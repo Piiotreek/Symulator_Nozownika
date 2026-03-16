@@ -19,6 +19,7 @@ namespace Symulator_Nozownika
                 app.UseHsts();
             }
 
+
             app.UseHttpsRedirection();
             app.UseRouting();
 
