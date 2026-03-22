@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Symulator_Nozownika.Data;
 
@@ -11,6 +12,8 @@ namespace Symulator_Nozownika
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            //building authentication services using cookie authentication scheme
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -27,6 +30,8 @@ namespace Symulator_Nozownika
 
             app.UseHttpsRedirection();
             app.UseRouting();
+            // Enable authentication and authorization middleware
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
