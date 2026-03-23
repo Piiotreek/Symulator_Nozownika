@@ -77,7 +77,7 @@ namespace Symulator_Nozownika.Controllers
                     var clamis = new List<Claim>
                     {
                        new Claim(ClaimTypes.Name, user.Email),
-                       new Claim("Name",user.FirstName),
+                       new Claim("Name",user.UserName),
                        new Claim(ClaimTypes.Role, "User")
                     }; 
                     var claimsidentity = new ClaimsIdentity(clamis, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -103,8 +103,45 @@ namespace Symulator_Nozownika.Controllers
         [Authorize]
         public IActionResult SecurePage()
         {
-            ViewBag.Name = HttpContext.User.Identity.Name;
+            ViewBag.Name = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
             return View();
         }
+
+        [Authorize]
+        public IActionResult RemoveAccount()
+        {
+            var userEmail = HttpContext.User.Identity.Name;
+            var user = _context.UserAccounts.FirstOrDefault(x => x.Email == userEmail);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            return View(user);
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> RemoveAccountConfirmed()
+        {
+            var userEmail = HttpContext.User.Identity.Name;
+            var user = _context.UserAccounts.FirstOrDefault(x => x.Email == userEmail);
+
+            if (user != null)
+            {
+                _context.UserAccounts.Remove(user);
+                await _context.SaveChangesAsync();
+
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                TempData["Message"] = "Your account has been successfully deleted.";
+                return RedirectToAction("Login");
+            }
+
+            return RedirectToAction("Login");
+        }
+
+
     }
 }
