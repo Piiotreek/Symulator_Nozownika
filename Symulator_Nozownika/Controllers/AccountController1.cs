@@ -92,11 +92,14 @@ namespace Symulator_Nozownika.Controllers
             }
             return View();
         }
-        public IActionResult Logout()
+        //changed login
+        [HttpPost]
+        public async Task<IActionResult> Logout()
         {
-            HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Index");
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Index", "Home");
         }
+        
         [Authorize]
         public IActionResult SecurePage()
         {
