@@ -83,7 +83,7 @@ namespace Symulator_Nozownika.Controllers
                     var claimsidentity = new ClaimsIdentity(clamis, CookieAuthenticationDefaults.AuthenticationScheme);
                     HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsidentity));
 
-                    return RedirectToAction("SecurePage", "Account");
+                    return RedirectToAction("SecurePage", "AccountController1");
                 }
                 else
                 {
