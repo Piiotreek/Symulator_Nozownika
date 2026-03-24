@@ -21,6 +21,7 @@ namespace Symulator_Nozownika.Models
         public string Password { get; set; }
         [Required(ErrorMessage = "Confirm Password is Required")]
         [DataType(DataType.Password)]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
 
     }

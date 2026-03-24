@@ -1,17 +1,112 @@
-﻿
-@{
+﻿@{
     ViewData["Title"] = "Model 3D";
-
-  
 }
 
+<div class="container text-center">
+    <div class="stats-bar mb-3" style="font-size: 24px; font-weight: bold;">
+        HP: <span id="hp-value">10000</span> |
+        Czas: <span id="timer-value">15</span>s
+    </div>
 
-    
-<div class="container">
-    @await Html.PartialAsync("_HugeGraphic")
+    <div id="graphic-container">
+        @await Html.PartialAsync("_HugeGraphic")
+    </div>
+
+    <button id="btn-start" class="btn btn-primary btn-lg mt-3">START</button>
 </div>
-    
-    
+
+<script>
+    let hp = 10000;
+    let timeLeft = 15;
+    let gameActive = false;
+    let timerInterval;
+
+    const hpDisplay = document.getElementById('hp-value');
+    const timerDisplay = document.getElementById('timer-value');
+    const startBtn = document.getElementById('btn-start');
+    const organs = document.querySelectorAll('.organ');
+
+    // Definicja mnożników dla organów (na podstawie tytułów w SVG)
+    const multipliers = {
+        "pecherz": 50,
+        "miednica": 20,
+        "jelito_grube": 100,
+        "jelito_cienkie": 80,
+        "serce": 200,
+        "cialo": 150,
+        "watroba": 120,
+        "zoladek": 90,
+        "tchawica": 70,
+        "kosci": 30,
+        "pluca": 110,
+        "pecherzyk_zolciowy": 60,
+        "default": 10
+    };
+
+    function startGame() {
+        // Resetowanie gry
+        hp = 10000;
+        timeLeft = 15;
+        gameActive = true;
+        hpDisplay.innerText = hp;
+        timerDisplay.innerText = timeLeft;
+        startBtn.disabled = true;
+
+        // Licznik czasu
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.innerText = timeLeft;
+
+            if (timeLeft <= 0) {
+                endGame("Koniec czasu!");
+            }
+        }, 1000);
+    }
+
+    function endGame(message) {
+        gameActive = false;
+        clearInterval(timerInterval);
+        startBtn.disabled = false;
+        alert(message + " Twój wynik HP: " + hp);
+    }
+
+    // Obsługa kliknięć w organy
+    organs.forEach(organ => {
+        organ.style.cursor = "pointer"; // Zmiana kursora na łapkę
+
+        organ.addEventListener('click', function() {
+            if (!gameActive) return;
+
+            // Pobieramy nazwę organu z tagu <title> wewnątrz <g>
+            const organName = this.querySelector('title')?.textContent || "default";
+            const multiplier = multipliers[organName] || multipliers["default"];
+
+            // Logika zmiany HP (np. odejmowanie HP przy kliknięciu)
+            hp -= multiplier;
+            if (hp < 0) hp = 0;
+
+            hpDisplay.innerText = hp;
+
+            // Efekt wizualny kliknięcia (opcjonalne)
+            this.style.opacity = "0.7";
+            setTimeout(() => this.style.opacity = "1", 100);
+
+            if (hp <= 0) {
+                endGame("Organ zniszczony!");
+            }
+        });
+    });
+
+    startBtn.addEventListener('click', startGame);
+</script>
+
+<style>
+    /* Styl dla efektu po najechaniu na organ */
+    .organ:hover {
+        filter: brightness(1.2);
+        transition: 0.2s;
+    }
+</style>
 
      
 
