@@ -6,7 +6,7 @@ namespace Symulator_Nozownika.Models
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage ="First Name is Required")]
+        [Required(ErrorMessage = "First Name is Required")]
         public string FirstName { get; set; }
         [Required(ErrorMessage = "Last Name is Required")]
         public string LastName { get; set; }
@@ -18,6 +18,8 @@ namespace Symulator_Nozownika.Models
         [Required(ErrorMessage = "Password is Required")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
-        
+
+        public int? SelectedWeaponId { get; set; }
+
     }
 }
