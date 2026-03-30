@@ -54,7 +54,7 @@ namespace Symulator_Nozownika.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserAccounts");
+                    b.ToTable("UserAccounts", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.Weapon", b =>
@@ -81,7 +81,7 @@ namespace Symulator_Nozownika.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Weapons");
+                    b.ToTable("Weapons", (string)null);
 
                     b.HasData(
                         new

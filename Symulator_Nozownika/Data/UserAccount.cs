@@ -19,7 +19,10 @@ namespace Symulator_Nozownika.Models
         [DataType(DataType.Password)]
         public string Password { get; set; }
 
+        // Klucz obcy
         public int? SelectedWeaponId { get; set; }
 
+        // WŁAŚCIWOŚĆ NAWIGACYJNA - Dodaj to:
+        public virtual Weapon? SelectedWeapon { get; set; }
     }
 }

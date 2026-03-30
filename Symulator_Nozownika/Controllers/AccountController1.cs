@@ -79,7 +79,7 @@ namespace Symulator_Nozownika.Controllers
                        new Claim(ClaimTypes.Name, user.Email),
                        new Claim("Name",user.UserName),
                        new Claim(ClaimTypes.Role, "User")
-                    }; 
+                    };
                     var claimsidentity = new ClaimsIdentity(clamis, CookieAuthenticationDefaults.AuthenticationScheme);
                     HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsidentity));
 
@@ -99,12 +99,33 @@ namespace Symulator_Nozownika.Controllers
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Index", "Home");
         }
-        
+
         [Authorize]
-        public IActionResult SecurePage()
+        public async Task<IActionResult> SecurePage()
         {
-            ViewBag.Name = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
-            return View();
+            // Pobieramy nazwę użytkownika z Claimów (tak jak masz teraz)
+            var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
+
+            if (string.IsNullOrEmpty(userName))
+            {
+                return RedirectToAction("Login");
+            }
+
+            // Pobieramy użytkownika z bazy RAZEM z jego bronią
+            var user = await _context.UserAccounts
+                .Include(u => u.SelectedWeapon) // To załaduje statystyki broni
+                .FirstOrDefaultAsync(u => u.UserName == userName);
+
+            if (user == null || user.SelectedWeapon == null)
+            {
+                // Jeśli nie wybrał broni, wyślij go do wyboru
+                return RedirectToAction("SelectWeapon");
+            }
+
+            ViewBag.Name = userName;
+
+            // Przekazujemy obiekt broni (Weapon) jako model do widoku
+            return View(user.SelectedWeapon);
         }
 
         [Authorize]
@@ -141,7 +162,30 @@ namespace Symulator_Nozownika.Controllers
 
             return RedirectToAction("Login");
         }
+        [HttpGet]
+        public async Task<IActionResult> SelectWeapon()
+        {
+            // Pobieramy listę wszystkich noży/toporów z bazy danych
+            var allWeapons = await _context.Weapons.ToListAsync();
+            return View(allWeapons);
+        }
+        [HttpPost]
+        public async Task<IActionResult> SelectWeaponConfirmed(int weaponId)
+        {
+            // Zakładając, że logujesz gracza na sesji lub po Username
+            var userName = HttpContext.Session.GetString("UserName"); // Przykładowe pobieranie usera z sesji
 
+            if (string.IsNullOrEmpty(userName)) return RedirectToAction("Login");
 
+            var user = await _context.UserAccounts.FirstOrDefaultAsync(u => u.UserName == userName);
+
+            if (user != null)
+            {
+                user.SelectedWeaponId = weaponId;
+                await _context.SaveChangesAsync(); // To zapisuje zmianę w bazie danych
+            }
+
+            return RedirectToAction("SecurePage");
+        }
     }
 }
