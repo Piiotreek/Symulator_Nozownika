@@ -1,0 +1,31 @@
+﻿
+<h1 class ="text-center">Hello @ViewBag.Name</h1>
+
+<div class="mt-4 text-center">
+    <a asp-action="RemoveAccount" class="btn btn-danger">
+        <i class="fas fa-trash"></i> Delete My Account
+    </a>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let pendingScore = sessionStorage.getItem("PendingScore");
+        if (pendingScore) {
+            fetch('/Home/SaveScore', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(parseInt(pendingScore))
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log("Your pending score of " + pendingScore + " was saved to the database! New Record: " + data.newHighScore);
+                    sessionStorage.removeItem("PendingScore");
+                }
+            })
+            .catch(error => console.error('Error saving score:', error));
+        }
+    });
+</script>

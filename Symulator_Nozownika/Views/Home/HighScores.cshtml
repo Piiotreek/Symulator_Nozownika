@@ -1,0 +1,32 @@
+@model IEnumerable<dynamic>
+
+@{
+    ViewData["Title"] = "Top 10 Highscores";
+}
+
+<div class="container text-center mt-5">
+    <h2>🏆 Top 10 Highscores 🏆</h2>
+    <table class="table table-striped mt-4 mx-auto" style="max-width: 600px;">
+        <thead class="thead-dark">
+            <tr>
+                <th>Miejsce</th>
+                <th>Gracz (Nick)</th>
+                <th>Wynik</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int rank = 1;
+            }
+            @foreach (var player in Model)
+            {
+                <tr>
+                    <td>#@rank</td>
+                    <td>@player.UserName</td>
+                    <td>@player.HighScore</td>
+                </tr>
+                rank++;
+            }
+        </tbody>
+    </table>
+</div>
