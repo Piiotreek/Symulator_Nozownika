@@ -1,0 +1,20 @@
+﻿@model IEnumerable<Symulator_Nozownika.Models.Weapon>
+
+<h2>Wybierz swoją broń</h2>
+
+<div class="row">
+    @foreach (var weapon in Model)
+    {
+        <div class="col-md-4 card">
+            <img src="@weapon.ImageUrl" alt="@weapon.Name" style="width:100px" />
+            <h3>@weapon.Name</h3>
+            <p>Obrażenia: @weapon.Damage</p>
+            <p>Cooldown: @weapon.Cooldown</p>
+
+            <form asp-action="SelectWeaponConfirmed" method="post">
+                <input type="hidden" name="weaponId" value="@weapon.Id" />
+                <button type="submit" class="btn btn-primary">Wybierz</button>
+            </form>
+        </div>
+    }
+</div>

@@ -1,5 +1,5 @@
 ﻿@if(Context.User.Identity.Name !=null){
-   <form asp-area="" asp-controller="AccountController1" asp-action="Logout" method="post" id="logoutForm" class="navbar-right">
+   <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" class="navbar-right">
         <ul>
             <li><a>Hello @Context.User.Identity.Name</a></li>
             <button type="submit">Logout</button>
@@ -10,7 +10,7 @@
 else
 {
     <ul>
-        <li><a asp-area="" asp-controller="AccountController1" asp-action="Login">Login</a></li>
-        <li><a asp-area="" asp-controller="AccountController1" asp-action="Registration">Register</a></li>
+        <li><a asp-area="" asp-controller="Account" asp-action="Login">Login</a></li>
+        <li><a asp-area="" asp-controller="Account" asp-action="Registration">Register</a></li>
     </ul>
 }

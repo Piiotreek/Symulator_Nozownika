@@ -1,0 +1,202 @@
+﻿@model Symulator_Nozownika.Models.UserAccount
+
+@{
+    ViewData["Title"] = "Symulator Nożownika - Walka";
+    // Pobieramy statystyki broni lub ustawiamy domyślne, jeśli coś pójdzie nie tak
+    var weaponName = Model.SelectedWeapon?.Name ?? "Pięści";
+    var weaponDmg = Model.SelectedWeapon?.Damage ?? 10;
+    var weaponCd = Model.SelectedWeapon?.Cooldown.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) ?? "1.0";
+    var weaponImg = Model.SelectedWeapon?.ImageUrl ?? "/images/default.png";
+}
+
+<div class="container mt-4">
+    <div class="row mb-4 shadow-sm p-3 mb-5 bg-dark rounded text-white border-gold">
+        <div class="col-md-4 text-center border-end">
+            <h5 class="text-muted">Gracz</h5>
+            <h2 class="text-warning">@Model.UserName</h2>
+        </div>
+        <div class="col-md-4 text-center">
+            <h5 class="text-muted">Wyposażona Broń</h5>
+            <div class="d-flex align-items-center justify-content-center">
+                <img src="@weaponImg" alt="Weapon" style="height: 50px; margin-right: 15px;" />
+                <div>
+                    <h4 class="mb-0">@weaponName</h4>
+                    <small class="text-info">DMG: @weaponDmg | CD: @weaponCd s</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-center border-start">
+            <div class="stats-bar" style="font-size: 28px; font-weight: bold;">
+                <span class="text-danger">HP: <span id="hp-value">10000</span></span>
+                <span class="mx-2">|</span>
+                <span class="text-clock">Czas: <span id="timer-value">15</span>s</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8 shadow-lg p-4 bg-light rounded relative-container">
+            <div id="cooldown-overlay"></div>
+
+            <div id="graphic-container" class="text-center">
+                @await Html.PartialAsync("_HugeGraphic")
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <button id="btn-start" class="btn btn-warning btn-xl shadow">ROZPOCZNIJ SYMULACJĘ</button>
+        <div class="mt-3">
+            <a asp-action="SelectWeapon" class="btn btn-outline-secondary btn-sm">Zmień broń</a>
+            <a asp-action="RemoveAccount" class="btn btn-outline-danger btn-sm ml-2">Usuń konto</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Dane z C# przelane do JS
+    const weaponDamageBase = @weaponDmg;
+    const cooldownTime = @weaponCd * 1000; // zamiana na milisekundy
+
+    let hp = 10000;
+    let timeLeft = 15;
+    let gameActive = false;
+    let canAttack = true;
+    let timerInterval;
+
+    const hpDisplay = document.getElementById('hp-value');
+    const timerDisplay = document.getElementById('timer-value');
+    const startBtn = document.getElementById('btn-start');
+    const organs = document.querySelectorAll('.organ');
+    const cooldownOverlay = document.getElementById('cooldown-overlay');
+
+    const multipliers = {
+        "pecherz": 1.2, "miednica": 1.1, "jelito_grube": 1.5, "jelito_cienkie": 1.4,
+        "serce": 5.0, "cialo": 1.0, "watroba": 2.0, "zoladek": 1.8,
+        "tchawica": 2.5, "kosci": 0.8, "pluca": 2.2, "default": 1.0
+    };
+
+    function startGame() {
+        hp = 10000;
+        timeLeft = 15;
+        gameActive = true;
+        canAttack = true;
+        hpDisplay.innerText = hp;
+        timerDisplay.innerText = timeLeft;
+        startBtn.style.display = 'none';
+
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            timerDisplay.innerText = timeLeft;
+            if (timeLeft <= 0) endGame("KONIEC CZASU!");
+        }, 1000);
+    }
+
+    function endGame(message) {
+        gameActive = false;
+        clearInterval(timerInterval);
+        startBtn.style.display = 'inline-block';
+        startBtn.innerText = "ZAGRAJ PONOWNIE";
+        alert(message + "\nPozostałe HP: " + hp);
+    }
+
+    organs.forEach(organ => {
+        organ.addEventListener('click', function() {
+            if (!gameActive || !canAttack) return;
+
+            const organName = this.querySelector('title')?.textContent || "default";
+            const multiplier = multipliers[organName] || multipliers["default"];
+
+            // Odejmujemy: (DMG broni * mnożnik organu)
+            let totalDamage = Math.round(weaponDamageBase * multiplier);
+            hp -= totalDamage;
+            if (hp < 0) hp = 0;
+            hpDisplay.innerText = hp;
+
+            // Efekt uderzenia
+            this.classList.add('hit');
+            setTimeout(() => this.classList.remove('hit'), 150);
+
+            // Logika Cooldownu
+            activateCooldown();
+
+            if (hp <= 0) endGame("CEL WYELIMINOWANY!");
+        });
+    });
+
+    function activateCooldown() {
+        canAttack = false;
+        cooldownOverlay.style.height = "100%"; // "Zalewa" grafikę
+        cooldownOverlay.style.transition = "none";
+
+        // Płynne opadanie nakładki cooldownu
+        setTimeout(() => {
+            cooldownOverlay.style.transition = `height ${cooldownTime}ms linear`;
+            cooldownOverlay.style.height = "0%";
+        }, 10);
+
+        setTimeout(() => {
+            canAttack = true;
+        }, cooldownTime);
+    }
+
+    startBtn.addEventListener('click', startGame);
+</script>
+
+<style>
+    .border-gold {
+        border: 2px solid #ffc107 !important;
+    }
+
+    .text-clock {
+        color: #00d4ff;
+    }
+
+    .btn-xl {
+        padding: 15px 40px;
+        font-size: 20px;
+        font-weight: bold;
+        border-radius: 50px;
+    }
+
+    #graphic-container {
+        position: relative;
+        z-index: 1;
+    }
+
+    .relative-container {
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Nakładka cooldownu na SVG */
+    #cooldown-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 0%;
+        background: rgba(255, 0, 0, 0.1);
+        pointer-events: none; /* Pozwala klikać "przez" nakładkę */
+        z-index: 2;
+    }
+
+    .organ {
+        cursor: crosshair;
+        transition: transform 0.1s, filter 0.2s;
+    }
+
+        .organ:hover {
+            filter: drop-shadow(0 0 8px rgba(255,0,0,0.8));
+            transform: scale(1.02);
+        }
+
+    .hit {
+        filter: brightness(0.5) sepia(1) hue-rotate(-50deg) !important;
+    }
+
+    svg {
+        max-width: 100%;
+        height: auto;
+    }
+</style>

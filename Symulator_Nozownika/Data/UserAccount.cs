@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Symulator_Nozownika.Models
 {
@@ -23,6 +24,7 @@ namespace Symulator_Nozownika.Models
         public int? SelectedWeaponId { get; set; }
 
         // WŁAŚCIWOŚĆ NAWIGACYJNA - Dodaj to:
+        [ForeignKey("SelectedWeaponId")]
         public virtual Weapon? SelectedWeapon { get; set; }
     }
 }

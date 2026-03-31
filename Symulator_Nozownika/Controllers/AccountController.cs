@@ -9,11 +9,11 @@ using System.Security.Claims;
 
 namespace Symulator_Nozownika.Controllers
 {
-    public class AccountController1 : Controller
+    public class AccountController : Controller
     {
         private readonly AppDbContext _context;
 
-        public AccountController1(AppDbContext appDbContext)
+        public AccountController(AppDbContext appDbContext)
         {
             _context = appDbContext;
         }
@@ -83,7 +83,7 @@ namespace Symulator_Nozownika.Controllers
                     var claimsidentity = new ClaimsIdentity(clamis, CookieAuthenticationDefaults.AuthenticationScheme);
                     HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsidentity));
 
-                    return RedirectToAction("SecurePage", "AccountController1");
+                    return RedirectToAction("SelectWeapon", "Account");
                 }
                 else
                 {
@@ -100,10 +100,43 @@ namespace Symulator_Nozownika.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+
+        [HttpPost]
+        public async Task<IActionResult> SelectWeapon(int weaponId)
+        {
+            // 1. Pobierz ID zalogowanego użytkownika (używamy claimu "Name" który przechowuje UserName)
+            var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
+
+            if (string.IsNullOrEmpty(userName))
+            {
+                // brak zalogowanego użytkownika -> przekieruj do logowania
+                return RedirectToAction("Login");
+            }
+
+            var user = _context.UserAccounts.FirstOrDefault(u => u.UserName == userName);
+
+            if (user != null)
+            {
+                user.SelectedWeaponId = weaponId;
+
+                // ZAPIS
+                await _context.SaveChangesAsync();
+
+                // Przekierowanie na stronę z podsumowaniem
+                return RedirectToAction("SecurePage");
+            }
+
+            return RedirectToAction("Login");
+        }
+
+
+
+
+
         [Authorize]
         public async Task<IActionResult> SecurePage()
         {
-            // Pobieramy nazwę użytkownika z Claimów (tak jak masz teraz)
+
             var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
 
             if (string.IsNullOrEmpty(userName))
@@ -125,13 +158,20 @@ namespace Symulator_Nozownika.Controllers
             ViewBag.Name = userName;
 
             // Przekazujemy obiekt broni (Weapon) jako model do widoku
-            return View(user.SelectedWeapon);
+            return View(user);
         }
 
         [Authorize]
         public IActionResult RemoveAccount()
         {
-            var userEmail = HttpContext.User.Identity.Name;
+            // bezpieczne odczytanie emaila z claimu (ClaimTypes.Name trzymamy email przy logowaniu)
+            var userEmail = HttpContext.User.Identity?.Name;
+
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return RedirectToAction("Login");
+            }
+
             var user = _context.UserAccounts.FirstOrDefault(x => x.Email == userEmail);
 
             if (user == null)
@@ -146,7 +186,13 @@ namespace Symulator_Nozownika.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveAccountConfirmed()
         {
-            var userEmail = HttpContext.User.Identity.Name;
+            var userEmail = HttpContext.User.Identity?.Name;
+
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                return RedirectToAction("Login");
+            }
+
             var user = _context.UserAccounts.FirstOrDefault(x => x.Email == userEmail);
 
             if (user != null)
@@ -172,17 +218,22 @@ namespace Symulator_Nozownika.Controllers
         [HttpPost]
         public async Task<IActionResult> SelectWeaponConfirmed(int weaponId)
         {
-            // Zakładając, że logujesz gracza na sesji lub po Username
-            var userName = HttpContext.Session.GetString("UserName"); // Przykładowe pobieranie usera z sesji
+            // Pobieramy UserName z Claimów (tak jak w Login przypisałeś: new Claim("Name", user.UserName))
+            var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
 
-            if (string.IsNullOrEmpty(userName)) return RedirectToAction("Login");
+            if (string.IsNullOrEmpty(userName))
+            {
+                return RedirectToAction("Login");
+            }
 
             var user = await _context.UserAccounts.FirstOrDefaultAsync(u => u.UserName == userName);
 
             if (user != null)
             {
                 user.SelectedWeaponId = weaponId;
-                await _context.SaveChangesAsync(); // To zapisuje zmianę w bazie danych
+                await _context.SaveChangesAsync();
+
+                // Opcjonalnie: sprawdź w debuggerze czy tu wchodzi
             }
 
             return RedirectToAction("SecurePage");

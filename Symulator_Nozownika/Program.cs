@@ -38,7 +38,7 @@ namespace Symulator_Nozownika
             app.MapStaticAssets();
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=AccountController1}/{action=Login}/{id?}")
+                pattern: "{controller=Account}/{action=Login}/{id?}")
                 .WithStaticAssets();
 
             app.Run();
