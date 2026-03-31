@@ -37,9 +37,6 @@ namespace Symulator_Nozownika.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("HighScore")
-                        .HasColumnType("int");
-
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -48,13 +45,125 @@ namespace Symulator_Nozownika.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("SelectedWeaponId")
+                        .HasColumnType("int");
+
                     b.Property<string>("UserName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserAccounts");
+                    b.ToTable("UserAccounts", (string)null);
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.Weapon", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("Cooldown")
+                        .HasColumnType("float");
+
+                    b.Property<int>("Damage")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Weapons", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Cooldown = 0.40000000000000002,
+                            Damage = 10,
+                            ImageUrl = "/images/knife.png",
+                            Name = "Kitchen Knife"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Cooldown = 0.59999999999999998,
+                            Damage = 25,
+                            ImageUrl = "/images/dagger.png",
+                            Name = "Dagger"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Cooldown = 0.90000000000000002,
+                            Damage = 45,
+                            ImageUrl = "/images/machete.png",
+                            Name = "Machete"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Cooldown = 1.1000000000000001,
+                            Damage = 55,
+                            ImageUrl = "/images/sword.png",
+                            Name = "Sword"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Cooldown = 1.5,
+                            Damage = 70,
+                            ImageUrl = "/images/axe.png",
+                            Name = "Axe"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Cooldown = 0.69999999999999996,
+                            Damage = 40,
+                            ImageUrl = "/images/spear.png",
+                            Name = "Spear"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Cooldown = 1.3,
+                            Damage = 60,
+                            ImageUrl = "/images/cleaver.png",
+                            Name = "Cleaver"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Cooldown = 2.0,
+                            Damage = 90,
+                            ImageUrl = "/images/mace.png",
+                            Name = "Mace"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Cooldown = 0.5,
+                            Damage = 50,
+                            ImageUrl = "/images/katana.png",
+                            Name = "Katana"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Cooldown = 0.10000000000000001,
+                            Damage = 2,
+                            ImageUrl = "/images/scissors.png",
+                            Name = "Scissors"
+                        });
                 });
 #pragma warning restore 612, 618
         }

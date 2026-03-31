@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Symulator_Nozownika.Models
 {
@@ -6,7 +7,7 @@ namespace Symulator_Nozownika.Models
     {
         public int Id { get; set; }
 
-        [Required(ErrorMessage ="First Name is Required")]
+        [Required(ErrorMessage = "First Name is Required")]
         public string FirstName { get; set; }
         [Required(ErrorMessage = "Last Name is Required")]
         public string LastName { get; set; }
@@ -19,7 +20,11 @@ namespace Symulator_Nozownika.Models
         [DataType(DataType.Password)]
         public string Password { get; set; }
 
-        // Personal Best
-        public int HighScore { get; set; } = 0; 
+        // Klucz obcy
+        public int? SelectedWeaponId { get; set; }
+
+        // WŁAŚCIWOŚĆ NAWIGACYJNA - Dodaj to:
+        [ForeignKey("SelectedWeaponId")]
+        public virtual Weapon? SelectedWeapon { get; set; }
     }
 }
