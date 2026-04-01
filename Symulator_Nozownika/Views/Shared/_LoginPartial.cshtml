@@ -1,16 +1,12 @@
-﻿@if(Context.User.Identity.Name !=null){
-   <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" class="navbar-right">
-        <ul>
-            <li><a>Hello @Context.User.Identity.Name</a></li>
-            <button type="submit">Logout</button>
-            
-        </ul>
-    </form>
+﻿@if(Context.User.Identity.Name != null)
+{
+    <li class="nav-item login-center">
+        <a class="nav-link text-dark fw-bold">Hello @Context.User.Identity.Name</a>
+    </li>
 }
 else
 {
-    <ul>
-        <li><a asp-area="" asp-controller="Account" asp-action="Login">Login</a></li>
-        <li><a asp-area="" asp-controller="Account" asp-action="Registration">Register</a></li>
-    </ul>
+    <li class="nav-item please-center">
+        <a class= "text-dark fw-bold">Please log into the Account</a>
+    </li>
 }
