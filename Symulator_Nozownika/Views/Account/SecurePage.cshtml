@@ -9,6 +9,8 @@
     var weaponImg = Model.SelectedWeapon?.ImageUrl ?? "/images/default.png";
 }
 
+@Html.AntiForgeryToken()
+
 <div class="container mt-4">
     <div class="row mb-4 shadow-sm p-3 mb-5 bg-dark rounded text-white border-gold">
         <div class="col-md-4 text-center border-end">
@@ -67,7 +69,6 @@
     const hpDisplay = document.getElementById('hp-value');
     const timerDisplay = document.getElementById('timer-value');
     const startBtn = document.getElementById('btn-start');
-    const organs = document.querySelectorAll('.organ');
     const cooldownOverlay = document.getElementById('cooldown-overlay');
 
     const multipliers = {
@@ -98,31 +99,42 @@
         startBtn.style.display = 'inline-block';
         startBtn.innerText = "ZAGRAJ PONOWNIE";
         alert(message + "\nPozostałe HP: " + hp);
+
+        // Przesłanie wyniku do serwera
+        const finalScore = 10000 - hp; // Wynik = zadane obrażenia
+        submitGameScore(finalScore);
     }
 
-    organs.forEach(organ => {
-        organ.addEventListener('click', function() {
-            if (!gameActive || !canAttack) return;
+    // Setup event listeners na organach
+    function setupOrganListeners() {
+        const organs = document.querySelectorAll('.organ');
+        console.log('📍 Znaleziono organów:', organs.length);
 
-            const organName = this.querySelector('title')?.textContent || "default";
-            const multiplier = multipliers[organName] || multipliers["default"];
+        organs.forEach(organ => {
+            organ.addEventListener('click', function() {
+                if (!gameActive || !canAttack) return;
 
-            // Odejmujemy: (DMG broni * mnożnik organu)
-            let totalDamage = Math.round(weaponDamageBase * multiplier);
-            hp -= totalDamage;
-            if (hp < 0) hp = 0;
-            hpDisplay.innerText = hp;
+                const organName = this.querySelector('title')?.textContent || "default";
+                const multiplier = multipliers[organName] || multipliers["default"];
 
-            // Efekt uderzenia
-            this.classList.add('hit');
-            setTimeout(() => this.classList.remove('hit'), 150);
+                // Odejmujemy: (DMG broni * mnożnik organu)
+                let totalDamage = Math.round(weaponDamageBase * multiplier);
+                hp -= totalDamage;
+                if (hp < 0) hp = 0;
+                hpDisplay.innerText = hp;
+                console.log(`💥 Trafienie! Organ: ${organName}, DMG: ${totalDamage}, HP: ${hp}`);
 
-            // Logika Cooldownu
-            activateCooldown();
+                // Efekt uderzenia
+                this.classList.add('hit');
+                setTimeout(() => this.classList.remove('hit'), 150);
 
-            if (hp <= 0) endGame("CEL WYELIMINOWANY!");
+                // Logika Cooldownu
+                activateCooldown();
+
+                if (hp <= 0) endGame("CEL WYELIMINOWANY!");
+            });
         });
-    });
+    }
 
     function activateCooldown() {
         canAttack = false;
@@ -141,6 +153,9 @@
     }
 
     startBtn.addEventListener('click', startGame);
+
+    // Ustaw event listenery gdy dokument jest gotowy
+    document.addEventListener('DOMContentLoaded', setupOrganListeners);
 </script>
 
 <style>
@@ -200,3 +215,5 @@
         height: auto;
     }
 </style>
+
+<script src="~/js/highscore.js"></script>

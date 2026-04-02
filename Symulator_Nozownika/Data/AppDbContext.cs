@@ -12,10 +12,18 @@ namespace Symulator_Nozownika.Data
 
         public DbSet<UserAccount> UserAccounts { get; set; }
         public DbSet<Weapon> Weapons { get; set; } //weapons
+        public DbSet<HighScore> HighScores { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Relacja HighScore -> UserAccount
+            modelBuilder.Entity<HighScore>()
+                .HasOne(h => h.UserAccount)
+                .WithMany()
+                .HasForeignKey(h => h.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Weapon>().HasData(
                 new Weapon { Id = 1, Name = "Kitchen Knife", Damage = 10, Cooldown = 0.4, ImageUrl = "/images/knife.png" },

@@ -76,6 +76,7 @@ namespace Symulator_Nozownika.Controllers
                     //Successful login logic 
                     var clamis = new List<Claim>
                     {
+                       new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                        new Claim(ClaimTypes.Name, user.Email),
                        new Claim("Name",user.UserName),
                        new Claim(ClaimTypes.Role, "User")
