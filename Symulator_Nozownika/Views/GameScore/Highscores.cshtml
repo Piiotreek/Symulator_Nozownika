@@ -1,23 +1,23 @@
 @model IEnumerable<dynamic>
 
 @{
-    ViewData["Title"] = "Ranking Wyników";
+    ViewData["Title"] = "Ranking";
 }
 
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <h1 class="text-center mb-4">🏆 Ranking Wyników</h1>
+            <h1 class="text-center mb-4">🏆 Ranking</h1>
 
             @if (Model != null && Model.Any())
             {
                 <table class="table table-dark table-striped table-hover">
                     <thead>
                         <tr>
-                            <th style="width: 10%;">Miejsce</th>
-                            <th style="width: 50%;">Gracz</th>
-                            <th style="width: 20%;">Wynik</th>
-                            <th style="width: 20%;">Data</th>
+                            <th style="width: 10%;">Place</th>
+                            <th style="width: 50%;">Player</th>
+                            <th style="width: 20%;">Score</th>
+                            <th style="width: 20%;">Date</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -51,7 +51,7 @@
                                         <span class="badge bg-info">@score.Score pkt</span>
                                     </td>
                                     <td>
-                                        @((DateTime)score.CreatedAt).ToLocaleDateString("pl-PL")
+                                        @(((DateTime)score.CreatedAt).ToString("dd.MM.yyyy HH:mm:ss"))
                                     </td>
                                 </tr>
                                 position++;
@@ -63,9 +63,13 @@
             else
             {
                 <div class="alert alert-info text-center">
-                    <p>Brak wyników do wyświetlenia.</p>
+                    <p>No highscores to display.</p>
                 </div>
             }
+
+            <div class="d-flex justify-content-center gap-2 mt-4">
+                <a asp-controller="Account" asp-action="SelectWeapon" class="btn btn-warning">Play game</a>
+            </div>
         </div>
     </div>
 </div>

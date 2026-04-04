@@ -198,6 +198,15 @@ namespace Symulator_Nozownika.Controllers
 
             if (user != null)
             {
+                var userHighScores = await _context.HighScores
+                    .Where(h => h.UserId == user.Id)
+                    .ToListAsync();
+
+                if (userHighScores.Count > 0)
+                {
+                    _context.HighScores.RemoveRange(userHighScores);
+                }
+
                 _context.UserAccounts.Remove(user);
                 await _context.SaveChangesAsync();
 

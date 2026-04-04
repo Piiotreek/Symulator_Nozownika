@@ -23,7 +23,7 @@ namespace Symulator_Nozownika.Data
                 .HasOne(h => h.UserAccount)
                 .WithMany()
                 .HasForeignKey(h => h.UserId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Weapon>().HasData(
                 new Weapon { Id = 1, Name = "Kitchen Knife", Damage = 10, Cooldown = 0.4, ImageUrl = "/images/knife.png" },

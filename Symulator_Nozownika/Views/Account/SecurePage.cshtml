@@ -9,8 +9,6 @@
     var weaponImg = Model.SelectedWeapon?.ImageUrl ?? "/images/default.png";
 }
 
-@Html.AntiForgeryToken()
-
 <div class="container mt-4">
     <div class="row mb-4 shadow-sm p-3 mb-5 bg-dark rounded text-white border-gold">
         <div class="col-md-4 text-center border-end">
@@ -53,6 +51,8 @@
             <a asp-action="RemoveAccount" class="btn btn-outline-danger btn-sm ml-2">Usuń konto</a>
         </div>
     </div>
+
+    @Html.AntiForgeryToken()
 </div>
 
 <script>
@@ -98,17 +98,21 @@
         clearInterval(timerInterval);
         startBtn.style.display = 'inline-block';
         startBtn.innerText = "ZAGRAJ PONOWNIE";
-        alert(message + "\nPozostałe HP: " + hp);
 
-        // Przesłanie wyniku do serwera
-        const finalScore = 10000 - hp; // Wynik = zadane obrażenia
-        submitGameScore(finalScore);
+        const finalScore = 10000 - hp;
+        console.log(`🎮 Koniec gry! HP: ${hp}, Wynik: ${finalScore}`);
+        alert(message + "\nPozostałe HP: " + hp + "\nWynik: " + finalScore);
+
+        // Opóźnienie aby alert nie blokował
+        setTimeout(() => {
+            console.log(`📤 Wysyłam wynik: ${finalScore}`);
+            submitGameScore(finalScore);
+        }, 100);
     }
 
-    // Setup event listeners na organach
     function setupOrganListeners() {
         const organs = document.querySelectorAll('.organ');
-        console.log('📍 Znaleziono organów:', organs.length);
+        console.log(`📍 Znaleziono organów: ${organs.length}`);
 
         organs.forEach(organ => {
             organ.addEventListener('click', function() {
@@ -122,6 +126,7 @@
                 hp -= totalDamage;
                 if (hp < 0) hp = 0;
                 hpDisplay.innerText = hp;
+
                 console.log(`💥 Trafienie! Organ: ${organName}, DMG: ${totalDamage}, HP: ${hp}`);
 
                 // Efekt uderzenia
@@ -154,8 +159,19 @@
 
     startBtn.addEventListener('click', startGame);
 
-    // Ustaw event listenery gdy dokument jest gotowy
-    document.addEventListener('DOMContentLoaded', setupOrganListeners);
+    // Upewnij się, że SVG jest załadowany przed dodaniem event listenerów
+    function initializeOrganListeners() {
+        console.log(`📍 Inicjalizacja organ listenerów, document.readyState: ${document.readyState}`);
+        setupOrganListeners();
+    }
+
+    if (document.readyState === 'loading') {
+        console.log('📍 DOM nie jest jeszcze gotowy, czekam na DOMContentLoaded');
+        document.addEventListener('DOMContentLoaded', initializeOrganListeners);
+    } else {
+        console.log('📍 DOM jest już gotowy, inicjalizuję od razu');
+        initializeOrganListeners();
+    }
 </script>
 
 <style>
@@ -215,5 +231,3 @@
         height: auto;
     }
 </style>
-
-<script src="~/js/highscore.js"></script>

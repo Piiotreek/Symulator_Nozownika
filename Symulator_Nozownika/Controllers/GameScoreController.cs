@@ -6,6 +6,12 @@ using System.Security.Claims;
 
 namespace Symulator_Nozownika.Controllers
 {
+    public class GameScoreRequest
+    {
+        public int Score { get; set; }
+        public string? PlayerName { get; set; }
+    }
+
     public class GameScoreController : Controller
     {
         private readonly AppDbContext _context;
@@ -16,21 +22,23 @@ namespace Symulator_Nozownika.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveScore(int score)
+        public async Task<IActionResult> SaveScore([FromBody] GameScoreRequest request)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var score = request?.Score ?? 0;
+            System.Console.WriteLine($"🎮 SaveScore() wywoływana z wynikiem: {score}");
 
-            Console.WriteLine($"🎮 SaveScore wywoływany - Score: {score}, UserId: {userId}");
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            System.Console.WriteLine($"👤 UserId z Claims: {userId}");
 
             // Jeśli użytkownik jest zalogowany
             if (!string.IsNullOrEmpty(userId) && int.TryParse(userId, out int parsedUserId))
             {
-                Console.WriteLine($"✓ Użytkownik zalogowany - ID: {parsedUserId}");
+                System.Console.WriteLine($"✅ Użytkownik zalogowany, ID: {parsedUserId}");
 
                 var userAccount = await _context.UserAccounts.FindAsync(parsedUserId);
                 if (userAccount != null)
                 {
-                    Console.WriteLine($"✓ Znaleziono użytkownika: {userAccount.FirstName} {userAccount.LastName}");
+                    System.Console.WriteLine($"👤 Znaleziono użytkownika: {userAccount.FirstName} {userAccount.LastName}");
 
                     // Sprawdzenie czy nowy wynik jest lepszy niż ostatni
                     var lastHighScore = await _context.HighScores
@@ -38,8 +46,12 @@ namespace Symulator_Nozownika.Controllers
                         .OrderByDescending(h => h.Score)
                         .FirstOrDefaultAsync();
 
+                    System.Console.WriteLine($"📊 Ostatni wynik: {lastHighScore?.Score ?? 0}");
+
                     if (lastHighScore == null || score > lastHighScore.Score)
                     {
+                        System.Console.WriteLine($"💾 Zapisuję nowy wynik: {score}");
+
                         var highScore = new HighScore
                         {
                             UserId = parsedUserId,
@@ -51,32 +63,36 @@ namespace Symulator_Nozownika.Controllers
                         _context.HighScores.Add(highScore);
                         await _context.SaveChangesAsync();
 
-                        Console.WriteLine($"✓ Wynik zapisany!");
+                        System.Console.WriteLine($"✅ Wynik zapisany pomyślnie!");
                         return Json(new { success = true, message = "Wynik zapisany!", newRecord = lastHighScore == null });
                     }
                     else
                     {
-                        Console.WriteLine($"⚠ Wynik {score} nie jest lepszy od {lastHighScore.Score}");
+                        System.Console.WriteLine($"⚠️ Wynik {score} nie jest lepszy niż {lastHighScore.Score}");
                         return Json(new { success = false, message = $"Twój najlepszy wynik to {lastHighScore.Score}. Spróbuj jeszcze raz!" });
                     }
                 }
                 else
                 {
-                    Console.WriteLine($"❌ Nie znaleziono użytkownika o ID {parsedUserId}");
+                    System.Console.WriteLine($"❌ Użytkownik nie znaleziony w bazie!");
                 }
             }
             else
             {
-                Console.WriteLine($"ℹ Użytkownik niezalogowany");
+                System.Console.WriteLine($"⚠️ Użytkownik nie zalogowany lub parsowanie ID nie powiodło się");
             }
 
             // Jeśli nie zalogowany - przechowaj tymczasowo
+            System.Console.WriteLine($"↩️ Zwracam needsLogin");
             return Json(new { success = false, needsLogin = true, message = "Zaloguj się aby zapisać swój wynik!" });
         }
 
         [HttpPost]
-        public async Task<IActionResult> SaveAnonymousScore(int score, string playerName)
+        public async Task<IActionResult> SaveAnonymousScore([FromBody] GameScoreRequest request)
         {
+            var score = request?.Score ?? 0;
+            var playerName = request?.PlayerName;
+
             var highScore = new HighScore
             {
                 Score = score,

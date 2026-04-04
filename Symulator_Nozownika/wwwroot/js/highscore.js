@@ -4,37 +4,36 @@ let tempScore = 0;
 // Funkcja wywoływana po zakończeniu gry
 async function submitGameScore(score) {
     tempScore = score;
-    console.log('📤 Wysyłam wynik:', score);
+
+    console.log(`📤 submitGameScore() wywoływana z wynikiem: ${score}`);
 
     try {
-        // Pobierz token CSRF
-        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        // Pobierz CSRF token z meta tagu lub form
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || 
+                      document.querySelector('meta[name="csrf-token"]')?.content;
 
         const headers = {
             'Content-Type': 'application/json'
         };
 
-        // Dodaj token CSRF jeśli istnieje
         if (token) {
-            headers['RequestVerificationToken'] = token;
-            console.log('✓ Token CSRF znaleziony');
+            headers['X-CSRF-TOKEN'] = token;
+            console.log(`🔐 CSRF token znaleziony: ${token.substring(0, 10)}...`);
         } else {
-            console.log('⚠ Token CSRF nie znaleziony');
+            console.log(`⚠️ CSRF token nie znaleziony`);
         }
 
-        const payload = { score: score };
-        console.log('📦 Payload:', JSON.stringify(payload));
+        console.log(`📨 Wysyłam do /GameScore/SaveScore z wynikiem: ${score}`);
 
         const response = await fetch('/GameScore/SaveScore', {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ score: score })
         });
 
-        console.log('📨 Status odpowiedzi:', response.status);
-
+        console.log(`📥 Status odpowiedzi: ${response.status}`);
         const result = await response.json();
-        console.log('📥 Odpowiedź serwera:', result);
+        console.log(`📥 Odpowiedź serwera:`, result);
 
         if (result.success) {
             showAlert('Sukces! ✓', result.message);
@@ -46,8 +45,8 @@ async function submitGameScore(score) {
             showAlert('Wynik nie został zapisany', result.message);
         }
     } catch (error) {
-        console.error('❌ Błąd przy wysyłaniu wyniku:', error);
-        showAlert('Błąd', 'Nie udało się zapisać wyniku: ' + error.message);
+        console.error('❌ Błąd przy zapisywaniu wyniku:', error);
+        showAlert('Błąd', 'Nie udało się zapisać wyniku');
     }
 }
 
