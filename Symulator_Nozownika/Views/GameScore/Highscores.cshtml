@@ -1,12 +1,30 @@
 @model IEnumerable<dynamic>
+@using System.Text
 
 @{
     ViewData["Title"] = "Ranking";
+
+    string NormalizeFlag(string? flag)
+    {
+        if (string.IsNullOrWhiteSpace(flag))
+        {
+            return "🏳️";
+        }
+
+        if (!flag.Contains("ð"))
+        {
+            return flag;
+        }
+
+        var bytes = Encoding.GetEncoding("ISO-8859-1").GetBytes(flag);
+        var normalized = Encoding.UTF8.GetString(bytes);
+        return string.IsNullOrWhiteSpace(normalized) ? "🏳️" : normalized;
+    }
 }
 
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-10">
             <h1 class="text-center mb-4">🏆 Ranking</h1>
 
             @if (Model != null && Model.Any())
@@ -15,8 +33,9 @@
                     <thead>
                         <tr>
                             <th style="width: 10%;">Place</th>
-                            <th style="width: 50%;">Player</th>
-                            <th style="width: 20%;">Score</th>
+                            <th style="width: 35%;">Player</th>
+                            <th style="width: 20%;">Country</th>
+                            <th style="width: 15%;">Score</th>
                             <th style="width: 20%;">Date</th>
                         </tr>
                     </thead>
@@ -25,6 +44,9 @@
                             int position = 1;
                             foreach (var score in Model)
                             {
+                                var country = (string?)score.Country;
+                                var countryFlag = NormalizeFlag((string?)score.CountryFlag);
+
                                 <tr>
                                     <td>
                                         @if (position == 1)
@@ -46,6 +68,17 @@
                                     </td>
                                     <td>
                                         <strong>@score.PlayerName</strong>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(country))
+                                        {
+                                            <span style="margin-right:6px;font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;">@countryFlag</span>
+                                            <span>@country</span>
+                                        }
+                                        else
+                                        {
+                                            <span>-</span>
+                                        }
                                     </td>
                                     <td>
                                         <span class="badge bg-info">@score.Score pkt</span>

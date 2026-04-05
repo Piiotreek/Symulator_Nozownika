@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Symulator_Nozownika.Data;
 using Symulator_Nozownika.Models;
+using System.Net.Http.Json;
 using System.Security.Claims;
 
 namespace Symulator_Nozownika.Controllers
@@ -14,11 +15,100 @@ namespace Symulator_Nozownika.Controllers
 
     public class GameScoreController : Controller
     {
+        private sealed class CountryCatalogItem
+        {
+            public string? Name { get; set; }
+            public string? Flag { get; set; }
+            public string? Code { get; set; }
+        }
+
+        private const string CountriesCatalogUrl = "https://gist.githubusercontent.com/devhammed/78cfbee0c36dfdaa4fce7e79c0d39208/raw/449258552611926be9ee7a8b4acc2ed9b2243a97/countries.json";
+        private static List<CountryCatalogItem>? _countriesCache;
+        private static readonly SemaphoreSlim _countriesCacheLock = new(1, 1);
+
         private readonly AppDbContext _context;
 
         public GameScoreController(AppDbContext context)
         {
             _context = context;
+        }
+
+        private static string NormalizeCountryName(string country)
+        {
+            return country.Trim();
+        }
+
+        private static string ApplyCountryAliases(string country)
+        {
+            return country switch
+            {
+                "Czechia" => "Czech Republic",
+                "North Macedonia" => "Macedonia",
+                "South Korea" => "Korea, Republic of South Korea",
+                "North Korea" => "Korea, Democratic People's Republic of Korea",
+                "Russia" => "Russia",
+                "Ivory Coast" => "Côte d'Ivoire",
+                _ => country
+            };
+        }
+
+        private async Task<List<CountryCatalogItem>> GetCountriesCatalogAsync()
+        {
+            if (_countriesCache != null)
+            {
+                return _countriesCache;
+            }
+
+            await _countriesCacheLock.WaitAsync();
+            try
+            {
+                if (_countriesCache != null)
+                {
+                    return _countriesCache;
+                }
+
+                using var httpClient = new HttpClient();
+                var response = await httpClient.GetFromJsonAsync<List<CountryCatalogItem>>(CountriesCatalogUrl);
+                _countriesCache = response ?? new List<CountryCatalogItem>();
+                return _countriesCache;
+            }
+            catch
+            {
+                _countriesCache = new List<CountryCatalogItem>();
+                return _countriesCache;
+            }
+            finally
+            {
+                _countriesCacheLock.Release();
+            }
+        }
+
+        private async Task<string?> GetCountryFlagAsync(string? country)
+        {
+            if (string.IsNullOrWhiteSpace(country))
+            {
+                return null;
+            }
+
+            var normalized = NormalizeCountryName(country);
+            var alias = ApplyCountryAliases(normalized);
+            var countries = await GetCountriesCatalogAsync();
+
+            var exactMatch = countries.FirstOrDefault(c =>
+                !string.IsNullOrWhiteSpace(c.Name) &&
+                string.Equals(c.Name, alias, StringComparison.OrdinalIgnoreCase));
+
+            if (!string.IsNullOrWhiteSpace(exactMatch?.Flag))
+            {
+                return exactMatch.Flag;
+            }
+
+            var containsMatch = countries.FirstOrDefault(c =>
+                !string.IsNullOrWhiteSpace(c.Name) &&
+                (c.Name.Contains(alias, StringComparison.OrdinalIgnoreCase) ||
+                 alias.Contains(c.Name, StringComparison.OrdinalIgnoreCase)));
+
+            return containsMatch?.Flag;
         }
 
         [HttpPost]
@@ -40,37 +130,64 @@ namespace Symulator_Nozownika.Controllers
                 {
                     System.Console.WriteLine($"👤 Znaleziono użytkownika: {userAccount.FirstName} {userAccount.LastName}");
 
-                    // Sprawdzenie czy nowy wynik jest lepszy niż ostatni
-                    var lastHighScore = await _context.HighScores
+                    var userScores = await _context.HighScores
                         .Where(h => h.UserId == parsedUserId)
                         .OrderByDescending(h => h.Score)
-                        .FirstOrDefaultAsync();
+                        .ThenByDescending(h => h.CreatedAt)
+                        .ToListAsync();
 
-                    System.Console.WriteLine($"📊 Ostatni wynik: {lastHighScore?.Score ?? 0}");
+                    var personalBest = userScores.FirstOrDefault();
 
-                    if (lastHighScore == null || score > lastHighScore.Score)
+                    // Zachowaj tylko jeden najwyższy wynik
+                    if (userScores.Count > 1)
                     {
-                        System.Console.WriteLine($"💾 Zapisuję nowy wynik: {score}");
+                        _context.HighScores.RemoveRange(userScores.Skip(1));
+                    }
 
+                    var country = userAccount.Country;
+                    var countryFlag = await GetCountryFlagAsync(country);
+
+                    // Jeśli nie było wcześniejszych wyników
+                    if (personalBest == null)
+                    {
                         var highScore = new HighScore
                         {
                             UserId = parsedUserId,
                             Score = score,
                             CreatedAt = DateTime.Now,
-                            PlayerName = $"{userAccount.FirstName} {userAccount.LastName}"
+                            PlayerName = $"{userAccount.FirstName} {userAccount.LastName}",
+                            Country = country,
+                            CountryFlag = countryFlag
                         };
 
                         _context.HighScores.Add(highScore);
                         await _context.SaveChangesAsync();
-
                         System.Console.WriteLine($"✅ Wynik zapisany pomyślnie!");
-                        return Json(new { success = true, message = "Wynik zapisany!", newRecord = lastHighScore == null });
+                        return Json(new { success = true, message = "Wynik zapisany!", newRecord = true });
                     }
-                    else
+
+                    // Jeśli nowy wynik jest lepszy od najlepszego
+                    if (score > personalBest.Score)
                     {
-                        System.Console.WriteLine($"⚠️ Wynik {score} nie jest lepszy niż {lastHighScore.Score}");
-                        return Json(new { success = false, message = $"Twój najlepszy wynik to {lastHighScore.Score}. Spróbuj jeszcze raz!" });
+                        personalBest.Score = score;
+                        personalBest.CreatedAt = DateTime.Now;
+                        personalBest.PlayerName = $"{userAccount.FirstName} {userAccount.LastName}";
+                        personalBest.Country = country;
+                        personalBest.CountryFlag = countryFlag;
+
+                        await _context.SaveChangesAsync();
+                        System.Console.WriteLine($"✅ Nowy Personal Best zapisany!");
+                        return Json(new { success = true, message = "Nowy Personal Best zapisany!", newRecord = false });
                     }
+
+                    // Jeśli nie ma potrzeby aktualizacji rekordu
+                    if (userScores.Count > 1)
+                    {
+                        await _context.SaveChangesAsync();
+                    }
+
+                    System.Console.WriteLine($"⚠️ Wynik {score} nie jest lepszy niż {personalBest.Score}");
+                    return Json(new { success = false, message = $"Twój najlepszy wynik to {personalBest.Score}. Spróbuj jeszcze raz!" });
                 }
                 else
                 {
@@ -98,7 +215,9 @@ namespace Symulator_Nozownika.Controllers
                 Score = score,
                 CreatedAt = DateTime.Now,
                 PlayerName = playerName ?? "Anonimowy gracz",
-                UserId = null
+                UserId = null,
+                Country = null,
+                CountryFlag = null
             };
 
             _context.HighScores.Add(highScore);
@@ -119,7 +238,9 @@ namespace Symulator_Nozownika.Controllers
                     h.Score,
                     h.CreatedAt,
                     PlayerName = h.PlayerName ?? (h.UserAccount != null ? $"{h.UserAccount.FirstName} {h.UserAccount.LastName}" : "Anonimowy"),
-                    h.UserId
+                    h.UserId,
+                    h.Country,
+                    h.CountryFlag
                 })
                 .ToListAsync();
 
@@ -155,7 +276,9 @@ namespace Symulator_Nozownika.Controllers
                     h.Score,
                     h.CreatedAt,
                     PlayerName = h.PlayerName ?? (h.UserAccount != null ? $"{h.UserAccount.FirstName} {h.UserAccount.LastName}" : "Anonimowy"),
-                    h.UserId
+                    h.UserId,
+                    h.Country,
+                    h.CountryFlag
                 })
                 .ToListAsync();
 

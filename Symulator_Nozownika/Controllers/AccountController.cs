@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Symulator_Nozownika.Data;
 using Symulator_Nozownika.Models;
+using System.Net.Http.Json;
 using System.Security.Claims;
 
 namespace Symulator_Nozownika.Controllers
@@ -13,30 +15,70 @@ namespace Symulator_Nozownika.Controllers
     {
         private readonly AppDbContext _context;
 
+        private sealed class CountryApiResponse
+        {
+            public CountryName Name { get; set; } = default!;
+        }
+
+        private sealed class CountryName
+        {
+            public string Common { get; set; } = string.Empty;
+        }
+
         public AccountController(AppDbContext appDbContext)
         {
             _context = appDbContext;
         }
+
+        private async Task<List<SelectListItem>> LoadCountriesAsync()
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                var countries = await httpClient.GetFromJsonAsync<List<CountryApiResponse>>("https://restcountries.com/v3.1/all?fields=name");
+
+                return countries?
+                    .Where(x => !string.IsNullOrWhiteSpace(x.Name?.Common))
+                    .Select(x => x.Name.Common)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .Select(x => new SelectListItem
+                    {
+                        Value = x,
+                        Text = x
+                    })
+                    .ToList()
+                    ?? new List<SelectListItem>();
+            }
+            catch
+            {
+                return new List<SelectListItem>();
+            }
+        }
+
         public IActionResult Index()
         {
             return View(_context.UserAccounts.ToList());
         }
-        public IActionResult Registration()
+
+        public async Task<IActionResult> Registration()
         {
-            return View();
+            ViewBag.Countries = await LoadCountriesAsync();
+            return View(new RegistrationViewModel());
         }
 
         [HttpPost]
-        public IActionResult Registration(RegistrationViewModel model)
+        public async Task<IActionResult> Registration(RegistrationViewModel model)
         {
+            ViewBag.Countries = await LoadCountriesAsync();
+
             if (ModelState.IsValid)
             {
-                // Tutaj można dodać logikę rejestracji użytkownika, np. zapis do bazy danych
-                // Po udanej rejestracji można przekierować użytkownika na inną stronę, np. stronę logowania
                 UserAccount account = new UserAccount();
                 account.Email = model.Email;
                 account.FirstName = model.FirstName;
                 account.LastName = model.LastName;
+                account.Country = model.Country;
                 account.UserName = model.UserName;
                 account.Password = model.Password;
                 try
@@ -46,24 +88,23 @@ namespace Symulator_Nozownika.Controllers
 
                     ModelState.Clear();
                     ViewBag.Message = $"{account.FirstName} {account.LastName} registered succesfully! You may now log in.";
+                    return View(new RegistrationViewModel());
                 }
                 catch (DbUpdateException ex)
                 {
-
                     ModelState.AddModelError("", "An error occurred while saving the user account. Please try again.");
                     return View(model);
                 }
-                return View();
-
-                //return RedirectToAction("Index", "Home");
             }
             return View(model);
         }
+
         public IActionResult Login()
         {
 
             return View();
         }
+
         [HttpPost]
         public IActionResult Login(LoginViewModel model)
         {

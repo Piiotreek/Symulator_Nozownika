@@ -19,5 +19,7 @@ namespace Symulator_Nozownika.Models
         public DateTime CreatedAt { get; set; }
 
         public string? PlayerName { get; set; } // Dla anonimowych graczy
+        public string? Country { get; set; }
+        public string? CountryFlag { get; set; }
     }
 }

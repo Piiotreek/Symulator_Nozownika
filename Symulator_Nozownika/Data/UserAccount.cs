@@ -14,6 +14,8 @@ namespace Symulator_Nozownika.Models
         [Required(ErrorMessage = "Email is Required")]
         [DataType(DataType.EmailAddress)]
         public string Email { get; set; }
+        [Required(ErrorMessage = "Country is Required")]
+        public string Country { get; set; }
         [Required(ErrorMessage = "Username is Required")]
         public string UserName { get; set; }
         [Required(ErrorMessage = "Password is Required")]
