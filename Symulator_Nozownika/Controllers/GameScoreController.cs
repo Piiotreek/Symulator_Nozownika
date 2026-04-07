@@ -284,5 +284,54 @@ namespace Symulator_Nozownika.Controllers
 
             return View(topScores);
         }
+
+        [HttpGet]
+        [Route("api/highscores")]
+        public async Task<IActionResult> GetHighscoresApi(string? sortBy = "score", string? direction = "desc", int limit = 50)
+        {
+            IQueryable<HighScore> query = _context.HighScores;
+
+            // Sort
+            query = sortBy?.ToLower() switch
+            {
+                "playerName" or "playername" => direction?.ToLower() == "asc"
+                    ? query.OrderBy(h => h.PlayerName)
+                    : query.OrderByDescending(h => h.PlayerName),
+                "country" => direction?.ToLower() == "asc"
+                    ? query.OrderBy(h => h.Country)
+                    : query.OrderByDescending(h => h.Country),
+                "date" or "createdat" => direction?.ToLower() == "asc"
+                    ? query.OrderBy(h => h.CreatedAt)
+                    : query.OrderByDescending(h => h.CreatedAt),
+                _ => direction?.ToLower() == "asc"
+                    ? query.OrderBy(h => h.Score)
+                    : query.OrderByDescending(h => h.Score)
+            };
+
+            var highscoresData = await query
+                .Take(Math.Min(limit, 500))
+                .ToListAsync();  // Wykonaj zapytanie do DB
+
+            var highscores = highscoresData
+                .Select((h, index) => new  // Oblicz indeks na kliencie
+                {
+                    position = index + 1,
+                    h.Id,
+                    h.Score,
+                    h.CreatedAt,
+                    PlayerName = h.PlayerName ?? (h.UserAccount != null ? $"{h.UserAccount.FirstName} {h.UserAccount.LastName}" : "Anonimowy"),
+                    h.UserId,
+                    h.Country,
+                    h.CountryFlag
+                })
+                .ToList();
+
+            return Json(new
+            {
+                success = true,
+                count = highscores.Count,
+                data = highscores
+            });
+        }
     }
 }
