@@ -262,8 +262,26 @@ namespace Symulator_Nozownika.Controllers
         [HttpGet]
         public async Task<IActionResult> SelectWeapon()
         {
-            // Pobieramy listę wszystkich noży/toporów z bazy danych
+            var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
+            var userId = 0;
+            
+            if (!string.IsNullOrEmpty(userName))
+            {
+                var user = await _context.UserAccounts.FirstOrDefaultAsync(u => u.UserName == userName);
+                if (user != null) userId = user.Id;
+            }
+
+            // Pobierz wszystkie bronie
             var allWeapons = await _context.Weapons.ToListAsync();
+            
+            // Pobierz ulubione bronie użytkownika
+            var favoriteWeaponIds = await _context.FavoriteWeapons
+                .Where(f => f.UserId == userId)
+                .Select(f => f.WeaponId)
+                .ToListAsync();
+
+            ViewBag.FavoriteWeaponIds = favoriteWeaponIds;
+            
             return View(allWeapons);
         }
         [HttpPost]
@@ -288,6 +306,58 @@ namespace Symulator_Nozownika.Controllers
             }
 
             return RedirectToAction("SecurePage");
+        }
+        [HttpPost]
+        public async Task<IActionResult> ToggleFavorite([FromBody] FavoriteRequest request)
+        {
+            var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
+            
+            if (string.IsNullOrEmpty(userName))
+            {
+                return Json(new { success = false, message = "Musisz być zalogowany" });
+            }
+
+            var user = await _context.UserAccounts.FirstOrDefaultAsync(u => u.UserName == userName);
+            if (user == null)
+            {
+                return Json(new { success = false, message = "Użytkownik nie znaleziony" });
+            }
+
+            // WALIDACJA: Sprawdź czy broń istnieje
+            var weaponExists = await _context.Weapons.AnyAsync(w => w.Id == request.WeaponId);
+            if (!weaponExists)
+            {
+                return Json(new { success = false, message = $"Broń o ID {request.WeaponId} nie istnieje" });
+            }
+
+            var favorite = await _context.FavoriteWeapons
+                .FirstOrDefaultAsync(f => f.UserId == user.Id && f.WeaponId == request.WeaponId);
+
+            if (favorite != null)
+            {
+                // Usuń z ulubionych
+                _context.FavoriteWeapons.Remove(favorite);
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, isFavorite = false });
+            }
+            else
+            {
+                // Dodaj do ulubionych
+                _context.FavoriteWeapons.Add(new FavoriteWeapon
+                {
+                    UserId = user.Id,
+                    WeaponId = request.WeaponId,
+                    MarkedAt = DateTime.Now
+                });
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, isFavorite = true });
+            }
+        }
+
+        // Dodaj tę klasę na końcu AccountController (przed zamykającym })
+        public class FavoriteRequest
+        {
+            public int WeaponId { get; set; }
         }
     }
 }

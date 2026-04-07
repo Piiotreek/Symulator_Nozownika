@@ -29,69 +29,132 @@
 
             @if (Model != null && Model.Any())
             {
-                <table class="table table-dark table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th style="width: 10%;">Place</th>
-                            <th style="width: 35%;">Player</th>
-                            <th style="width: 20%;">Country</th>
-                            <th style="width: 15%;">Score</th>
-                            <th style="width: 20%;">Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @{
-                            int position = 1;
-                            foreach (var score in Model)
-                            {
-                                var country = (string?)score.Country;
-                                var countryFlag = NormalizeFlag((string?)score.CountryFlag);
+                <!-- Wersja desktop -->
+                <div class="table-responsive d-none d-md-block">
+                    <table class="table table-dark table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">Place</th>
+                                <th style="width: 35%;">Player</th>
+                                <th style="width: 20%;">Country</th>
+                                <th style="width: 15%;">Score</th>
+                                <th style="width: 20%;">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int position = 1;
+                                foreach (var score in Model)
+                                {
+                                    var country = (string?)score.Country;
+                                    var countryFlag = NormalizeFlag((string?)score.CountryFlag);
 
-                                <tr>
-                                    <td>
-                                        @if (position == 1)
-                                        {
-                                            <span class="badge bg-warning text-dark">🥇 @position</span>
-                                        }
-                                        else if (position == 2)
-                                        {
-                                            <span class="badge bg-secondary">🥈 @position</span>
-                                        }
-                                        else if (position == 3)
-                                        {
-                                            <span class="badge bg-danger">🥉 @position</span>
-                                        }
-                                        else
-                                        {
-                                            <span>@position</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <strong>@score.PlayerName</strong>
-                                    </td>
-                                    <td>
-                                        @if (!string.IsNullOrWhiteSpace(country))
-                                        {
-                                            <span style="margin-right:6px;font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;">@countryFlag</span>
-                                            <span>@country</span>
-                                        }
-                                        else
-                                        {
-                                            <span>-</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info">@score.Score pkt</span>
-                                    </td>
-                                    <td>
-                                        @(((DateTime)score.CreatedAt).ToString("dd.MM.yyyy HH:mm:ss"))
-                                    </td>
-                                </tr>
-                                position++;
+                                    <tr>
+                                        <td>
+                                            @if (position == 1)
+                                            {
+                                                <span class="badge bg-warning text-dark">🥇 @position</span>
+                                            }
+                                            else if (position == 2)
+                                            {
+                                                <span class="badge bg-secondary">🥈 @position</span>
+                                            }
+                                            else if (position == 3)
+                                            {
+                                                <span class="badge bg-danger">🥉 @position</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@position</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <strong>@score.PlayerName</strong>
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrWhiteSpace(country))
+                                            {
+                                                <span style="margin-right:6px;font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;">@countryFlag</span>
+                                                <span>@country</span>
+                                            }
+                                            else
+                                            {
+                                                <span>-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">@score.Score pkt</span>
+                                        </td>
+                                        <td>
+                                            @(((DateTime)score.CreatedAt).ToString("dd.MM.yyyy HH:mm:ss"))
+                                        </td>
+                                    </tr>
+                                    position++;
+                                }
                             }
-                        }
-                    </tbody>
-                </table>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Wersja mobile - kompaktowa tabela -->
+                <div class="table-responsive d-md-none">
+                    <table class="table table-dark table-striped table-hover table-sm mobile-ranking">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Player</th>
+                                <th>Score</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int mobilePosition = 1;
+                                foreach (var score in Model)
+                                {
+                                    var country = (string?)score.Country;
+                                    var countryFlag = NormalizeFlag((string?)score.CountryFlag);
+
+                                    <tr>
+                                        <td>
+                                            @if (mobilePosition == 1)
+                                            {
+                                                <span class="badge bg-warning text-dark">🥇</span>
+                                            }
+                                            else if (mobilePosition == 2)
+                                            {
+                                                <span class="badge bg-secondary">🥈</span>
+                                            }
+                                            else if (mobilePosition == 3)
+                                            {
+                                                <span class="badge bg-danger">🥉</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="small">@mobilePosition</span>
+                                            }
+                                        </td>
+                                        <td class="mobile-player">
+                                            <div><strong>@score.PlayerName</strong></div>
+                                            <div class="small text-muted">
+                                                @if (!string.IsNullOrWhiteSpace(country))
+                                                {
+                                                    <span style="font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;">@countryFlag</span>
+                                                    <span>@country</span>
+                                                }
+                                                <br />
+                                                <span>@(((DateTime)score.CreatedAt).ToString("dd.MM.yyyy HH:mm"))</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">@score.Score</span>
+                                        </td>
+                                    </tr>
+                                    mobilePosition++;
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
             }
             else
             {
@@ -100,8 +163,8 @@
                 </div>
             }
 
-            <div class="d-flex justify-content-center gap-2 mt-4">
-                <a asp-controller="Account" asp-action="SelectWeapon" class="btn btn-warning">Play game</a>
+            <div class="text-center mt-4">
+                <a asp-controller="Account" asp-action="SecurePage" class="btn btn-warning btn-lg">Play game</a>
             </div>
         </div>
     </div>

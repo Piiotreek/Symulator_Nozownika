@@ -13,6 +13,7 @@ namespace Symulator_Nozownika.Data
         public DbSet<UserAccount> UserAccounts { get; set; }
         public DbSet<Weapon> Weapons { get; set; } //weapons
         public DbSet<HighScore> HighScores { get; set; }
+        public DbSet<FavoriteWeapon> FavoriteWeapons { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

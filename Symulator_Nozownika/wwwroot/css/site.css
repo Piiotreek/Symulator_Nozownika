@@ -68,3 +68,67 @@ body {
     margin-right: 150px;
     padding-left: 20px;
 }
+
+/* Biały background dla rozwiniętego menu na mobile */
+.navbar-collapse {
+    background-color: white !important;
+    padding: 10px;
+}
+
+/* Mniejszy tytuł na mobile */
+@media (max-width: 576px) {
+    .mobile-brand {
+        font-size: 0.9rem !important;
+        max-width: 140px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .mobile-hello {
+        font-size: 0.85rem;
+    }
+}
+
+/* Zapewnienie, że rozwinięte menu nie nakłada się */
+@media (max-width: 576px) {
+    .navbar-collapse.show,
+    .navbar-collapse.collapsing {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+}
+
+/* Responsywna tabela rankingu na mobile */
+@media (max-width: 768px) {
+    .mobile-ranking {
+        font-size: 0.85rem;
+    }
+    
+    .mobile-ranking td {
+        padding: 0.5rem 0.3rem;
+        vertical-align: middle;
+    }
+    
+    .mobile-player {
+        max-width: 150px;
+    }
+    
+    .mobile-ranking .badge {
+        font-size: 0.75rem;
+    }
+    
+    /* Heading dla rankingu mniejszy na mobile */
+    h1 {
+        font-size: 1.5rem !important;
+    }
+}
+
+/* Lepsze scrollowanie na małych ekranach */
+.table-responsive {
+    -webkit-overflow-scrolling: touch;
+}
