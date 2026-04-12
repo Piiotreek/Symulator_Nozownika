@@ -11,20 +11,30 @@ namespace Symulator_Nozownika.Data
         }
 
         public DbSet<UserAccount> UserAccounts { get; set; }
-        public DbSet<Weapon> Weapons { get; set; } //weapons
+        public DbSet<Weapon> Weapons { get; set; }
         public DbSet<HighScore> HighScores { get; set; }
         public DbSet<FavoriteWeapon> FavoriteWeapons { get; set; }
+        public DbSet<UserStatistics> UserStatistics { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Relacja HighScore -> UserAccount
             modelBuilder.Entity<HighScore>()
                 .HasOne(h => h.UserAccount)
                 .WithMany()
                 .HasForeignKey(h => h.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserStatistics>()
+                .HasOne(us => us.User)
+                .WithOne(u => u.Statistics)
+                .HasForeignKey<UserStatistics>(us => us.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserStatistics>()
+                .HasIndex(us => us.UserId)
+                .IsUnique();
 
             modelBuilder.Entity<Weapon>().HasData(
                 new Weapon { Id = 1, Name = "Kitchen Knife", Damage = 10, Cooldown = 0.4, ImageUrl = "/images/knife.png" },

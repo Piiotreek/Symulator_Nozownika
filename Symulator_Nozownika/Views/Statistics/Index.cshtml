@@ -1,0 +1,85 @@
+@model Symulator_Nozownika.Models.UserStatistics
+
+@{
+    ViewData["Title"] = "Twoje Statystyki";
+    var avgScore = Model.TotalGamesPlayed > 0 ? (double)Model.TotalScore / Model.TotalGamesPlayed : 0;
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <h1 class="mb-4">📊 Twoje Statystyki</h1>
+            <p class="lead">Witaj, <strong>@Model.User.UserName</strong>!</p>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">🎮 Rozegranych Gier</h5>
+                            <h2 class="display-4">@Model.TotalGamesPlayed</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">📊 Łączny Wynik</h5>
+                            <h2 class="display-4">@Model.TotalScore</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">🏆 Najwyższy Wynik</h5>
+                            <h2 class="display-4">@Model.HighestScore</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-8 mx-auto">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">🔥 Serie i Czas Gry</h5>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Obecna seria:</span>
+                                    <strong class="text-warning">@Model.CurrentStreak</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Najdłuższa seria:</span>
+                                    <strong class="text-warning">@Model.LongestStreak</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Średni wynik:</span>
+                                    <strong>@avgScore.ToString("F0")</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Łączny czas gry:</span>
+                                    <strong>@Model.TotalPlayTime.ToString(@"hh\:mm\:ss")</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Ostatnio graliśmy:</span>
+                                    <strong>@Model.LastPlayedAt.ToString("dd.MM.yyyy HH:mm")</strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a asp-controller="Statistics" asp-action="Leaderboard" class="btn btn-primary btn-lg">
+                    🏆 Zobacz Ranking
+                </a>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-secondary btn-lg">
+                    👤 Moje Konto
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

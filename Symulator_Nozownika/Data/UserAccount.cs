@@ -21,12 +21,17 @@ namespace Symulator_Nozownika.Models
         [Required(ErrorMessage = "Password is Required")]
         [DataType(DataType.Password)]
         public string Password { get; set; }
+        
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         // Klucz obcy
         public int? SelectedWeaponId { get; set; }
 
-        // WŁAŚCIWOŚĆ NAWIGACYJNA - Dodaj to:
+        // WŁAŚCIWOŚĆ NAWIGACYJNA - Broń
         [ForeignKey("SelectedWeaponId")]
         public virtual Weapon? SelectedWeapon { get; set; }
+
+        // WŁAŚCIWOŚĆ NAWIGACYJNA - Statystyki (DODAJ TO!)
+        public virtual UserStatistics? Statistics { get; set; }
     }
 }

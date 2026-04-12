@@ -11,6 +11,8 @@ namespace Symulator_Nozownika.Controllers
     {
         public int Score { get; set; }
         public string? PlayerName { get; set; }
+        public int PlayTimeSeconds { get; set; }
+        public bool Won { get; set; }
     }
 
     public class GameScoreController : Controller
@@ -111,24 +113,65 @@ namespace Symulator_Nozownika.Controllers
             return containsMatch?.Flag;
         }
 
+        private async Task UpdateUserStatisticsAsync(int userId, GameScoreRequest request)
+        {
+            var statistics = await _context.UserStatistics
+                .FirstOrDefaultAsync(s => s.UserId == userId);
+
+            if (statistics == null)
+            {
+                statistics = new UserStatistics
+                {
+                    UserId = userId,
+                    TotalGamesPlayed = 0,
+                    TotalScore = 0,
+                    HighestScore = 0,
+                    TotalPlayTime = TimeSpan.Zero,
+                    CurrentStreak = 0,
+                    LongestStreak = 0,
+                    LastPlayedAt = DateTime.Now
+                };
+
+                _context.UserStatistics.Add(statistics);
+            }
+
+            var score = Math.Max(0, request.Score);
+            var playTimeSeconds = Math.Max(0, request.PlayTimeSeconds);
+
+            statistics.TotalGamesPlayed += 1;
+            statistics.TotalScore += score;
+            statistics.HighestScore = Math.Max(statistics.HighestScore, score);
+            statistics.TotalPlayTime += TimeSpan.FromSeconds(playTimeSeconds);
+            statistics.LastPlayedAt = DateTime.Now;
+
+            if (request.Won)
+            {
+                statistics.CurrentStreak++;
+
+                if (statistics.CurrentStreak > statistics.LongestStreak)
+                {
+                    statistics.LongestStreak = statistics.CurrentStreak;
+                }
+            }
+            else
+            {
+                statistics.CurrentStreak = 0;
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> SaveScore([FromBody] GameScoreRequest request)
         {
             var score = request?.Score ?? 0;
-            System.Console.WriteLine($"🎮 SaveScore() wywoływana z wynikiem: {score}");
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            System.Console.WriteLine($"👤 UserId z Claims: {userId}");
 
-            // Jeśli użytkownik jest zalogowany
             if (!string.IsNullOrEmpty(userId) && int.TryParse(userId, out int parsedUserId))
             {
-                System.Console.WriteLine($"✅ Użytkownik zalogowany, ID: {parsedUserId}");
-
                 var userAccount = await _context.UserAccounts.FindAsync(parsedUserId);
                 if (userAccount != null)
                 {
-                    System.Console.WriteLine($"👤 Znaleziono użytkownika: {userAccount.FirstName} {userAccount.LastName}");
+                    await UpdateUserStatisticsAsync(parsedUserId, request);
 
                     var userScores = await _context.HighScores
                         .Where(h => h.UserId == parsedUserId)
@@ -138,7 +181,6 @@ namespace Symulator_Nozownika.Controllers
 
                     var personalBest = userScores.FirstOrDefault();
 
-                    // Zachowaj tylko jeden najwyższy wynik
                     if (userScores.Count > 1)
                     {
                         _context.HighScores.RemoveRange(userScores.Skip(1));

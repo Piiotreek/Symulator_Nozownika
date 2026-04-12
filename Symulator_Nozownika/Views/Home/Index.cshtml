@@ -1,1 +1,61 @@
-﻿
+﻿@model Symulator_Nozownika.Models.UserAccount
+
+@{
+    ViewData["Title"] = "Moje Konto";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">👤 Moje Konto</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Informacje o koncie</h5>
+                            <dl class="row">
+                                <dt class="col-sm-4">Nazwa użytkownika:</dt>
+                                <dd class="col-sm-8"><strong>@Model.UserName</strong></dd>
+
+                                <dt class="col-sm-4">Email:</dt>
+                                <dd class="col-sm-8">@Model.Email</dd>
+
+                                <dt class="col-sm-4">Data utworzenia:</dt>
+                                <dd class="col-sm-8">@Model.CreatedAt.ToString("dd.MM.yyyy")</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            @if (Model.Statistics != null)
+                            {
+                                <h5>Szybki przegląd statystyk</h5>
+                                <div class="alert alert-info">
+                                    <p class="mb-1">🎮 Gry: <strong>@Model.Statistics.TotalGamesPlayed</strong></p>
+                                    <p class="mb-1">🏆 Najwyższy wynik: <strong>@Model.Statistics.HighestScore</strong></p>
+                                    <p class="mb-0">📊 Łączny wynik: <strong>@Model.Statistics.TotalScore</strong></p>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted">Brak statystyk - zacznij grać!</p>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a asp-controller="Statistics" asp-action="Index" class="btn btn-primary btn-lg">
+                            📊 Zobacz Pełne Statystyki
+                        </a>
+                        <a asp-controller="Statistics" asp-action="Leaderboard" class="btn btn-warning btn-lg">
+                            🏆 Ranking
+                        </a>
+                        <a asp-controller="Account" asp-action="ChangePassword" class="btn btn-secondary">
+                            🔒 Zmień Hasło
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

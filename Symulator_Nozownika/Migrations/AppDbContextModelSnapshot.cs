@@ -93,6 +93,9 @@ namespace Symulator_Nozownika.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -121,6 +124,46 @@ namespace Symulator_Nozownika.Migrations
                     b.HasIndex("SelectedWeaponId");
 
                     b.ToTable("UserAccounts");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.UserStatistics", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CurrentStreak")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HighestScore")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastPlayedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("LongestStreak")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalGamesPlayed")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("TotalPlayTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("TotalScore")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserStatistics");
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.Weapon", b =>
@@ -268,6 +311,22 @@ namespace Symulator_Nozownika.Migrations
                         .HasForeignKey("SelectedWeaponId");
 
                     b.Navigation("SelectedWeapon");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.UserStatistics", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
+                        .WithOne("Statistics")
+                        .HasForeignKey("Symulator_Nozownika.Models.UserStatistics", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.UserAccount", b =>
+                {
+                    b.Navigation("Statistics");
                 });
 #pragma warning restore 612, 618
         }

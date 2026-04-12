@@ -1,21 +1,43 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Symulator_Nozownika.Data;
 using Symulator_Nozownika.Models;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace Symulator_Nozownika.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly AppDbContext _context;
+
+        public HomeController(AppDbContext context)
         {
-            return View();
+            _context = context;
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Index()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            
+            var user = await _context.UserAccounts
+                .Include(u => u.Statistics)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            return View(user);
         }
 
         public IActionResult Privacy()
         {
             return View();
         }
-       
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
