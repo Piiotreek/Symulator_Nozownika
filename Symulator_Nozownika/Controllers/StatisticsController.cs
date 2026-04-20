@@ -67,6 +67,19 @@ namespace Symulator_Nozownika.Controllers
             return View(topUsers);
         }
 
+        // GET: Statistics/SavedScores
+        public async Task<IActionResult> SavedScores()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var saved = await _context.SavedScores
+                .Where(s => s.UserId == userId)
+                .OrderByDescending(s => s.Score)
+                .ToListAsync();
+
+            return View(saved);
+        }
+
         [HttpPost]
         public async Task<IActionResult> UpdateStatistics([FromBody] GameResult? result)
         {

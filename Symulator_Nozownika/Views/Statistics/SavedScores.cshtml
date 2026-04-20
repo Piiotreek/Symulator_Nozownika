@@ -1,0 +1,73 @@
+@model IEnumerable<Symulator_Nozownika.Models.SavedScore>
+
+@{
+    ViewData["Title"] = "Ulubione Wyniki";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <h1 class="mb-4">📌 Ulubione Wyniki</h1>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">
+                    Nie masz jeszcze żadnych przypiętych wyników. Przypnij wynik po zakończeniu gry!
+                </div>
+            }
+            else
+            {
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Wynik</th>
+                            <th>Osiągnięty</th>
+                            <th>Notatka</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{int rank = 1;}
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@rank++</td>
+                                <td><strong>@item.Score</strong></td>
+                                <td>@item.AchievedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>@(item.Note ?? "-")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-danger"
+                                            onclick="unpinScore(@item.Id, this)">
+                                        Usuń
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+
+            <a asp-controller="Statistics" asp-action="Index" class="btn btn-secondary mt-2">← Wróć do statystyk</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function unpinScore(id, btn) {
+        if (!confirm('Usunąć ten wynik z ulubionych?')) return;
+
+        const response = await fetch('/GameScore/UnpinScore', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            btn.closest('tr').remove();
+        } else {
+            alert(result.message);
+        }
+    }
+</script>

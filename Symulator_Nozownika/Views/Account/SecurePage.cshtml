@@ -55,6 +55,27 @@
     @Html.AntiForgeryToken()
 </div>
 
+<!-- Modal: Przypnij wynik -->
+<div class="modal fade" id="pinScoreModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📌 Przypiąć wynik?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Twój wynik: <strong id="pin-score-value"></strong></p>
+                <label for="pin-note" class="form-label">Notatka (opcjonalnie):</label>
+                <input type="text" id="pin-note" class="form-control" maxlength="100" placeholder="np. rekord z kataną" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Pomiń</button>
+                <button type="button" class="btn btn-warning" onclick="confirmPin()">📌 Przypnij</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     // Dane z C# przelane do JS
     const weaponDamageBase = @weaponDmg;
@@ -107,7 +128,32 @@
         setTimeout(() => {
             console.log(`📤 Wysyłam wynik: ${finalScore}`);
             submitGameScore(finalScore);
+            showPinModal(finalScore);
         }, 100);
+    }
+
+    let _pendingPinScore = 0;
+    function showPinModal(score) {
+        _pendingPinScore = score;
+        document.getElementById('pin-score-value').innerText = score;
+        document.getElementById('pin-note').value = '';
+        const modal = new bootstrap.Modal(document.getElementById('pinScoreModal'));
+        modal.show();
+    }
+
+    async function confirmPin() {
+        const note = document.getElementById('pin-note').value;
+        bootstrap.Modal.getInstance(document.getElementById('pinScoreModal')).hide();
+
+        const response = await fetch('/GameScore/PinScore', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ score: _pendingPinScore, note })
+        });
+        const result = await response.json();
+        if (result.success) {
+            alert('📌 Wynik przypiąty do ulubionych!');
+        }
     }
 
     function setupOrganListeners() {

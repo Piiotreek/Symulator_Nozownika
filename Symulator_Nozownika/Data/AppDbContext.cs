@@ -15,6 +15,7 @@ namespace Symulator_Nozownika.Data
         public DbSet<HighScore> HighScores { get; set; }
         public DbSet<FavoriteWeapon> FavoriteWeapons { get; set; }
         public DbSet<UserStatistics> UserStatistics { get; set; }
+        public DbSet<SavedScore> SavedScores { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -35,6 +36,12 @@ namespace Symulator_Nozownika.Data
             modelBuilder.Entity<UserStatistics>()
                 .HasIndex(us => us.UserId)
                 .IsUnique();
+
+            modelBuilder.Entity<SavedScore>()
+                .HasOne(ss => ss.User)
+                .WithMany()
+                .HasForeignKey(ss => ss.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Weapon>().HasData(
                 new Weapon { Id = 1, Name = "Kitchen Knife", Damage = 10, Cooldown = 0.4, ImageUrl = "/images/knife.png" },

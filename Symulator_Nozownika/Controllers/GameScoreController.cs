@@ -118,6 +118,8 @@ namespace Symulator_Nozownika.Controllers
             var statistics = await _context.UserStatistics
                 .FirstOrDefaultAsync(s => s.UserId == userId);
 
+            var today = DateTime.Today;
+
             if (statistics == null)
             {
                 statistics = new UserStatistics
@@ -127,12 +129,35 @@ namespace Symulator_Nozownika.Controllers
                     TotalScore = 0,
                     HighestScore = 0,
                     TotalPlayTime = TimeSpan.Zero,
-                    CurrentStreak = 0,
-                    LongestStreak = 0,
+                    CurrentStreak = 1,
+                    LongestStreak = 1,
                     LastPlayedAt = DateTime.Now
                 };
 
                 _context.UserStatistics.Add(statistics);
+            }
+            else
+            {
+                var lastPlayed = statistics.LastPlayedAt.Date;
+
+                if (lastPlayed == today)
+                {
+                    // Już grał dziś – streak bez zmian
+                }
+                else if (lastPlayed == today.AddDays(-1))
+                {
+                    // Grał wczoraj – kontynuacja streaku
+                    statistics.CurrentStreak++;
+                    if (statistics.CurrentStreak > statistics.LongestStreak)
+                        statistics.LongestStreak = statistics.CurrentStreak;
+                }
+                else
+                {
+                    // Przerwa dłuższa niż 1 dzień – reset
+                    statistics.CurrentStreak = 1;
+                    if (statistics.LongestStreak < 1)
+                        statistics.LongestStreak = 1;
+                }
             }
 
             var score = Math.Max(0, request.Score);
@@ -143,20 +168,6 @@ namespace Symulator_Nozownika.Controllers
             statistics.HighestScore = Math.Max(statistics.HighestScore, score);
             statistics.TotalPlayTime += TimeSpan.FromSeconds(playTimeSeconds);
             statistics.LastPlayedAt = DateTime.Now;
-
-            if (request.Won)
-            {
-                statistics.CurrentStreak++;
-
-                if (statistics.CurrentStreak > statistics.LongestStreak)
-                {
-                    statistics.LongestStreak = statistics.CurrentStreak;
-                }
-            }
-            else
-            {
-                statistics.CurrentStreak = 0;
-            }
         }
 
         [HttpPost]
@@ -375,5 +386,59 @@ namespace Symulator_Nozownika.Controllers
                 data = highscores
             });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> PinScore([FromBody] PinScoreRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int parsedUserId))
+                return Json(new { success = false, message = "Musisz być zalogowany." });
+
+            var saved = new SavedScore
+            {
+                UserId = parsedUserId,
+                Score = request.Score,
+                AchievedAt = DateTime.Now,
+                SavedAt = DateTime.Now,
+                Note = request.Note
+            };
+
+            _context.SavedScores.Add(saved);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Wynik zapisany do ulubionych!", id = saved.Id });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UnpinScore([FromBody] UnpinScoreRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int parsedUserId))
+                return Json(new { success = false, message = "Musisz być zalogowany." });
+
+            var saved = await _context.SavedScores
+                .FirstOrDefaultAsync(s => s.Id == request.Id && s.UserId == parsedUserId);
+
+            if (saved == null)
+                return Json(new { success = false, message = "Nie znaleziono wyniku." });
+
+            _context.SavedScores.Remove(saved);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Wynik usunięty z ulubionych." });
+        }
     }
+}
+
+public class PinScoreRequest
+{
+    public int Score { get; set; }
+    public string? Note { get; set; }
+}
+
+public class UnpinScoreRequest
+{
+    public int Id { get; set; }
 }
