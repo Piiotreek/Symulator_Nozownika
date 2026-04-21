@@ -233,11 +233,8 @@ namespace Symulator_Nozownika.Controllers
                         return Json(new { success = true, message = "Nowy Personal Best zapisany!", newRecord = false });
                     }
 
-                    // Jeśli nie ma potrzeby aktualizacji rekordu
-                    if (userScores.Count > 1)
-                    {
-                        await _context.SaveChangesAsync();
-                    }
+                    // Zapisz statystyki (np. streak) nawet jeśli wynik nie jest nowym rekordem
+                    await _context.SaveChangesAsync();
 
                     System.Console.WriteLine($"⚠️ Wynik {score} nie jest lepszy niż {personalBest.Score}");
                     return Json(new { success = false, message = $"Twój najlepszy wynik to {personalBest.Score}. Spróbuj jeszcze raz!" });
