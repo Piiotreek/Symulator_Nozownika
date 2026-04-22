@@ -35,7 +35,14 @@
 
                     <tr class="@(rank <= 3 ? "table-warning" : "")">
                         <td><strong>@medal @rank</strong></td>
-                        <td>@stat.User.UserName</td>
+                        <td>
+                            @{
+                                var lbAvatar = stat.User?.AvatarPath;
+                                var lbAvatarSrc = string.IsNullOrEmpty(lbAvatar) ? "/images/default-avatar.svg" : lbAvatar;
+                            }
+                            <img src="@lbAvatarSrc" alt="avatar" class="rounded-circle me-2" style="width:32px;height:32px;object-fit:cover;border:1px solid #ffc107;" />
+                            @stat.User.UserName
+                        </td>
                         <td><strong class="text-warning">@stat.HighestScore</strong></td>
                         <td>@stat.TotalScore.ToString("N0")</td>
                         <td>@stat.TotalGamesPlayed</td>

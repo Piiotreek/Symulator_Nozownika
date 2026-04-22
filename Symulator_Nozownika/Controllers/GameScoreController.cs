@@ -318,6 +318,7 @@ namespace Symulator_Nozownika.Controllers
         public async Task<IActionResult> Highscores()
         {
             var topScores = await _context.HighScores
+                .Include(h => h.UserAccount)
                 .OrderByDescending(h => h.Score)
                 .Take(50)
                 .Select(h => new
@@ -328,7 +329,8 @@ namespace Symulator_Nozownika.Controllers
                     PlayerName = h.PlayerName ?? (h.UserAccount != null ? $"{h.UserAccount.FirstName} {h.UserAccount.LastName}" : "Anonimowy"),
                     h.UserId,
                     h.Country,
-                    h.CountryFlag
+                    h.CountryFlag,
+                    AvatarPath = h.UserAccount != null ? h.UserAccount.AvatarPath : null
                 })
                 .ToListAsync();
 
@@ -359,6 +361,7 @@ namespace Symulator_Nozownika.Controllers
             };
 
             var highscoresData = await query
+                .Include(h => h.UserAccount)
                 .Take(Math.Min(limit, 500))
                 .ToListAsync();  // Wykonaj zapytanie do DB
 
@@ -372,7 +375,8 @@ namespace Symulator_Nozownika.Controllers
                     PlayerName = h.PlayerName ?? (h.UserAccount != null ? $"{h.UserAccount.FirstName} {h.UserAccount.LastName}" : "Anonimowy"),
                     h.UserId,
                     h.Country,
-                    h.CountryFlag
+                    h.CountryFlag,
+                    AvatarPath = h.UserAccount?.AvatarPath
                 })
                 .ToList();
 

@@ -33,5 +33,8 @@ namespace Symulator_Nozownika.Models
 
         // WŁAŚCIWOŚĆ NAWIGACYJNA - Statystyki (DODAJ TO!)
         public virtual UserStatistics? Statistics { get; set; }
+
+        // Ścieżka do awatara
+        public string? AvatarPath { get; set; }
     }
 }

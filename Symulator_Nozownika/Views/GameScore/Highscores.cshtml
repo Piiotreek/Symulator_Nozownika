@@ -118,6 +118,11 @@
                                             }
                                         </td>
                                         <td data-value="@score.PlayerName">
+                                            @{
+                                                var hsAvatar = (string?)score.AvatarPath;
+                                                var hsAvatarSrc = string.IsNullOrEmpty(hsAvatar) ? "/images/default-avatar.svg" : hsAvatar;
+                                            }
+                                            <img src="@hsAvatarSrc" alt="avatar" class="rounded-circle me-2" style="width:32px;height:32px;object-fit:cover;border:1px solid #ffc107;" />
                                             <strong>@score.PlayerName</strong>
                                         </td>
                                         <td data-value="@country">
@@ -192,15 +197,24 @@
                                             }
                                         </td>
                                         <td class="mobile-player" data-value="@score.PlayerName">
-                                            <div><strong>@score.PlayerName</strong></div>
-                                            <div class="small text-muted">
-                                                @if (!string.IsNullOrWhiteSpace(country))
-                                                {
-                                                    <span style="font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;">@countryFlag</span>
-                                                    <span>@country</span>
-                                                }
-                                                <br />
-                                                <span>@(((DateTime)score.CreatedAt).ToString("dd.MM.yyyy HH:mm"))</span>
+                                            @{
+                                                var mAvatar = (string?)score.AvatarPath;
+                                                var mAvatarSrc = string.IsNullOrEmpty(mAvatar) ? "/images/default-avatar.svg" : mAvatar;
+                                            }
+                                            <div class="d-flex align-items-center gap-2">
+                                                <img src="@mAvatarSrc" alt="avatar" class="rounded-circle" style="width:28px;height:28px;object-fit:cover;border:1px solid #ffc107;" />
+                                                <div>
+                                                    <div><strong>@score.PlayerName</strong></div>
+                                                    <div class="small text-muted">
+                                                        @if (!string.IsNullOrWhiteSpace(country))
+                                                        {
+                                                            <span style="font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;">@countryFlag</span>
+                                                            <span>@country</span>
+                                                        }
+                                                        <br />
+                                                        <span>@(((DateTime)score.CreatedAt).ToString("dd.MM.yyyy HH:mm"))</span>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </td>
                                         <td data-value="@score.Score">

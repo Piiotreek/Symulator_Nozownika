@@ -359,5 +359,68 @@ namespace Symulator_Nozownika.Controllers
         {
             public int WeaponId { get; set; }
         }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> UploadAvatar(IFormFile avatarFile, string? returnUrl = null)
+        {
+            var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
+            if (string.IsNullOrEmpty(userName))
+                return RedirectToAction("Login");
+
+            var user = await _context.UserAccounts.FirstOrDefaultAsync(u => u.UserName == userName);
+            if (user == null)
+                return RedirectToAction("Login");
+
+            if (avatarFile == null || avatarFile.Length == 0)
+            {
+                TempData["AvatarError"] = "Nie wybrano pliku.";
+                return returnUrl == "account"
+                    ? RedirectToAction("Index", "Home")
+                    : RedirectToAction("SecurePage");
+            }
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+            var extension = Path.GetExtension(avatarFile.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension))
+            {
+                TempData["AvatarError"] = "Dozwolone formaty: jpg, jpeg, png, gif.";
+                return returnUrl == "account"
+                    ? RedirectToAction("Index", "Home")
+                    : RedirectToAction("SecurePage");
+            }
+
+            if (avatarFile.Length > 2 * 1024 * 1024)
+            {
+                TempData["AvatarError"] = "Plik jest za duży. Maksymalny rozmiar to 2 MB.";
+                return returnUrl == "account"
+                    ? RedirectToAction("Index", "Home")
+                    : RedirectToAction("SecurePage");
+            }
+
+            // Usuń stary awatar, jeśli istnieje
+            if (!string.IsNullOrEmpty(user.AvatarPath))
+            {
+                var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.AvatarPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+                if (System.IO.File.Exists(oldPath))
+                    System.IO.File.Delete(oldPath);
+            }
+
+            var fileName = $"{user.Id}_{Guid.NewGuid()}{extension}";
+            var savePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars", fileName);
+
+            using (var stream = new FileStream(savePath, FileMode.Create))
+            {
+                await avatarFile.CopyToAsync(stream);
+            }
+
+            user.AvatarPath = $"/avatars/{fileName}";
+            await _context.SaveChangesAsync();
+
+            TempData["AvatarSuccess"] = "Awatar zaktualizowany!";
+            return returnUrl == "account"
+                ? RedirectToAction("Index", "Home")
+                : RedirectToAction("SecurePage");
+        }
     }
 }
