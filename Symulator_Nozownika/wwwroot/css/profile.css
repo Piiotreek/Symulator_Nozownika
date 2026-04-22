@@ -1,0 +1,44 @@
+﻿
+body {
+    background-color: #0d1117;
+    color: #c9d1d9;
+}
+
+.card.bg-dark {
+    background-color: #161b22 !important; 
+}
+
+.border-secondary {
+    border-color: #30363d !important; 
+}
+
+.btn-secondary {
+    background-color: #21262d;
+    border-color: #30363d;
+}
+
+    .btn-secondary:hover {
+        background-color: #30363d;
+        border-color: #8b949e;
+    }
+
+.nav-tabs .nav-link:hover {
+    border-bottom: 3px solid #8b949e !important;
+    color: #f0f6fc !important;
+}
+
+.border-orange {
+    border-color: #f78166 !important; 
+}
+
+.text-primary {
+    color: #58a6ff !important;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+    background: #21262d;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    padding: 5px 10px;
+}
