@@ -36,5 +36,7 @@ namespace Symulator_Nozownika.Models
 
         // Ścieżka do awatara
         public string? AvatarPath { get; set; }
+
+        public virtual ICollection<UserAchievement> UserAchievements { get; set; }
     }
 }

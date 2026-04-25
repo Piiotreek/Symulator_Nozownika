@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Symulator_Nozownika.Data;
+using Symulator_Nozownika.Services;
 
 namespace Symulator_Nozownika
 {
@@ -16,7 +17,8 @@ namespace Symulator_Nozownika
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+            //building dependency injection for achievement service
+            builder.Services.AddScoped<IAchievementService, AchievementService>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

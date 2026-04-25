@@ -17,6 +17,9 @@ namespace Symulator_Nozownika.Data
         public DbSet<UserStatistics> UserStatistics { get; set; }
         public DbSet<SavedScore> SavedScores { get; set; }
 
+        public DbSet<Achievement> Achievements { get; set; }
+        public DbSet<UserAchievement> UserAchievements { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -55,6 +58,41 @@ namespace Symulator_Nozownika.Data
                 new Weapon { Id = 9, Name = "Katana", Damage = 50, Cooldown = 0.5, ImageUrl = "/images/katana.png" },
                 new Weapon { Id = 10, Name = "Scissors", Damage = 2, Cooldown = 0.1, ImageUrl = "/images/scissors.png" }
             );
+
+            //Seed for Achievements and UserAchievements
+            modelBuilder.Entity<UserAchievement>()
+                .HasIndex(ua => new { ua.UserAccountId, ua.AchievementId })
+                .IsUnique();
+
+
+            modelBuilder.Entity<Achievement>().HasData(
+                new Achievement
+                {
+                    Id = 1,
+                    Name = "Nowicjusz",
+                    Description = "Zdobądź łącznie 2000 punktów.",
+                    ImagePath = "/images/achiv/2000.png",
+                    Type = AchievementType.TotalScore,
+                    TargetValue = 2000
+                },
+                new Achievement
+                {
+                    Id = 2,
+                    Name = "Doświadczony",
+                    Description = "Zdobądź łącznie 5000 punktów.",
+                    ImagePath = "/images/achiv/5000.png",
+                    Type = AchievementType.TotalScore,
+                    TargetValue = 5000
+                },
+                new Achievement
+                {
+                    Id = 3,
+                    Name = "Weteran",
+                    Description = "Zdobądź łącznie 10000 punktów.",
+                    ImagePath = "/images/achiv/10000.png",
+                    Type = AchievementType.TotalScore,
+                    TargetValue = 10000
+                });
         }
     }
 }

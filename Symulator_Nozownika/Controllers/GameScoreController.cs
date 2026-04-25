@@ -1,7 +1,9 @@
+using Azure.Core;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Symulator_Nozownika.Data;
 using Symulator_Nozownika.Models;
+using Symulator_Nozownika.Services;
 using System.Net.Http.Json;
 using System.Security.Claims;
 
@@ -29,12 +31,15 @@ namespace Symulator_Nozownika.Controllers
         private static readonly SemaphoreSlim _countriesCacheLock = new(1, 1);
 
         private readonly AppDbContext _context;
+        // creating this service to handle achievement unlocking logic when user reaches certain total score milestones
+        private readonly IAchievementService _achievementService;
 
-        public GameScoreController(AppDbContext context)
+        //recreating constructor to inject achievement service into controller
+        public GameScoreController(AppDbContext context, IAchievementService achievementService)
         {
             _context = context;
+            _achievementService = achievementService;
         }
-
         private static string NormalizeCountryName(string country)
         {
             return country.Trim();
@@ -170,11 +175,13 @@ namespace Symulator_Nozownika.Controllers
             statistics.LastPlayedAt = DateTime.Now;
         }
 
+        //new save score method that first updates user statistics and then checks for achievements before saving the high score
         [HttpPost]
         public async Task<IActionResult> SaveScore([FromBody] GameScoreRequest request)
         {
             var score = request?.Score ?? 0;
 
+            // Pobranie ID gracza z Claims
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (!string.IsNullOrEmpty(userId) && int.TryParse(userId, out int parsedUserId))
@@ -182,8 +189,20 @@ namespace Symulator_Nozownika.Controllers
                 var userAccount = await _context.UserAccounts.FindAsync(parsedUserId);
                 if (userAccount != null)
                 {
+                    // 1. Najpierw aktualizujemy Twoje statystyki gracza (w tym TotalScore)
                     await UpdateUserStatisticsAsync(parsedUserId, request);
 
+                    // --- 2. NOWY KOD: SPRAWDZANIE OSIĄGNIĘĆ ---
+                    // Pobieramy zaktualizowane statystyki z bazy, aby przekazać najświeższy TotalScore
+                    var userStats = await _context.UserStatistics.FirstOrDefaultAsync(u => u.UserId == parsedUserId);
+                    if (userStats != null)
+                    {
+                        // Zauważ: używamy userStats.TotalScore (Twoje pole), a nie TotalSum z mojego przykładu
+                        await _achievementService.CheckTotalScoreAchievementsAsync(parsedUserId, userStats.TotalScore);
+                    }
+                    // ------------------------------------------
+
+                    // 3. Twoja oryginalna logika pobierania najlepszych wyników (HighScores)
                     var userScores = await _context.HighScores
                         .Where(h => h.UserId == parsedUserId)
                         .OrderByDescending(h => h.Score)
@@ -253,6 +272,8 @@ namespace Symulator_Nozownika.Controllers
             System.Console.WriteLine($"↩️ Zwracam needsLogin");
             return Json(new { success = false, needsLogin = true, message = "Zaloguj się aby zapisać swój wynik!" });
         }
+
+
 
         [HttpPost]
         public async Task<IActionResult> SaveAnonymousScore([FromBody] GameScoreRequest request)
@@ -430,16 +451,17 @@ namespace Symulator_Nozownika.Controllers
 
             return Json(new { success = true, message = "Wynik usunięty z ulubionych." });
         }
+
+
+        public class PinScoreRequest
+        {
+            public int Score { get; set; }
+            public string? Note { get; set; }
+        }
+
+        public class UnpinScoreRequest
+        {
+            public int Id { get; set; }
+        }
     }
-}
-
-public class PinScoreRequest
-{
-    public int Score { get; set; }
-    public string? Note { get; set; }
-}
-
-public class UnpinScoreRequest
-{
-    public int Id { get; set; }
 }

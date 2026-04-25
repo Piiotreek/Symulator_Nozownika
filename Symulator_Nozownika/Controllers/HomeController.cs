@@ -21,7 +21,7 @@ namespace Symulator_Nozownika.Controllers
         public async Task<IActionResult> Index()
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            
+
             var user = await _context.UserAccounts
                 .Include(u => u.Statistics)
                 .FirstOrDefaultAsync(u => u.Id == userId);
@@ -30,6 +30,18 @@ namespace Symulator_Nozownika.Controllers
             {
                 return RedirectToAction("Login", "Account");
             }
+
+            //achievements logic for homepage display
+            var allAchievements = await _context.Achievements.ToListAsync();
+
+            var unlockedAchievementIds = await _context.UserAchievements
+                .Where(ua => ua.UserAccountId == userId)
+                .Select(ua => ua.AchievementId)
+                .ToListAsync();
+
+            ViewBag.AllAchievements = allAchievements;
+            ViewBag.UnlockedIds = unlockedAchievementIds;
+           
 
             return View(user);
         }
