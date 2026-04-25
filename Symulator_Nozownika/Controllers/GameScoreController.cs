@@ -173,6 +173,9 @@ namespace Symulator_Nozownika.Controllers
             statistics.HighestScore = Math.Max(statistics.HighestScore, score);
             statistics.TotalPlayTime += TimeSpan.FromSeconds(playTimeSeconds);
             statistics.LastPlayedAt = DateTime.Now;
+
+            //save score
+            await _context.SaveChangesAsync();
         }
 
         //new save score method that first updates user statistics and then checks for achievements before saving the high score
@@ -181,7 +184,7 @@ namespace Symulator_Nozownika.Controllers
         {
             var score = request?.Score ?? 0;
 
-            // Pobranie ID gracza z Claims
+            // get user ID from claims to associate the score with the logged-in user
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (!string.IsNullOrEmpty(userId) && int.TryParse(userId, out int parsedUserId))
@@ -189,20 +192,18 @@ namespace Symulator_Nozownika.Controllers
                 var userAccount = await _context.UserAccounts.FindAsync(parsedUserId);
                 if (userAccount != null)
                 {
-                    // 1. Najpierw aktualizujemy Twoje statystyki gracza (w tym TotalScore)
+                    //update user statistics first before checking for achievements, so we have the latest total score to compare against achievement thresholds
                     await UpdateUserStatisticsAsync(parsedUserId, request);
 
-                    // --- 2. NOWY KOD: SPRAWDZANIE OSIĄGNIĘĆ ---
-                    // Pobieramy zaktualizowane statystyki z bazy, aby przekazać najświeższy TotalScore
+                    //checking for achievements after updating statistics, so we have the latest total score to compare against achievement thresholds
+                    var unlockedAchievements = new List<Achievement>();
                     var userStats = await _context.UserStatistics.FirstOrDefaultAsync(u => u.UserId == parsedUserId);
                     if (userStats != null)
                     {
-                        // Zauważ: używamy userStats.TotalScore (Twoje pole), a nie TotalSum z mojego przykładu
-                        await _achievementService.CheckTotalScoreAchievementsAsync(parsedUserId, userStats.TotalScore);
+                        unlockedAchievements = await _achievementService.CheckTotalScoreAchievementsAsync(parsedUserId, userStats.TotalScore);
                     }
-                    // ------------------------------------------
 
-                    // 3. Twoja oryginalna logika pobierania najlepszych wyników (HighScores)
+                    //logic to determine if the new score is a personal best and update the high score table accordingly, while also ensuring that only the best score for each user is kept in the high score table
                     var userScores = await _context.HighScores
                         .Where(h => h.UserId == parsedUserId)
                         .OrderByDescending(h => h.Score)
@@ -235,7 +236,8 @@ namespace Symulator_Nozownika.Controllers
                         _context.HighScores.Add(highScore);
                         await _context.SaveChangesAsync();
                         System.Console.WriteLine($"✅ Wynik zapisany pomyślnie!");
-                        return Json(new { success = true, message = "Wynik zapisany!", newRecord = true });
+                        
+                        return Json(new { success = true, message = "Wynik zapisany!", newRecord = true , achievements = unlockedAchievements });
                     }
 
                     // Jeśli nowy wynik jest lepszy od najlepszego
@@ -249,14 +251,15 @@ namespace Symulator_Nozownika.Controllers
 
                         await _context.SaveChangesAsync();
                         System.Console.WriteLine($"✅ Nowy Personal Best zapisany!");
-                        return Json(new { success = true, message = "Nowy Personal Best zapisany!", newRecord = false });
+
+                        return Json(new { success = true, message = "Nowy Personal Best zapisany!", newRecord = false, achievements = unlockedAchievements });
                     }
 
                     // Zapisz statystyki (np. streak) nawet jeśli wynik nie jest nowym rekordem
                     await _context.SaveChangesAsync();
 
                     System.Console.WriteLine($"⚠️ Wynik {score} nie jest lepszy niż {personalBest.Score}");
-                    return Json(new { success = false, message = $"Twój najlepszy wynik to {personalBest.Score}. Spróbuj jeszcze raz!" });
+                    return Json(new { success = false, message = $"Twój najlepszy wynik to {personalBest.Score}. Spróbuj jeszcze raz!", achievements = unlockedAchievements });
                 }
                 else
                 {

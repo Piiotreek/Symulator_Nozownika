@@ -35,15 +35,32 @@ async function submitGameScore(score) {
         const result = await response.json();
         console.log(`📥 Odpowiedź serwera:`, result);
 
-        if (result.success) {
-            showAlert('Sukces! ✓', result.message);
-            return true;
-        } else if (result.needsLogin) {
-            // Pokaż popup pytając o zalogowanie
-            showLoginPrompt(score);
-        } else {
-            showAlert('Wynik nie został zapisany', result.message);
+        //show achievement
+        if (result.achievements && result.achievements.length > 0) {
+            result.achievements.forEach(ach => {
+                let name = ach.name || ach.Name;
+                let imagePath = ach.imagePath || ach.ImagePath;
+
+                if (typeof showAchievementToast === "function") {
+                    showAchievementToast(name, imagePath);
+                } else {
+                    console.error("Brak funkcji showAchievementToast!");
+                }
+            });
         }
+
+        // slowed alert
+        setTimeout(() => {
+            if (result.success) {
+                showAlert('Sukces! ✓', result.message);
+            } else if (result.needsLogin) {
+                //
+                showLoginPrompt(score);
+            } else {
+                showAlert('Informacje o wyniku', result.message); 
+            }
+        }, 300);
+
     } catch (error) {
         console.error('❌ Błąd przy zapisywaniu wyniku:', error);
         showAlert('Błąd', 'Nie udało się zapisać wyniku');
