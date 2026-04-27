@@ -42,7 +42,7 @@
 
             <hr class="border-secondary my-4">
 
-            <div class="small text-secondary">
+            <div class="small text-muted">
                 <div class="mb-2"><i class="bi bi-calendar3 me-2"></i>Konto od: @Model.CreatedAt.ToString("dd.MM.yyyy")</div>
                 <div><i class="bi bi-shield-lock me-2"></i>Status: Aktywny</div>
             </div>
@@ -56,12 +56,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-secondary border-0" asp-controller="Statistics" asp-action="Index">
+                    <a class="nav-link text-muted border-0" asp-controller="Statistics" asp-action="Index">
                         <i class="bi bi-graph-up me-2"></i>Pełne Statystyki
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-secondary border-0" asp-controller="Statistics" asp-action="Leaderboard">
+                    <a class="nav-link text-muted border-0" asp-controller="Statistics" asp-action="Leaderboard">
                         <i class="bi bi-trophy me-2"></i>Ranking
                     </a>
                 </li>
@@ -83,7 +83,7 @@
                     <div class="col-sm-4">
                         <div class="card bg-dark border-secondary h-100 shadow-sm">
                             <div class="card-body">
-                                <span class="text-secondary small fw-bold text-uppercase">Rozegrane gry</span>
+                                <span class="text-muted small fw-bold text-uppercase">Rozegrane gry</span>
                                 <div class="h3 mb-0 mt-1 text-white fw-bold">@Model.Statistics.TotalGamesPlayed</div>
                             </div>
                         </div>
@@ -91,7 +91,7 @@
                     <div class="col-sm-4">
                         <div class="card bg-dark border-secondary h-100 shadow-sm border-start border-4 border-success">
                             <div class="card-body">
-                                <span class="text-secondary small fw-bold text-uppercase">Best Score</span>
+                                <span class="text-muted small fw-bold text-uppercase">Best Score</span>
                                 <div class="h3 mb-0 mt-1 text-success fw-bold">@Model.Statistics.HighestScore</div>
                             </div>
                         </div>
@@ -99,7 +99,7 @@
                     <div class="col-sm-4">
                         <div class="card bg-dark border-secondary h-100 shadow-sm">
                             <div class="card-body">
-                                <span class="text-secondary small fw-bold text-uppercase">Suma punktów</span>
+                                <span class="text-muted small fw-bold text-uppercase">Suma punktów</span>
                                 <div class="h3 mb-0 mt-1 text-white fw-bold">@Model.Statistics.TotalScore</div>
                             </div>
                         </div>
@@ -112,9 +112,9 @@
                 <a asp-controller="Account" asp-action="SecurePage" class="list-group-item list-group-item-action bg-dark text-white border-secondary p-3">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1 text-primary">Uruchom Symulator</h5>
-                        <small class="text-secondary"><i class="bi bi-play-circle"></i></small>
+                        <small class="text-white"><i class="bi bi-play-circle"></i></small>
                     </div>
-                    <p class="mb-1 small text-secondary">Wróć do gry i popraw swój najwyższy wynik!</p>
+                    <p class="mb-1 small text-white">Wróć do gry i popraw swój najwyższy wynik!</p>
                 </a>
             </div>
                 <h6 class="text-white mt-5 mb-3 fw-bold"><span style="color: #ffc107;">🏆</span> Twoje Osiągnięcia</h6>
