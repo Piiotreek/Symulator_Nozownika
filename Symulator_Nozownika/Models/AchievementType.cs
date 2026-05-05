@@ -5,6 +5,7 @@
         FirstGame,
         TotalClicks,
         TotalScore,
-        FriendsCount
+        FriendsCount,
+        SingleGameClicks
     }
 }

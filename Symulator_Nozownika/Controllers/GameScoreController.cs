@@ -15,6 +15,7 @@ namespace Symulator_Nozownika.Controllers
         public string? PlayerName { get; set; }
         public int PlayTimeSeconds { get; set; }
         public bool Won { get; set; }
+        public int Clicks { get; set; }
     }
 
     public class GameScoreController : Controller
@@ -183,6 +184,7 @@ namespace Symulator_Nozownika.Controllers
 
             var rawScore = Math.Max(0, request.Score);
             var playTimeSeconds = Math.Max(0, request.PlayTimeSeconds);
+            var clicks = Math.Max(0, request.Clicks);
 
             // Kenshi-style diminishing returns: XP (tu: przyrost TotalScore) maleje wraz z levelem.
             // Level wyliczamy z aktualnego TotalScore (przed dodaniem punktów z tej gry).
@@ -196,6 +198,7 @@ namespace Symulator_Nozownika.Controllers
             statistics.HighestScore = Math.Max(statistics.HighestScore, rawScore);
             statistics.TotalPlayTime += TimeSpan.FromSeconds(playTimeSeconds);
             statistics.LastPlayedAt = DateTime.Now;
+            statistics.TotalClicks += clicks;
 
             _levelService.SyncLevel(level, statistics.TotalScore);
 
@@ -225,7 +228,21 @@ namespace Symulator_Nozownika.Controllers
                     var userStats = await _context.UserStatistics.FirstOrDefaultAsync(u => u.UserId == parsedUserId);
                     if (userStats != null)
                     {
-                        unlockedAchievements = await _achievementService.CheckTotalScoreAchievementsAsync(parsedUserId, userStats.TotalScore);
+                        // 1. Sprawdzanie Total Score
+                        var scoreAch = await _achievementService.CheckTotalScoreAchievementsAsync(parsedUserId, userStats.TotalScore);
+                        if (scoreAch != null && scoreAch.Any()) unlockedAchievements.AddRange(scoreAch);
+
+                        // 2. Sprawdzanie Pierwszej Gry
+                        var firstGameAch = await _achievementService.CheckFirstGameAchievementAsync(parsedUserId, userStats.TotalGamesPlayed);
+                        if (firstGameAch != null && firstGameAch.Any()) unlockedAchievements.AddRange(firstGameAch);
+
+                        // 3. Sprawdzanie kliknięć w TEJ konkretnej grze
+                        var singleGameAch = await _achievementService.CheckSingleGameClicksAchievementAsync(parsedUserId, request.Clicks);
+                        if (singleGameAch != null && singleGameAch.Any()) unlockedAchievements.AddRange(singleGameAch);
+
+                        // 4. Sprawdzanie łącznej sumy kliknięć
+                        var totalClicksAch = await _achievementService.CheckTotalClicksAchievementsAsync(parsedUserId, userStats.TotalClicks);
+                        if (totalClicksAch != null && totalClicksAch.Any()) unlockedAchievements.AddRange(totalClicksAch);
                     }
 
                     //logic to determine if the new score is a personal best and update the high score table accordingly, while also ensuring that only the best score for each user is kept in the high score table

@@ -89,6 +89,7 @@
 
     let hp = 10000;
     let timeLeft = 15;
+    let currentClicks = 0;
     let gameActive = false;
     let canAttack = true;
     let timerInterval;
@@ -109,6 +110,7 @@
         timeLeft = 15;
         gameActive = true;
         canAttack = true;
+        currentClicks = 0;
         hpDisplay.innerText = hp;
         timerDisplay.innerText = timeLeft;
         startBtn.style.display = 'none';
@@ -132,8 +134,9 @@
 
         // Opóźnienie aby alert nie blokował
         setTimeout(() => {
-            console.log(`📤 Wysyłam wynik: ${finalScore}`);
-            submitGameScore(finalScore);
+            console.log(`📤 Wysyłam wynik: ${finalScore},${currentClicks}`);
+            //submit clicks and finalScore
+            submitGameScore(finalScore,currentClicks);
             showPinModal(finalScore);
         }, 100);
     }
@@ -169,7 +172,8 @@
         organs.forEach(organ => {
             organ.addEventListener('click', function() {
                 if (!gameActive || !canAttack) return;
-
+                //adding clicks
+                currentClicks++;
                 const organName = this.querySelector('title')?.textContent || "default";
                 const multiplier = multipliers[organName] || multipliers["default"];
 

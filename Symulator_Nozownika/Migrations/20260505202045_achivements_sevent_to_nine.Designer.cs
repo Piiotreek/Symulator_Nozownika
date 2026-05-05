@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Symulator_Nozownika.Data;
 
@@ -11,9 +12,11 @@ using Symulator_Nozownika.Data;
 namespace Symulator_Nozownika.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260505202045_achivements_sevent_to_nine")]
+    partial class achivements_sevent_to_nine
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -196,40 +199,6 @@ namespace Symulator_Nozownika.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("HighScores");
-                });
-
-            modelBuilder.Entity("Symulator_Nozownika.Models.Level", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CurrentLevel")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CurrentLevelThreshold")
-                        .HasColumnType("int");
-
-                    b.Property<int>("NextLevelThreshold")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalScoreSnapshot")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("Levels");
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.SavedScore", b =>
@@ -519,17 +488,6 @@ namespace Symulator_Nozownika.Migrations
                     b.Navigation("UserAccount");
                 });
 
-            modelBuilder.Entity("Symulator_Nozownika.Models.Level", b =>
-                {
-                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
-                        .WithOne("Level")
-                        .HasForeignKey("Symulator_Nozownika.Models.Level", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Symulator_Nozownika.Models.SavedScore", b =>
                 {
                     b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
@@ -582,8 +540,6 @@ namespace Symulator_Nozownika.Migrations
 
             modelBuilder.Entity("Symulator_Nozownika.Models.UserAccount", b =>
                 {
-                    b.Navigation("Level");
-
                     b.Navigation("Statistics");
 
                     b.Navigation("UserAchievements");
