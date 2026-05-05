@@ -125,6 +125,9 @@ namespace Symulator_Nozownika.Controllers
             var statistics = await _context.UserStatistics
                 .FirstOrDefaultAsync(s => s.UserId == userId);
 
+            var level = await _context.Levels
+                .FirstOrDefaultAsync(l => l.UserId == userId);
+
             var today = DateTime.Today;
 
             if (statistics == null)
@@ -142,6 +145,17 @@ namespace Symulator_Nozownika.Controllers
                 };
 
                 _context.UserStatistics.Add(statistics);
+            }
+
+            if (level == null)
+            {
+                level = new Level
+                {
+                    UserId = userId
+                };
+
+                _levelService.SyncLevel(level, statistics.TotalScore);
+                _context.Levels.Add(level);
             }
             else
             {
@@ -182,6 +196,8 @@ namespace Symulator_Nozownika.Controllers
             statistics.HighestScore = Math.Max(statistics.HighestScore, rawScore);
             statistics.TotalPlayTime += TimeSpan.FromSeconds(playTimeSeconds);
             statistics.LastPlayedAt = DateTime.Now;
+
+            _levelService.SyncLevel(level, statistics.TotalScore);
 
             //save score
             await _context.SaveChangesAsync();

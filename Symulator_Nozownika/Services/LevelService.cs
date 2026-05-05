@@ -1,59 +1,47 @@
 using System.Collections.ObjectModel;
+using Symulator_Nozownika.Models;
 
 namespace Symulator_Nozownika.Services
 {
     public sealed class LevelService : ILevelService
     {
-        // Level = 1..N; progi oznaczają minimalny TotalScore wymagany do wejścia na dany level.
-        // Index 0 ignorujemy (dla czytelności), a dla level 1 próg = 0.
-        private static readonly IReadOnlyList<int> _levelScoreThresholds = new ReadOnlyCollection<int>(
-        [
-            0,      // (unused)
-            0,      // level 1
-            2000,   // level 2
-            5000,   // level 3
-            10000,  // level 4
-            20000,  // level 5
-            35000   // level 6
-        ]);
-
         // WeaponId -> wymagany level
         // Level 1: tylko nożyczki (Id=10)
         // Kolejne levele odblokowują po 2 bronie (ostatni może odblokować 1).
         private static readonly IReadOnlyDictionary<int, int> _weaponRequiredLevels =
             new ReadOnlyDictionary<int, int>(new Dictionary<int, int>
             {
-                [10] = 1, // Scissors
+                [10] = 1,   // Scissors (starter)
 
-                [1] = 2,  // Kitchen Knife
-                [2] = 2,  // Dagger
+                [1] = 5,    // Kitchen Knife
+                [2] = 10,   // Dagger
 
-                [3] = 3,  // Machete
-                [6] = 3,  // Spear
+                [3] = 20,   // Machete
+                [6] = 25,   // Spear
 
-                [4] = 4,  // Sword
-                [9] = 4,  // Katana
+                [4] = 35,   // Sword
+                [7] = 45,   // Cleaver
 
-                [7] = 5,  // Cleaver
-                [5] = 5,  // Axe
+                [5] = 55,   // Axe
+                [8] = 65,   // Mace
 
-                [8] = 6   // Mace
+                [9] = 75    // Katana (after rebalance!)
             });
+
+        private const double LevelGrowthFactor = 1250d;
+        private const double LevelGrowthExponent = 2.15d;
 
         public int GetLevelFromTotalScore(int totalScore)
         {
             var score = Math.Max(0, totalScore);
 
-            // Iterujemy od najwyższego progu w dół, by znaleźć najwyższy osiągnięty level.
-            for (var level = _levelScoreThresholds.Count - 1; level >= 1; level--)
+            var level = 1;
+            while (score >= GetNextLevelTotalScoreThreshold(level))
             {
-                if (score >= _levelScoreThresholds[level])
-                {
-                    return level;
-                }
+                level++;
             }
 
-            return 1;
+            return level;
         }
 
         public int GetTotalScoreThresholdForLevel(int level)
@@ -63,12 +51,13 @@ namespace Symulator_Nozownika.Services
                 return 0;
             }
 
-            if (level >= _levelScoreThresholds.Count)
+            if (level == 1)
             {
-                return _levelScoreThresholds[^1];
+                return 0;
             }
 
-            return _levelScoreThresholds[level];
+            var threshold = LevelGrowthFactor * Math.Pow(level - 1, LevelGrowthExponent);
+            return (int)Math.Round(threshold, MidpointRounding.AwayFromZero);
         }
 
         public double GetLevelMultiplier(int level)
@@ -80,15 +69,29 @@ namespace Symulator_Nozownika.Services
             return factor * factor;
         }
 
-        public int? GetNextLevelTotalScoreThreshold(int currentLevel)
+        public int GetNextLevelTotalScoreThreshold(int currentLevel)
         {
             var next = currentLevel + 1;
-            if (next < 1 || next >= _levelScoreThresholds.Count)
+            if (next < 1)
             {
-                return null;
+                next = 1;
             }
 
-            return _levelScoreThresholds[next];
+            return GetTotalScoreThresholdForLevel(next);
+        }
+
+        public void SyncLevel(Level level, int totalScore)
+        {
+            ArgumentNullException.ThrowIfNull(level);
+
+            var normalizedScore = Math.Max(0, totalScore);
+            var currentLevel = GetLevelFromTotalScore(normalizedScore);
+
+            level.CurrentLevel = currentLevel;
+            level.CurrentLevelThreshold = GetTotalScoreThresholdForLevel(currentLevel);
+            level.NextLevelThreshold = GetNextLevelTotalScoreThreshold(currentLevel);
+            level.TotalScoreSnapshot = normalizedScore;
+            level.UpdatedAt = DateTime.Now;
         }
 
         public int GetRequiredLevelForWeapon(int weaponId)

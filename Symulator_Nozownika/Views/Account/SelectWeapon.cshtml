@@ -1,4 +1,5 @@
 ﻿@model IEnumerable<Symulator_Nozownika.Models.Weapon>
+@inject Symulator_Nozownika.Services.ILevelService LevelService
 
 @{
     var userLevel = (int?)ViewBag.UserLevel ?? 1;
@@ -10,19 +11,8 @@
     var favoriteWeapons = Model.Where(w => favoriteWeaponIds.Contains(w.Id)).ToList();
     var regularWeapons = Model.Where(w => !favoriteWeaponIds.Contains(w.Id)).ToList();
 
-    var unlockedWeapons = regularWeapons.Where(w => userLevel >= requiredLevelForWeapon(w.Id)).ToList();
-    var lockedWeapons = regularWeapons.Where(w => userLevel < requiredLevelForWeapon(w.Id)).ToList();
-
-    int requiredLevelForWeapon(int weaponId) => weaponId switch
-    {
-        10 => 1,
-        1 or 2 => 2,
-        3 or 6 => 3,
-        4 or 9 => 4,
-        5 or 7 => 5,
-        8 => 6,
-        _ => int.MaxValue
-    };
+    var unlockedWeapons = regularWeapons.Where(w => userLevel >= LevelService.GetRequiredLevelForWeapon(w.Id)).ToList();
+    var lockedWeapons = regularWeapons.Where(w => userLevel < LevelService.GetRequiredLevelForWeapon(w.Id)).ToList();
 }
 
 <div class="container mt-4">
@@ -69,7 +59,7 @@
             <div class="row">
                 @foreach (var weapon in favoriteWeapons)
                 {
-                    var requiredLvl = requiredLevelForWeapon(weapon.Id);
+                    var requiredLvl = LevelService.GetRequiredLevelForWeapon(weapon.Id);
                     var isUnlocked = userLevel >= requiredLvl;
                     <div class="col-md-3 col-sm-6 mb-4">
                         <div class="card weapon-card shadow-sm h-100 @(isUnlocked ? "" : "weapon-locked")">
@@ -108,7 +98,7 @@
     <div class="row">
         @foreach (var weapon in unlockedWeapons)
         {
-            var requiredLvl = requiredLevelForWeapon(weapon.Id);
+            var requiredLvl = LevelService.GetRequiredLevelForWeapon(weapon.Id);
             var isUnlocked = userLevel >= requiredLvl;
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="card weapon-card shadow-sm h-100 @(isUnlocked ? "" : "weapon-locked")">
@@ -145,7 +135,7 @@
     <div class="row">
         @foreach (var weapon in lockedWeapons)
         {
-            var requiredLvl = requiredLevelForWeapon(weapon.Id);
+            var requiredLvl = LevelService.GetRequiredLevelForWeapon(weapon.Id);
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="card weapon-card shadow-sm h-100 weapon-locked">
                     <img src="@weapon.ImageUrl" class="card-img-top p-3" alt="@weapon.Name" style="height: 150px; object-fit: contain;" />

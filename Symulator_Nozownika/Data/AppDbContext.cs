@@ -16,6 +16,7 @@ namespace Symulator_Nozownika.Data
         public DbSet<FavoriteWeapon> FavoriteWeapons { get; set; }
         public DbSet<UserStatistics> UserStatistics { get; set; }
         public DbSet<SavedScore> SavedScores { get; set; }
+        public DbSet<Level> Levels { get; set; }
 
         public DbSet<Achievement> Achievements { get; set; }
         public DbSet<UserAchievement> UserAchievements { get; set; }
@@ -38,6 +39,16 @@ namespace Symulator_Nozownika.Data
 
             modelBuilder.Entity<UserStatistics>()
                 .HasIndex(us => us.UserId)
+                .IsUnique();
+
+            modelBuilder.Entity<Level>()
+                .HasOne(l => l.User)
+                .WithOne(u => u.Level)
+                .HasForeignKey<Level>(l => l.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Level>()
+                .HasIndex(l => l.UserId)
                 .IsUnique();
 
             modelBuilder.Entity<SavedScore>()
