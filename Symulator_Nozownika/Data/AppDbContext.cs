@@ -92,6 +92,60 @@ namespace Symulator_Nozownika.Data
                     ImagePath = "/images/achiv/10000.png",
                     Type = AchievementType.TotalScore,
                     TargetValue = 10000
+                },
+                new Achievement
+                {
+                    Id = 4,
+                    Name = "Pierwsza krew",
+                    Description = "Zagraj w swoją pierwszą grę.",
+                    ImagePath = "/images/achiv/first-game.png",
+                    Type = AchievementType.FirstGame,
+                    TargetValue = 1
+                },
+                new Achievement
+                {
+                    Id = 5,
+                    Name = "Szybkie palce",
+                    Description = "Kliknij 100 razy w trakcie jednej gry.",
+                    ImagePath = "/images/achiv/100-clicks-in-one-game.png",
+                    Type = AchievementType.SingleGameClicks,
+                    TargetValue = 100
+                },
+                new Achievement
+                {
+                    Id = 6,
+                    Name = "Klikacz",
+                    Description = "Zdobądź łącznie 300 kliknięć we wszystkich grach.",
+                    ImagePath = "/images/achiv/300-clicks.png",
+                    Type = AchievementType.TotalClicks,
+                    TargetValue = 300
+                },
+                new Achievement
+                {
+                    Id = 7,
+                    Name = "Wprawiony Klikacz",
+                    Description = "Zdobądź łącznie 500 kliknięć we wszystkich grach.",
+                    ImagePath = "/images/achiv/500-clicks.png", 
+                    Type = AchievementType.TotalClicks,
+                    TargetValue = 500
+                },
+                new Achievement
+                {
+                    Id = 8,
+                    Name = "Maniak",
+                    Description = "Zdobądź łącznie 1000 kliknięć we wszystkich grach.",
+                    ImagePath = "/images/achiv/1000-clicks.png",
+                    Type = AchievementType.TotalClicks,
+                    TargetValue = 1000
+                },
+                new Achievement
+                {
+                    Id = 9,
+                    Name = "3000 GWIAZD!",
+                    Description = "Zdobądź łącznie 3000 kliknięć we wszystkich grach.",
+                    ImagePath = "/images/achiv/3000-clicks.png",
+                    Type = AchievementType.TotalClicks,
+                    TargetValue = 3000
                 });
         }
     }

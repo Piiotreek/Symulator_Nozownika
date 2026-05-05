@@ -173,7 +173,18 @@
                                         }
                                         else
                                         {
-                                            <span class="badge bg-secondary w-100" style="font-size: 0.7rem;">@ach.TargetValue pkt</span>
+                                            @if (ach.Type == Symulator_Nozownika.Models.AchievementType.TotalScore)
+                                            {
+                                                <span class="badge bg-secondary w-100" style="font-size: 0.7rem;">@ach.TargetValue pkt</span>
+                                            }
+                                            else if (ach.Type == Symulator_Nozownika.Models.AchievementType.TotalClicks || ach.Type == Symulator_Nozownika.Models.AchievementType.SingleGameClicks)
+                                            {
+                                                <span class="badge bg-secondary w-100" style="font-size: 0.7rem;">@ach.TargetValue kliknięć</span>
+                                            }
+                                            else if (ach.Type == Symulator_Nozownika.Models.AchievementType.FirstGame)
+                                            {
+                                                <span class="badge bg-secondary w-100" style="font-size: 0.7rem;">Wymaga gry</span>
+                                            }
                                         }
                                     </div>
                                 </div>

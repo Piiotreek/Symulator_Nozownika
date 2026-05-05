@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Symulator_Nozownika.Data;
 
@@ -11,9 +12,11 @@ using Symulator_Nozownika.Data;
 namespace Symulator_Nozownika.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260505194602_achivements_four_to_seven")]
+    partial class achivements_four_to_seven
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -104,36 +107,18 @@ namespace Symulator_Nozownika.Migrations
                         new
                         {
                             Id = 6,
-                            Description = "Zdobądź łącznie 300 kliknięć we wszystkich grach.",
-                            ImagePath = "/images/achiv/300-clicks.png",
-                            Name = "Klikacz",
-                            TargetValue = 300,
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Description = "Zdobądź łącznie 500 kliknięć we wszystkich grach.",
-                            ImagePath = "/images/achiv/500-clicks.png",
-                            Name = "Wprawiony Klikacz",
-                            TargetValue = 500,
-                            Type = 1
-                        },
-                        new
-                        {
-                            Id = 8,
                             Description = "Zdobądź łącznie 1000 kliknięć we wszystkich grach.",
                             ImagePath = "/images/achiv/1000-clicks.png",
-                            Name = "Maniak",
+                            Name = "Klikacz",
                             TargetValue = 1000,
                             Type = 1
                         },
                         new
                         {
-                            Id = 9,
+                            Id = 7,
                             Description = "Zdobądź łącznie 3000 kliknięć we wszystkich grach.",
                             ImagePath = "/images/achiv/3000-clicks.png",
-                            Name = "3000 GWIAZD!",
+                            Name = "Maniak",
                             TargetValue = 3000,
                             Type = 1
                         });

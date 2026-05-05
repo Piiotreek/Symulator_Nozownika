@@ -2,7 +2,7 @@
 let tempScore = 0;
 
 // Funkcja wywoływana po zakończeniu gry
-async function submitGameScore(score) {
+async function submitGameScore(score,clicks) {
     tempScore = score;
 
     console.log(`📤 submitGameScore() wywoływana z wynikiem: ${score}`);
@@ -28,7 +28,7 @@ async function submitGameScore(score) {
         const response = await fetch('/GameScore/SaveScore', {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({ score: score })
+            body: JSON.stringify({ score: score,clicks:clicks })
         });
 
         console.log(`📥 Status odpowiedzi: ${response.status}`);
@@ -54,8 +54,8 @@ async function submitGameScore(score) {
             if (result.success) {
                 showAlert('Sukces! ✓', result.message);
             } else if (result.needsLogin) {
-                //
-                showLoginPrompt(score);
+                //added clicks
+                showLoginPrompt(score,clicks);
             } else {
                 showAlert('Informacje o wyniku', result.message); 
             }
@@ -68,7 +68,7 @@ async function submitGameScore(score) {
 }
 
 // Wyświetlanie popupu do logowania
-function showLoginPrompt(score) {
+function showLoginPrompt(score, clicks) {
     const userResponse = confirm(
         `Aby zapisać wynik (${score} pkt), musisz się zalogować.\n\n` +
         'Kliknij OK aby się zalogować, lub ANULUJ aby kontynuować bez zapisu.'
@@ -76,7 +76,7 @@ function showLoginPrompt(score) {
 
     if (userResponse) {
         // Przechowaj wynik w sessionStorage przed przesunięciem
-        sessionStorage.setItem('pendingScore', score);
+        sessionStorage.setItem('pendingScore', score, clicks);
         window.location.href = '/Account/Login';
     } else {
         // Gracz rezygnuje - może zaproponować anonimowy zapis
@@ -97,6 +97,8 @@ async function showAnonymousScoreSave(score) {
                 },
                 body: JSON.stringify({ 
                     score: score,
+                    //adding clicks to json
+                    clicks: clicks,
                     playerName: playerName || 'Anonimowy gracz'
                 })
             });
@@ -172,17 +174,19 @@ function showAlert(title, message) {
 // Sprawdź czy jest pending score po zalogowaniu
 async function checkPendingScore() {
     const pendingScore = sessionStorage.getItem('pendingScore');
+    //added clicks check
+    const pendingClicks = sessionStorage.getItem('pendingClicks') || 0;
     
     if (pendingScore) {
         sessionStorage.removeItem('pendingScore');
-        
+        sessionStorage.removeItem('pendingClicks');
         try {
             const response = await fetch('/GameScore/SaveScore', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ score: parseInt(pendingScore) })
+                body: JSON.stringify({ score: parseInt(pendingScore),clicks: parseInt(pendingClicks) })
             });
 
             const result = await response.json();

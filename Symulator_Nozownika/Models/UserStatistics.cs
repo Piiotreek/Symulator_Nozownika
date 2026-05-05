@@ -6,6 +6,8 @@ namespace Symulator_Nozownika.Models
         public int UserId { get; set; }
         public int TotalGamesPlayed { get; set; }
         public int TotalScore { get; set; }
+
+       public int TotalClicks { get; set; }
         public int HighestScore { get; set; }
         public TimeSpan TotalPlayTime { get; set; }
         public int CurrentStreak { get; set; }
