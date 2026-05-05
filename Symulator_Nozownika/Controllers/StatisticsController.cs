@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Symulator_Nozownika.Data;
 using Symulator_Nozownika.Models;
+using Symulator_Nozownika.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
@@ -12,10 +13,12 @@ namespace Symulator_Nozownika.Controllers
     public class StatisticsController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly ILevelService _levelService;
 
-        public StatisticsController(AppDbContext context)
+        public StatisticsController(AppDbContext context, ILevelService levelService)
         {
             _context = context;
+            _levelService = levelService;
         }
 
         // GET: Statistics
@@ -117,8 +120,14 @@ namespace Symulator_Nozownika.Controllers
 
             var score = Math.Max(0, result.Score);
 
+            // Diminishing returns (Kenshi-style): XP (tu: TotalScore) maleje wraz z levelem.
+            // Aby zachować spójność z zapisem wyniku w GameScoreController, liczymy level z aktualnego TotalScore.
+            var currentLevel = _levelService.GetLevelFromTotalScore(statistics.TotalScore);
+            var multiplier = _levelService.GetLevelMultiplier(currentLevel);
+            var adjustedScore = (int)Math.Round(score * multiplier, MidpointRounding.AwayFromZero);
+
             statistics.TotalGamesPlayed += 1;
-            statistics.TotalScore += score;
+            statistics.TotalScore += adjustedScore;
             statistics.HighestScore = Math.Max(statistics.HighestScore, score);
             statistics.TotalPlayTime += TimeSpan.FromSeconds(Math.Max(0, result.PlayTimeSeconds));
             statistics.LastPlayedAt = DateTime.Now;

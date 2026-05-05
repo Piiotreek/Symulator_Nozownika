@@ -14,7 +14,7 @@
         <div class="col-md-4 text-center border-end">
             <h5 class="text-muted">Gracz</h5>
             @{
-                var avatarSrc = string.IsNullOrEmpty(Model.AvatarPath) ? "/images/default-avatar.svg" : Model.AvatarPath;
+                var avatarSrc = string.IsNullOrEmpty(Model.AvatarPath) ? "/images   /default-avatar.svg" : Model.AvatarPath;
             }
             <img src="@avatarSrc" alt="Awatar" class="rounded-circle mb-2" style="width:80px;height:80px;object-fit:cover;border:2px solid #ffc107;" />
             <h2 class="text-warning">@Model.UserName</h2>

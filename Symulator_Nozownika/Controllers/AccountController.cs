@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Symulator_Nozownika.Data;
 using Symulator_Nozownika.Models;
+using Symulator_Nozownika.Services;
 using System.Net.Http.Json;
 using System.Security.Claims;
 
@@ -14,6 +15,7 @@ namespace Symulator_Nozownika.Controllers
     public class AccountController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly ILevelService _levelService;
 
         private sealed class CountryApiResponse
         {
@@ -25,9 +27,10 @@ namespace Symulator_Nozownika.Controllers
             public string Common { get; set; } = string.Empty;
         }
 
-        public AccountController(AppDbContext appDbContext)
+        public AccountController(AppDbContext appDbContext, ILevelService levelService)
         {
             _context = appDbContext;
+            _levelService = levelService;
         }
 
         private async Task<List<SelectListItem>> LoadCountriesAsync()
@@ -155,10 +158,20 @@ namespace Symulator_Nozownika.Controllers
                 return RedirectToAction("Login");
             }
 
-            var user = _context.UserAccounts.FirstOrDefault(u => u.UserName == userName);
+            var user = await _context.UserAccounts
+                .Include(u => u.Statistics)
+                .FirstOrDefaultAsync(u => u.UserName == userName);
 
             if (user != null)
             {
+                var totalScore = user.Statistics?.TotalScore ?? 0;
+                var level = _levelService.GetLevelFromTotalScore(totalScore);
+                if (!_levelService.IsWeaponUnlocked(weaponId, level))
+                {
+                    TempData["WeaponSelectError"] = "Ta broń jest zablokowana. Zdobądź wyższy level, aby ją odblokować.";
+                    return RedirectToAction("SelectWeapon");
+                }
+
                 user.SelectedWeaponId = weaponId;
 
                 // ZAPIS
@@ -264,11 +277,21 @@ namespace Symulator_Nozownika.Controllers
         {
             var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
             var userId = 0;
+            var userLevel = 1;
+            var userTotalScore = 0;
             
             if (!string.IsNullOrEmpty(userName))
             {
-                var user = await _context.UserAccounts.FirstOrDefaultAsync(u => u.UserName == userName);
-                if (user != null) userId = user.Id;
+                var user = await _context.UserAccounts
+                    .Include(u => u.Statistics)
+                    .FirstOrDefaultAsync(u => u.UserName == userName);
+
+                if (user != null)
+                {
+                    userId = user.Id;
+                    userTotalScore = user.Statistics?.TotalScore ?? 0;
+                    userLevel = _levelService.GetLevelFromTotalScore(userTotalScore);
+                }
             }
 
             // Pobierz wszystkie bronie
@@ -281,6 +304,11 @@ namespace Symulator_Nozownika.Controllers
                 .ToListAsync();
 
             ViewBag.FavoriteWeaponIds = favoriteWeaponIds;
+
+            ViewBag.UserLevel = userLevel;
+            ViewBag.UserTotalScore = userTotalScore;
+            ViewBag.CurrentLevelThreshold = _levelService.GetTotalScoreThresholdForLevel(userLevel);
+            ViewBag.NextLevelThreshold = _levelService.GetNextLevelTotalScoreThreshold(userLevel);
             
             return View(allWeapons);
         }
@@ -295,10 +323,20 @@ namespace Symulator_Nozownika.Controllers
                 return RedirectToAction("Login");
             }
 
-            var user = await _context.UserAccounts.FirstOrDefaultAsync(u => u.UserName == userName);
+            var user = await _context.UserAccounts
+                .Include(u => u.Statistics)
+                .FirstOrDefaultAsync(u => u.UserName == userName);
 
             if (user != null)
             {
+                var totalScore = user.Statistics?.TotalScore ?? 0;
+                var level = _levelService.GetLevelFromTotalScore(totalScore);
+                if (!_levelService.IsWeaponUnlocked(weaponId, level))
+                {
+                    TempData["WeaponSelectError"] = "Ta broń jest zablokowana. Zdobądź wyższy level, aby ją odblokować.";
+                    return RedirectToAction("SelectWeapon");
+                }
+
                 user.SelectedWeaponId = weaponId;
                 await _context.SaveChangesAsync();
 
@@ -317,10 +355,21 @@ namespace Symulator_Nozownika.Controllers
                 return Json(new { success = false, message = "Musisz być zalogowany" });
             }
 
-            var user = await _context.UserAccounts.FirstOrDefaultAsync(u => u.UserName == userName);
+            var user = await _context.UserAccounts
+                .Include(u => u.Statistics)
+                .FirstOrDefaultAsync(u => u.UserName == userName);
             if (user == null)
             {
                 return Json(new { success = false, message = "Użytkownik nie znaleziony" });
+            }
+
+            var totalScore = user.Statistics?.TotalScore ?? 0;
+            var level = _levelService.GetLevelFromTotalScore(totalScore);
+            if (!_levelService.IsWeaponUnlocked(request.WeaponId, level))
+            {
+                // UI nie pozwala na faworyzowanie zablokowanych broni (brak serca),
+                // ale zabezpieczamy endpoint także po stronie serwera.
+                return Json(new { success = false, message = "Nie można dodać zablokowanej broni do ulubionych." });
             }
 
             // WALIDACJA: Sprawdź czy broń istnieje

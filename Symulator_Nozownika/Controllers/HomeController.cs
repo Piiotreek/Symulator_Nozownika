@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Symulator_Nozownika.Data;
 using Symulator_Nozownika.Models;
+using Symulator_Nozownika.Services;
 using System.Diagnostics;
 using System.Security.Claims;
 
@@ -11,10 +12,12 @@ namespace Symulator_Nozownika.Controllers
     public class HomeController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly ILevelService _levelService;
 
-        public HomeController(AppDbContext context)
+        public HomeController(AppDbContext context, ILevelService levelService)
         {
             _context = context;
+            _levelService = levelService;
         }
 
         [Authorize]
@@ -41,6 +44,13 @@ namespace Symulator_Nozownika.Controllers
 
             ViewBag.AllAchievements = allAchievements;
             ViewBag.UnlockedIds = unlockedAchievementIds;
+
+            var totalScore = user.Statistics?.TotalScore ?? 0;
+            var level = _levelService.GetLevelFromTotalScore(totalScore);
+            ViewBag.UserLevel = level;
+            ViewBag.UserTotalScore = totalScore;
+            ViewBag.CurrentLevelThreshold = _levelService.GetTotalScoreThresholdForLevel(level);
+            ViewBag.NextLevelThreshold = _levelService.GetNextLevelTotalScoreThreshold(level);
            
 
             return View(user);

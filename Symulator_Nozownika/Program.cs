@@ -19,6 +19,7 @@ namespace Symulator_Nozownika
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
             //building dependency injection for achievement service
             builder.Services.AddScoped<IAchievementService, AchievementService>();
+            builder.Services.AddSingleton<ILevelService, LevelService>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

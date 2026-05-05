@@ -2,6 +2,11 @@
 @{
     ViewData["Title"] = "Profil użytkownika";
     var avatarSrc = string.IsNullOrEmpty(Model.AvatarPath) ? "/images/default-avatar.svg" : Model.AvatarPath;
+
+    var userLevel = (int?)ViewBag.UserLevel ?? 1;
+    var userTotalScore = (int?)ViewBag.UserTotalScore ?? 0;
+    var currentLevelThreshold = (int?)ViewBag.CurrentLevelThreshold ?? 0;
+    var nextLevelThreshold = ViewBag.NextLevelThreshold as int?;
 }
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -116,6 +121,34 @@
                     </div>
                     <p class="mb-1 small text-white">Wróć do gry i popraw swój najwyższy wynik!</p>
                 </a>
+            </div>
+
+            <div class="card bg-dark border-secondary shadow-sm mt-3">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div class="text-white">
+                            <strong>Level:</strong> @userLevel
+                            <span class="text-muted">|</span>
+                            <strong>Punkty łącznie:</strong> @userTotalScore
+                        </div>
+
+                        @if (nextLevelThreshold.HasValue)
+                        {
+                            var span = Math.Max(1, nextLevelThreshold.Value - currentLevelThreshold);
+                            var progress = (int)Math.Clamp(((userTotalScore - currentLevelThreshold) * 100.0) / span, 0, 100);
+                            <div class="d-flex align-items-center gap-2" style="min-width: 280px;">
+                                <small class="text-muted">Do lvl @(userLevel + 1): @(Math.Max(0, nextLevelThreshold.Value - userTotalScore))</small>
+                                <div class="progress flex-grow-1" style="height: 10px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: @progress%"></div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">MAX LEVEL</span>
+                        }
+                    </div>
+                </div>
             </div>
                 <h6 class="text-white mt-5 mb-3 fw-bold"><span style="color: #ffc107;">🏆</span> Twoje Osiągnięcia</h6>
                 <div class="row g-3 mb-4">

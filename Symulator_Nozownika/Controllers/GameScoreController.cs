@@ -33,12 +33,14 @@ namespace Symulator_Nozownika.Controllers
         private readonly AppDbContext _context;
         // creating this service to handle achievement unlocking logic when user reaches certain total score milestones
         private readonly IAchievementService _achievementService;
+        private readonly ILevelService _levelService;
 
         //recreating constructor to inject achievement service into controller
-        public GameScoreController(AppDbContext context, IAchievementService achievementService)
+        public GameScoreController(AppDbContext context, IAchievementService achievementService, ILevelService levelService)
         {
             _context = context;
             _achievementService = achievementService;
+            _levelService = levelService;
         }
         private static string NormalizeCountryName(string country)
         {
@@ -165,12 +167,19 @@ namespace Symulator_Nozownika.Controllers
                 }
             }
 
-            var score = Math.Max(0, request.Score);
+            var rawScore = Math.Max(0, request.Score);
             var playTimeSeconds = Math.Max(0, request.PlayTimeSeconds);
+
+            // Kenshi-style diminishing returns: XP (tu: przyrost TotalScore) maleje wraz z levelem.
+            // Level wyliczamy z aktualnego TotalScore (przed dodaniem punktów z tej gry).
+            var currentLevel = _levelService.GetLevelFromTotalScore(statistics.TotalScore);
+            var multiplier = _levelService.GetLevelMultiplier(currentLevel);
+            var score = (int)Math.Round(rawScore * multiplier, MidpointRounding.AwayFromZero);
 
             statistics.TotalGamesPlayed += 1;
             statistics.TotalScore += score;
-            statistics.HighestScore = Math.Max(statistics.HighestScore, score);
+            // Najwyższy wynik powinien bazować na faktycznym wyniku w grze, a nie na zredukowanym XP.
+            statistics.HighestScore = Math.Max(statistics.HighestScore, rawScore);
             statistics.TotalPlayTime += TimeSpan.FromSeconds(playTimeSeconds);
             statistics.LastPlayedAt = DateTime.Now;
 

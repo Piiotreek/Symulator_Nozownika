@@ -1,13 +1,65 @@
 ﻿@model IEnumerable<Symulator_Nozownika.Models.Weapon>
 
 @{
+    var userLevel = (int?)ViewBag.UserLevel ?? 1;
+    var userTotalScore = (int?)ViewBag.UserTotalScore ?? 0;
+    var currentLevelThreshold = (int?)ViewBag.CurrentLevelThreshold ?? 0;
+    var nextLevelThreshold = ViewBag.NextLevelThreshold as int?;
+
     var favoriteWeaponIds = ViewBag.FavoriteWeaponIds as List<int> ?? new List<int>();
     var favoriteWeapons = Model.Where(w => favoriteWeaponIds.Contains(w.Id)).ToList();
     var regularWeapons = Model.Where(w => !favoriteWeaponIds.Contains(w.Id)).ToList();
+
+    var unlockedWeapons = regularWeapons.Where(w => userLevel >= requiredLevelForWeapon(w.Id)).ToList();
+    var lockedWeapons = regularWeapons.Where(w => userLevel < requiredLevelForWeapon(w.Id)).ToList();
+
+    int requiredLevelForWeapon(int weaponId) => weaponId switch
+    {
+        10 => 1,
+        1 or 2 => 2,
+        3 or 6 => 3,
+        4 or 9 => 4,
+        5 or 7 => 5,
+        8 => 6,
+        _ => int.MaxValue
+    };
 }
 
 <div class="container mt-4">
     <h2 class="text-center mb-4">Wybierz swoją broń</h2>
+
+    @if (TempData["WeaponSelectError"] is string weaponError && !string.IsNullOrWhiteSpace(weaponError))
+    {
+        <div class="alert alert-warning text-center" role="alert">@weaponError</div>
+    }
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <strong>Level:</strong> @userLevel
+                    <span class="text-muted">|</span>
+                    <strong>Punkty łącznie:</strong> @userTotalScore
+                </div>
+
+                @if (nextLevelThreshold.HasValue)
+                {
+                    var span = Math.Max(1, nextLevelThreshold.Value - currentLevelThreshold);
+                    var progress = (int)Math.Clamp(((userTotalScore - currentLevelThreshold) * 100.0) / span, 0, 100);
+                    <div class="d-flex align-items-center gap-2" style="min-width: 280px;">
+                        <small class="text-muted">Do lvl @(userLevel + 1): @(Math.Max(0, nextLevelThreshold.Value - userTotalScore))</small>
+                        <div class="progress flex-grow-1" style="height: 10px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: @progress%"></div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <span class="badge bg-success">MAX LEVEL</span>
+                }
+            </div>
+        </div>
+    </div>
 
     @if (favoriteWeapons.Any())
     {
@@ -17,8 +69,10 @@
             <div class="row">
                 @foreach (var weapon in favoriteWeapons)
                 {
+                    var requiredLvl = requiredLevelForWeapon(weapon.Id);
+                    var isUnlocked = userLevel >= requiredLvl;
                     <div class="col-md-3 col-sm-6 mb-4">
-                        <div class="card weapon-card shadow-sm h-100">
+                        <div class="card weapon-card shadow-sm h-100 @(isUnlocked ? "" : "weapon-locked")">
                             <button type="button" 
                                     class="btn btn-link favorite-btn position-absolute top-0 end-0 m-2" 
                                     onclick="toggleFavorite(@weapon.Id, this)"
@@ -31,10 +85,15 @@
                                 <p class="card-text">
                                     <span class="badge bg-danger">💥 @weapon.Damage DMG</span><br />
                                     <span class="badge bg-info mt-1">⏱️ @weapon.Cooldown.ToString("F1")s CD</span>
+                                    @if (!isUnlocked)
+                                    {
+                                        <br />
+                                        <span class="badge bg-secondary mt-1">Zablokowana (lvl @requiredLvl)</span>
+                                    }
                                 </p>
                                 <form asp-action="SelectWeapon" method="post" class="mt-2">
                                     <input type="hidden" name="weaponId" value="@weapon.Id" />
-                                    <button type="submit" class="btn btn-primary btn-sm">Wybierz</button>
+                                    <button type="submit" class="btn btn-primary btn-sm" disabled="@(!isUnlocked)">Wybierz</button>
                                 </form>
                             </div>
                         </div>
@@ -44,13 +103,15 @@
         </div>
     }
 
-    <h3 class="mb-3">Wszystkie bronie</h3>
+    <h3 class="mb-3">Odblokowane bronie</h3>
     <hr class="mb-4" />
     <div class="row">
-        @foreach (var weapon in regularWeapons)
+        @foreach (var weapon in unlockedWeapons)
         {
+            var requiredLvl = requiredLevelForWeapon(weapon.Id);
+            var isUnlocked = userLevel >= requiredLvl;
             <div class="col-md-3 col-sm-6 mb-4">
-                <div class="card weapon-card shadow-sm h-100">
+                <div class="card weapon-card shadow-sm h-100 @(isUnlocked ? "" : "weapon-locked")">
                     <button type="button" 
                             class="btn btn-link favorite-btn position-absolute top-0 end-0 m-2" 
                             onclick="toggleFavorite(@weapon.Id, this)"
@@ -63,10 +124,42 @@
                         <p class="card-text">
                             <span class="badge bg-danger">💥 @weapon.Damage DMG</span><br />
                             <span class="badge bg-info mt-1">⏱️ @weapon.Cooldown.ToString("F1")s CD</span>
+                            @if (!isUnlocked)
+                            {
+                                <br />
+                                <span class="badge bg-secondary mt-1">Zablokowana (lvl @requiredLvl)</span>
+                            }
                         </p>
                         <form asp-action="SelectWeapon" method="post" class="mt-2">
                             <input type="hidden" name="weaponId" value="@weapon.Id" />
-                            <button type="submit" class="btn btn-primary btn-sm">Wybierz</button>
+                            <button type="submit" class="btn btn-primary btn-sm" disabled="@(!isUnlocked)">Wybierz</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <h3 class="mb-3 mt-4">Zablokowane bronie</h3>
+    <hr class="mb-4" />
+    <div class="row">
+        @foreach (var weapon in lockedWeapons)
+        {
+            var requiredLvl = requiredLevelForWeapon(weapon.Id);
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="card weapon-card shadow-sm h-100 weapon-locked">
+                    <img src="@weapon.ImageUrl" class="card-img-top p-3" alt="@weapon.Name" style="height: 150px; object-fit: contain;" />
+                    <div class="card-body text-center">
+                        <h5 class="card-title">@weapon.Name</h5>
+                        <p class="card-text">
+                            <span class="badge bg-danger">💥 @weapon.Damage DMG</span><br />
+                            <span class="badge bg-info mt-1">⏱️ @weapon.Cooldown.ToString("F1")s CD</span>
+                            <br />
+                            <span class="badge bg-secondary mt-1">Zablokowana (lvl @requiredLvl)</span>
+                        </p>
+                        <form asp-action="SelectWeapon" method="post" class="mt-2">
+                            <input type="hidden" name="weaponId" value="@weapon.Id" />
+                            <button type="submit" class="btn btn-primary btn-sm" disabled>Wybierz</button>
                         </form>
                     </div>
                 </div>
@@ -124,6 +217,10 @@
     .favorite-btn:hover i {
         transform: scale(1.2);
         transition: transform 0.2s;
+    }
+
+    .weapon-locked {
+        opacity: 0.55;
     }
 </style>
 
