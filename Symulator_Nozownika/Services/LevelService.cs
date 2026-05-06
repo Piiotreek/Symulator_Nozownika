@@ -28,8 +28,8 @@ namespace Symulator_Nozownika.Services
                 [9] = 75    // Katana (after rebalance!)
             });
 
-        private const double LevelGrowthFactor = 1250d;
-        private const double LevelGrowthExponent = 2.15d;
+        private const int LevelLinearGrowth = 200;
+        private const int LevelQuadraticGrowth = 40;
 
         public int GetLevelFromTotalScore(int totalScore)
         {
@@ -56,8 +56,9 @@ namespace Symulator_Nozownika.Services
                 return 0;
             }
 
-            var threshold = LevelGrowthFactor * Math.Pow(level - 1, LevelGrowthExponent);
-            return (int)Math.Round(threshold, MidpointRounding.AwayFromZero);
+            var previousLevels = level - 1;
+            var threshold = (LevelQuadraticGrowth * previousLevels * previousLevels) + (LevelLinearGrowth * previousLevels);
+            return threshold;
         }
 
         public double GetLevelMultiplier(int level)
