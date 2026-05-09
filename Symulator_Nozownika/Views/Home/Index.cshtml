@@ -7,6 +7,7 @@
     var userTotalScore = (int?)ViewBag.UserTotalScore ?? 0;
     var currentLevelThreshold = (int?)ViewBag.CurrentLevelThreshold ?? 0;
     var nextLevelThreshold = ViewBag.NextLevelThreshold as int?;
+    var coinBalance = (int?)ViewBag.CoinBalance ?? 0;
 }
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -130,6 +131,8 @@
                             <strong>Level:</strong> @userLevel
                             <span class="text-muted">|</span>
                             <strong>Punkty łącznie:</strong> @userTotalScore
+                            <span class="text-muted">|</span>
+                            <strong>Monety:</strong> @coinBalance
                         </div>
 
                         @if (nextLevelThreshold.HasValue)

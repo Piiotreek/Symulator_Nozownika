@@ -36,9 +36,13 @@ namespace Symulator_Nozownika.Models
 
         public virtual Level? Level { get; set; }
 
+        public virtual CoinWallet? CoinWallet { get; set; }
+
+        public virtual ICollection<PurchasedWeapon> PurchasedWeapons { get; set; } = new List<PurchasedWeapon>();
+
         // Ścieżka do awatara
         public string? AvatarPath { get; set; }
 
-        public virtual ICollection<UserAchievement> UserAchievements { get; set; }
+        public virtual ICollection<UserAchievement> UserAchievements { get; set; } = new List<UserAchievement>();
     }
 }

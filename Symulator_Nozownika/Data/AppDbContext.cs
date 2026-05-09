@@ -17,6 +17,8 @@ namespace Symulator_Nozownika.Data
         public DbSet<UserStatistics> UserStatistics { get; set; }
         public DbSet<SavedScore> SavedScores { get; set; }
         public DbSet<Level> Levels { get; set; }
+        public DbSet<CoinWallet> CoinWallets { get; set; }
+        public DbSet<PurchasedWeapon> PurchasedWeapons { get; set; }
 
         public DbSet<Achievement> Achievements { get; set; }
         public DbSet<UserAchievement> UserAchievements { get; set; }
@@ -49,6 +51,32 @@ namespace Symulator_Nozownika.Data
 
             modelBuilder.Entity<Level>()
                 .HasIndex(l => l.UserId)
+                .IsUnique();
+
+            modelBuilder.Entity<CoinWallet>()
+                .HasOne(cw => cw.User)
+                .WithOne(u => u.CoinWallet)
+                .HasForeignKey<CoinWallet>(cw => cw.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<CoinWallet>()
+                .HasIndex(cw => cw.UserId)
+                .IsUnique();
+
+            modelBuilder.Entity<PurchasedWeapon>()
+                .HasOne(pw => pw.User)
+                .WithMany(u => u.PurchasedWeapons)
+                .HasForeignKey(pw => pw.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PurchasedWeapon>()
+                .HasOne(pw => pw.Weapon)
+                .WithMany()
+                .HasForeignKey(pw => pw.WeaponId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PurchasedWeapon>()
+                .HasIndex(pw => new { pw.UserId, pw.WeaponId })
                 .IsUnique();
 
             modelBuilder.Entity<SavedScore>()

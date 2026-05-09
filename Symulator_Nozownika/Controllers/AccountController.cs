@@ -33,6 +33,32 @@ namespace Symulator_Nozownika.Controllers
             _levelService = levelService;
         }
 
+        private bool IsStarterWeapon(int weaponId)
+        {
+            return weaponId == LevelService.StarterWeaponId;
+        }
+
+        private async Task<bool> HasPurchasedWeaponAsync(int userId, int weaponId)
+        {
+            if (IsStarterWeapon(weaponId))
+            {
+                return true;
+            }
+
+            return await _context.PurchasedWeapons.AnyAsync(pw => pw.UserId == userId && pw.WeaponId == weaponId);
+        }
+
+        private async Task<int> GetUserLevelAsync(UserAccount user)
+        {
+            if (user.Level != null)
+            {
+                return user.Level.CurrentLevel;
+            }
+
+            var totalScore = user.Statistics?.TotalScore ?? 0;
+            return _levelService.GetLevelFromTotalScore(totalScore);
+        }
+
         private async Task<List<SelectListItem>> LoadCountriesAsync()
         {
             try
@@ -160,15 +186,21 @@ namespace Symulator_Nozownika.Controllers
 
             var user = await _context.UserAccounts
                 .Include(u => u.Statistics)
+                .Include(u => u.Level)
                 .FirstOrDefaultAsync(u => u.UserName == userName);
 
             if (user != null)
             {
-                var totalScore = user.Statistics?.TotalScore ?? 0;
-                var level = _levelService.GetLevelFromTotalScore(totalScore);
+                var level = await GetUserLevelAsync(user);
                 if (!_levelService.IsWeaponUnlocked(weaponId, level))
                 {
                     TempData["WeaponSelectError"] = "Ta broń jest zablokowana. Zdobądź wyższy level, aby ją odblokować.";
+                    return RedirectToAction("SelectWeapon");
+                }
+
+                if (!await HasPurchasedWeaponAsync(user.Id, weaponId))
+                {
+                    TempData["WeaponSelectError"] = "Najpierw kup tę broń za monety, a dopiero potem możesz ją wybrać.";
                     return RedirectToAction("SelectWeapon");
                 }
 
@@ -202,6 +234,7 @@ namespace Symulator_Nozownika.Controllers
             // Pobieramy użytkownika z bazy RAZEM z jego bronią
             var user = await _context.UserAccounts
                 .Include(u => u.SelectedWeapon) // To załaduje statystyki broni
+                .Include(u => u.CoinWallet)
                 .FirstOrDefaultAsync(u => u.UserName == userName);
 
             if (user == null || user.SelectedWeapon == null)
@@ -284,13 +317,19 @@ namespace Symulator_Nozownika.Controllers
             {
                 var user = await _context.UserAccounts
                     .Include(u => u.Statistics)
+                    .Include(u => u.Level)
+                    .Include(u => u.CoinWallet)
+                    .Include(u => u.PurchasedWeapons)
                     .FirstOrDefaultAsync(u => u.UserName == userName);
 
                 if (user != null)
                 {
                     userId = user.Id;
                     userTotalScore = user.Statistics?.TotalScore ?? 0;
-                    userLevel = _levelService.GetLevelFromTotalScore(userTotalScore);
+                    userLevel = await GetUserLevelAsync(user);
+                    ViewBag.CoinBalance = user.CoinWallet?.Balance ?? 0;
+                    ViewBag.PurchasedWeaponIds = user.PurchasedWeapons.Select(pw => pw.WeaponId).Append(LevelService.StarterWeaponId).Distinct().ToList();
+                    ViewBag.SelectedWeaponId = user.SelectedWeaponId;
                 }
             }
 
@@ -309,6 +348,9 @@ namespace Symulator_Nozownika.Controllers
             ViewBag.UserTotalScore = userTotalScore;
             ViewBag.CurrentLevelThreshold = _levelService.GetTotalScoreThresholdForLevel(userLevel);
             ViewBag.NextLevelThreshold = _levelService.GetNextLevelTotalScoreThreshold(userLevel);
+            ViewBag.CoinBalance ??= 0;
+            ViewBag.PurchasedWeaponIds ??= new List<int> { LevelService.StarterWeaponId };
+            ViewBag.SelectedWeaponId ??= null;
             
             return View(allWeapons);
         }
@@ -325,15 +367,21 @@ namespace Symulator_Nozownika.Controllers
 
             var user = await _context.UserAccounts
                 .Include(u => u.Statistics)
+                .Include(u => u.Level)
                 .FirstOrDefaultAsync(u => u.UserName == userName);
 
             if (user != null)
             {
-                var totalScore = user.Statistics?.TotalScore ?? 0;
-                var level = _levelService.GetLevelFromTotalScore(totalScore);
+                var level = await GetUserLevelAsync(user);
                 if (!_levelService.IsWeaponUnlocked(weaponId, level))
                 {
                     TempData["WeaponSelectError"] = "Ta broń jest zablokowana. Zdobądź wyższy level, aby ją odblokować.";
+                    return RedirectToAction("SelectWeapon");
+                }
+
+                if (!await HasPurchasedWeaponAsync(user.Id, weaponId))
+                {
+                    TempData["WeaponSelectError"] = "Najpierw kup tę broń za monety, a dopiero potem możesz ją wybrać.";
                     return RedirectToAction("SelectWeapon");
                 }
 
@@ -357,19 +405,24 @@ namespace Symulator_Nozownika.Controllers
 
             var user = await _context.UserAccounts
                 .Include(u => u.Statistics)
+                .Include(u => u.Level)
                 .FirstOrDefaultAsync(u => u.UserName == userName);
             if (user == null)
             {
                 return Json(new { success = false, message = "Użytkownik nie znaleziony" });
             }
 
-            var totalScore = user.Statistics?.TotalScore ?? 0;
-            var level = _levelService.GetLevelFromTotalScore(totalScore);
+            var level = await GetUserLevelAsync(user);
             if (!_levelService.IsWeaponUnlocked(request.WeaponId, level))
             {
                 // UI nie pozwala na faworyzowanie zablokowanych broni (brak serca),
                 // ale zabezpieczamy endpoint także po stronie serwera.
                 return Json(new { success = false, message = "Nie można dodać zablokowanej broni do ulubionych." });
+            }
+
+            if (!await HasPurchasedWeaponAsync(user.Id, request.WeaponId))
+            {
+                return Json(new { success = false, message = "Nie można dodać niekupionej broni do ulubionych." });
             }
 
             // WALIDACJA: Sprawdź czy broń istnieje
@@ -401,6 +454,85 @@ namespace Symulator_Nozownika.Controllers
                 await _context.SaveChangesAsync();
                 return Json(new { success = true, isFavorite = true });
             }
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> BuyWeapon(int weaponId)
+        {
+            var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
+
+            if (string.IsNullOrEmpty(userName))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var user = await _context.UserAccounts
+                .Include(u => u.Statistics)
+                .Include(u => u.Level)
+                .Include(u => u.CoinWallet)
+                .Include(u => u.PurchasedWeapons)
+                .FirstOrDefaultAsync(u => u.UserName == userName);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            var weapon = await _context.Weapons.FirstOrDefaultAsync(w => w.Id == weaponId);
+            if (weapon == null)
+            {
+                TempData["WeaponSelectError"] = "Nie znaleziono wybranej broni.";
+                return RedirectToAction("SelectWeapon");
+            }
+
+            var level = await GetUserLevelAsync(user);
+            if (!_levelService.IsWeaponUnlocked(weaponId, level))
+            {
+                TempData["WeaponSelectError"] = "Najpierw osiągnij wymagany level, aby kupić tę broń.";
+                return RedirectToAction("SelectWeapon");
+            }
+
+            if (await HasPurchasedWeaponAsync(user.Id, weaponId))
+            {
+                TempData["WeaponSelectError"] = "Ta broń została już kupiona.";
+                return RedirectToAction("SelectWeapon");
+            }
+
+            var wallet = user.CoinWallet;
+            if (wallet == null)
+            {
+                wallet = new CoinWallet
+                {
+                    UserId = user.Id,
+                    Balance = 0,
+                    UpdatedAt = DateTime.Now
+                };
+
+                _context.CoinWallets.Add(wallet);
+            }
+
+            var price = _levelService.GetWeaponPrice(weapon.Id, weapon.Damage);
+            if (wallet.Balance < price)
+            {
+                TempData["WeaponSelectError"] = $"Masz za mało monet. Potrzebujesz {price}, a masz {wallet.Balance}.";
+                return RedirectToAction("SelectWeapon");
+            }
+
+            wallet.Balance -= price;
+            wallet.UpdatedAt = DateTime.Now;
+
+            _context.PurchasedWeapons.Add(new PurchasedWeapon
+            {
+                UserId = user.Id,
+                WeaponId = weapon.Id,
+                PricePaid = price,
+                PurchasedAt = DateTime.Now
+            });
+
+            await _context.SaveChangesAsync();
+            TempData["WeaponPurchaseSuccess"] = $"Kupiono broń {weapon.Name} za {price} monet.";
+            return RedirectToAction("SelectWeapon");
         }
 
         // Dodaj tę klasę na końcu AccountController (przed zamykającym })

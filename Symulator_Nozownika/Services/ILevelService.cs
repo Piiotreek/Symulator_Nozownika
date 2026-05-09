@@ -14,5 +14,7 @@ namespace Symulator_Nozownika.Services
 
         int GetRequiredLevelForWeapon(int weaponId);
         bool IsWeaponUnlocked(int weaponId, int currentLevel);
+        int GetWeaponPrice(int weaponId, int weaponDamage);
+        int GetCoinReward(int rawScore, int weaponDamage);
     }
 }

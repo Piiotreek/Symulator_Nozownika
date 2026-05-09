@@ -129,6 +129,18 @@ namespace Symulator_Nozownika.Controllers
             var level = await _context.Levels
                 .FirstOrDefaultAsync(l => l.UserId == userId);
 
+            var user = await _context.UserAccounts
+                .Include(u => u.SelectedWeapon)
+                .Include(u => u.CoinWallet)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return;
+            }
+
+            var wallet = user.CoinWallet;
+
             var today = DateTime.Today;
 
             if (statistics == null)
@@ -158,6 +170,18 @@ namespace Symulator_Nozownika.Controllers
                 _levelService.SyncLevel(level, statistics.TotalScore);
                 _context.Levels.Add(level);
             }
+
+            if (wallet == null)
+            {
+                wallet = new CoinWallet
+                {
+                    UserId = userId,
+                    Balance = 0,
+                    UpdatedAt = DateTime.Now
+                };
+
+                _context.CoinWallets.Add(wallet);
+            }
             else
             {
                 var lastPlayed = statistics.LastPlayedAt.Date;
@@ -185,6 +209,8 @@ namespace Symulator_Nozownika.Controllers
             var rawScore = Math.Max(0, request.Score);
             var playTimeSeconds = Math.Max(0, request.PlayTimeSeconds);
             var clicks = Math.Max(0, request.Clicks);
+            var weaponDamage = user.SelectedWeapon?.Damage ?? 2;
+            var coinReward = _levelService.GetCoinReward(rawScore, weaponDamage);
 
             // Kenshi-style diminishing returns: XP (tu: przyrost TotalScore) maleje wraz z levelem.
             // Level wyliczamy z aktualnego TotalScore (przed dodaniem punktów z tej gry).
@@ -199,6 +225,8 @@ namespace Symulator_Nozownika.Controllers
             statistics.TotalPlayTime += TimeSpan.FromSeconds(playTimeSeconds);
             statistics.LastPlayedAt = DateTime.Now;
             statistics.TotalClicks += clicks;
+            wallet.Balance += coinReward;
+            wallet.UpdatedAt = DateTime.Now;
 
             _levelService.SyncLevel(level, statistics.TotalScore);
 

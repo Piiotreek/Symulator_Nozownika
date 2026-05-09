@@ -139,6 +139,31 @@ namespace Symulator_Nozownika.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.CoinWallet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Balance")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("CoinWallets");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.FavoriteWeapon", b =>
                 {
                     b.Property<int>("Id")
@@ -230,6 +255,36 @@ namespace Symulator_Nozownika.Migrations
                         .IsUnique();
 
                     b.ToTable("Levels");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.PurchasedWeapon", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("PurchasedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PricePaid")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WeaponId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "WeaponId")
+                        .IsUnique();
+
+                    b.HasIndex("WeaponId");
+
+                    b.ToTable("PurchasedWeapons");
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.SavedScore", b =>
@@ -530,6 +585,25 @@ namespace Symulator_Nozownika.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.PurchasedWeapon", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
+                        .WithMany("PurchasedWeapons")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.Weapon", "Weapon")
+                        .WithMany()
+                        .HasForeignKey("WeaponId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("Weapon");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.SavedScore", b =>
                 {
                     b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
@@ -547,6 +621,22 @@ namespace Symulator_Nozownika.Migrations
                         .WithMany()
                         .HasForeignKey("SelectedWeaponId");
 
+                    b.Navigation("SelectedWeapon");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.CoinWallet", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
+                        .WithOne("CoinWallet")
+                        .HasForeignKey("Symulator_Nozownika.Models.CoinWallet", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.UserAccount", b =>
+                {
                     b.Navigation("SelectedWeapon");
                 });
 
@@ -582,7 +672,11 @@ namespace Symulator_Nozownika.Migrations
 
             modelBuilder.Entity("Symulator_Nozownika.Models.UserAccount", b =>
                 {
+                    b.Navigation("CoinWallet");
+
                     b.Navigation("Level");
+
+                    b.Navigation("PurchasedWeapons");
 
                     b.Navigation("Statistics");
 

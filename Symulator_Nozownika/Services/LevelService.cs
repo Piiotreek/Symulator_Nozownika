@@ -5,9 +5,21 @@ namespace Symulator_Nozownika.Services
 {
     public sealed class LevelService : ILevelService
     {
+        public const int StarterWeaponId = 10;
+
+        // Ręczne ceny early-game, żeby start nie był grindem.
+        // Balans można później dopracować bez zmiany całej formuły.
+        private static readonly IReadOnlyDictionary<int, int> _earlyWeaponPrices =
+            new ReadOnlyDictionary<int, int>(new Dictionary<int, int>
+            {
+                [1] = 200,   // Kitchen Knife
+                [2] = 450,   // Dagger
+                [3] = 1200   // Machete
+            });
+
         // WeaponId -> wymagany level
         // Level 1: tylko nożyczki (Id=10)
-        // Kolejne levele odblokowują po 2 bronie (ostatni może odblokować 1).
+        // Level 5 : Kitchen Knife (Id=1 itd.)
         private static readonly IReadOnlyDictionary<int, int> _weaponRequiredLevels =
             new ReadOnlyDictionary<int, int>(new Dictionary<int, int>
             {
@@ -30,6 +42,9 @@ namespace Symulator_Nozownika.Services
 
         private const int LevelLinearGrowth = 200;
         private const int LevelQuadraticGrowth = 40;
+        private const int WeaponBasePrice = 75;
+        private const int WeaponLevelLinearPriceGrowth = 60;
+        private const int WeaponLevelQuadraticPriceGrowth = 12;
 
         public int GetLevelFromTotalScore(int totalScore)
         {
@@ -104,6 +119,45 @@ namespace Symulator_Nozownika.Services
         {
             var required = GetRequiredLevelForWeapon(weaponId);
             return currentLevel >= required;
+        }
+
+        public int GetWeaponPrice(int weaponId, int weaponDamage)
+        {
+            if (weaponId == StarterWeaponId)
+            {
+                return 0;
+            }
+
+            if (_earlyWeaponPrices.TryGetValue(weaponId, out var earlyPrice))
+            {
+                return earlyPrice;
+            }
+
+            var requiredLevel = GetRequiredLevelForWeapon(weaponId);
+            if (requiredLevel == int.MaxValue)
+            {
+                return int.MaxValue;
+            }
+
+            var normalizedDamage = Math.Max(1, weaponDamage);
+            var levelComponent = (WeaponLevelQuadraticPriceGrowth * requiredLevel * requiredLevel) +
+                                 (WeaponLevelLinearPriceGrowth * requiredLevel);
+
+            return WeaponBasePrice + levelComponent + (normalizedDamage * 15);
+        }
+
+        public int GetCoinReward(int rawScore, int weaponDamage)
+        {
+            var normalizedScore = Math.Max(0, rawScore);
+            var normalizedDamage = Math.Max(1, weaponDamage);
+
+            // Wczesna gra: nożyczki mają niski DMG, więc dodajemy stałą bazę,
+            // a część score skalujemy łagodniej, żeby pierwsze zakupy były realne.
+            const int baseReward = 15;
+            var scoreReward = (int)Math.Round(normalizedScore / 30.0, MidpointRounding.AwayFromZero);
+            var damageReward = normalizedDamage * 2;
+
+            return Math.Max(5, baseReward + scoreReward + damageReward);
         }
     }
 }

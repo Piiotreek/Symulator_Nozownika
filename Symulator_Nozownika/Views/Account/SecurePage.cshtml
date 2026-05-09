@@ -7,6 +7,7 @@
     var weaponDmg = Model.SelectedWeapon?.Damage ?? 10;
     var weaponCd = Model.SelectedWeapon?.Cooldown.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) ?? "1.0";
     var weaponImg = Model.SelectedWeapon?.ImageUrl ?? "/images/default.png";
+    var coinBalance = Model.CoinWallet?.Balance ?? 0;
 }
 
 <div class="container mt-4">
@@ -34,6 +35,7 @@
                 <span class="text-danger">HP: <span id="hp-value">10000</span></span>
                 <span class="mx-2">|</span>
                 <span class="text-clock">Czas: <span id="timer-value">15</span>s</span>
+                <div class="mt-2 text-warning" style="font-size: 20px;">Monety: <span id="coin-balance">@coinBalance</span></div>
             </div>
         </div>
     </div>
@@ -120,6 +122,30 @@
             timerDisplay.innerText = timeLeft;
             if (timeLeft <= 0) endGame("KONIEC CZASU!");
         }, 1000);
+    }
+
+    async function submitGameScore(finalScore, currentClicks) {
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        const response = await fetch('/GameScore/SaveScore', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { 'RequestVerificationToken': token } : {})
+            },
+            body: JSON.stringify({
+                score: finalScore,
+                clicks: currentClicks,
+                playTimeSeconds: 15,
+                won: hp <= 0
+            })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            location.reload();
+        } else if (result.needsLogin) {
+            alert(result.message || 'Zaloguj się, aby zapisać wynik.');
+        }
     }
 
     function endGame(message) {

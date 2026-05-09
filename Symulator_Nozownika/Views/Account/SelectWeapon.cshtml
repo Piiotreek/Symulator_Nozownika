@@ -6,12 +6,16 @@
     var userTotalScore = (int?)ViewBag.UserTotalScore ?? 0;
     var currentLevelThreshold = (int?)ViewBag.CurrentLevelThreshold ?? 0;
     var nextLevelThreshold = ViewBag.NextLevelThreshold as int?;
+    var coinBalance = (int?)ViewBag.CoinBalance ?? 0;
+    var purchasedWeaponIds = ViewBag.PurchasedWeaponIds as List<int> ?? new List<int> { Symulator_Nozownika.Services.LevelService.StarterWeaponId };
+    var selectedWeaponId = ViewBag.SelectedWeaponId as int?;
 
     var favoriteWeaponIds = ViewBag.FavoriteWeaponIds as List<int> ?? new List<int>();
     var favoriteWeapons = Model.Where(w => favoriteWeaponIds.Contains(w.Id)).ToList();
     var regularWeapons = Model.Where(w => !favoriteWeaponIds.Contains(w.Id)).ToList();
 
-    var unlockedWeapons = regularWeapons.Where(w => userLevel >= LevelService.GetRequiredLevelForWeapon(w.Id)).ToList();
+    var availableToBuyWeapons = regularWeapons.Where(w => userLevel >= LevelService.GetRequiredLevelForWeapon(w.Id) && !purchasedWeaponIds.Contains(w.Id)).ToList();
+    var ownedWeapons = regularWeapons.Where(w => purchasedWeaponIds.Contains(w.Id)).ToList();
     var lockedWeapons = regularWeapons.Where(w => userLevel < LevelService.GetRequiredLevelForWeapon(w.Id)).ToList();
 }
 
@@ -23,6 +27,11 @@
         <div class="alert alert-warning text-center" role="alert">@weaponError</div>
     }
 
+    @if (TempData["WeaponPurchaseSuccess"] is string purchaseSuccess && !string.IsNullOrWhiteSpace(purchaseSuccess))
+    {
+        <div class="alert alert-success text-center" role="alert">@purchaseSuccess</div>
+    }
+
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
@@ -30,6 +39,8 @@
                     <strong>Level:</strong> @userLevel
                     <span class="text-muted">|</span>
                     <strong>Punkty łącznie:</strong> @userTotalScore
+                    <span class="text-muted">|</span>
+                    <strong>Monety:</strong> @coinBalance
                 </div>
 
                 @if (nextLevelThreshold.HasValue)
@@ -61,6 +72,8 @@
                 {
                     var requiredLvl = LevelService.GetRequiredLevelForWeapon(weapon.Id);
                     var isUnlocked = userLevel >= requiredLvl;
+                    var isPurchased = purchasedWeaponIds.Contains(weapon.Id);
+                    var price = LevelService.GetWeaponPrice(weapon.Id, weapon.Damage);
                     <div class="col-md-3 col-sm-6 mb-4">
                         <div class="card weapon-card shadow-sm h-100 @(isUnlocked ? "" : "weapon-locked")">
                             <button type="button" 
@@ -75,15 +88,24 @@
                                 <p class="card-text">
                                     <span class="badge bg-danger">💥 @weapon.Damage DMG</span><br />
                                     <span class="badge bg-info mt-1">⏱️ @weapon.Cooldown.ToString("F1")s CD</span>
+                                     <br />
+                                     <span class="badge bg-warning text-dark mt-1">💰 @price</span>
                                     @if (!isUnlocked)
                                     {
                                         <br />
                                         <span class="badge bg-secondary mt-1">Zablokowana (lvl @requiredLvl)</span>
                                     }
+                                     else if (isPurchased)
+                                     {
+                                         <br />
+                                         <span class="badge bg-success mt-1">Kupiona</span>
+                                     }
                                 </p>
                                 <form asp-action="SelectWeapon" method="post" class="mt-2">
                                     <input type="hidden" name="weaponId" value="@weapon.Id" />
-                                    <button type="submit" class="btn btn-primary btn-sm" disabled="@(!isUnlocked)">Wybierz</button>
+                                     <button type="submit" class="btn btn-primary btn-sm" disabled="@(!isUnlocked || !isPurchased)">
+                                         @(selectedWeaponId == weapon.Id ? "Wybrana" : "Wybierz")
+                                     </button>
                                 </form>
                             </div>
                         </div>
@@ -93,13 +115,14 @@
         </div>
     }
 
-    <h3 class="mb-3">Odblokowane bronie</h3>
+    <h3 class="mb-3">Kupione bronie</h3>
     <hr class="mb-4" />
     <div class="row">
-        @foreach (var weapon in unlockedWeapons)
+        @foreach (var weapon in ownedWeapons)
         {
             var requiredLvl = LevelService.GetRequiredLevelForWeapon(weapon.Id);
             var isUnlocked = userLevel >= requiredLvl;
+            var price = LevelService.GetWeaponPrice(weapon.Id, weapon.Damage);
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="card weapon-card shadow-sm h-100 @(isUnlocked ? "" : "weapon-locked")">
                     <button type="button" 
@@ -114,16 +137,58 @@
                         <p class="card-text">
                             <span class="badge bg-danger">💥 @weapon.Damage DMG</span><br />
                             <span class="badge bg-info mt-1">⏱️ @weapon.Cooldown.ToString("F1")s CD</span>
+                            <br />
+                            <span class="badge bg-warning text-dark mt-1">💰 @price</span>
                             @if (!isUnlocked)
                             {
                                 <br />
                                 <span class="badge bg-secondary mt-1">Zablokowana (lvl @requiredLvl)</span>
                             }
+                            else
+                            {
+                                <br />
+                                <span class="badge bg-success mt-1">Kupiona</span>
+                            }
                         </p>
                         <form asp-action="SelectWeapon" method="post" class="mt-2">
                             <input type="hidden" name="weaponId" value="@weapon.Id" />
-                            <button type="submit" class="btn btn-primary btn-sm" disabled="@(!isUnlocked)">Wybierz</button>
+                            <button type="submit" class="btn btn-primary btn-sm" disabled="@(!isUnlocked)">
+                                @(selectedWeaponId == weapon.Id ? "Wybrana" : "Wybierz")
+                            </button>
                         </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <h3 class="mb-3 mt-4">Bronie gotowe do kupienia</h3>
+    <hr class="mb-4" />
+    <div class="row">
+        @foreach (var weapon in availableToBuyWeapons)
+        {
+            var price = LevelService.GetWeaponPrice(weapon.Id, weapon.Damage);
+            var canAfford = coinBalance >= price;
+            var reward = LevelService.GetCoinReward(0, weapon.Damage);
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="card weapon-card shadow-sm h-100">
+                    <img src="@weapon.ImageUrl" class="card-img-top p-3" alt="@weapon.Name" style="height: 150px; object-fit: contain;" />
+                    <div class="card-body text-center">
+                        <h5 class="card-title">@weapon.Name</h5>
+                        <p class="card-text">
+                            <span class="badge bg-danger">💥 @weapon.Damage DMG</span><br />
+                            <span class="badge bg-info mt-1">⏱️ @weapon.Cooldown.ToString("F1")s CD</span><br />
+                            <span class="badge bg-warning text-dark mt-1">Cena: @price</span><br />
+                            <span class="badge bg-success mt-1">+@reward monet bazowo / gra</span>
+                        </p>
+                        <form asp-action="BuyWeapon" method="post" class="mt-2">
+                            <input type="hidden" name="weaponId" value="@weapon.Id" />
+                            <button type="submit" class="btn btn-warning btn-sm" disabled="@(!canAfford)">Kup</button>
+                        </form>
+                        @if (!canAfford)
+                        {
+                            <small class="text-danger d-block mt-2">Brakuje @(price - coinBalance) monet</small>
+                        }
                     </div>
                 </div>
             </div>
@@ -136,6 +201,7 @@
         @foreach (var weapon in lockedWeapons)
         {
             var requiredLvl = LevelService.GetRequiredLevelForWeapon(weapon.Id);
+            var price = LevelService.GetWeaponPrice(weapon.Id, weapon.Damage);
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="card weapon-card shadow-sm h-100 weapon-locked">
                     <img src="@weapon.ImageUrl" class="card-img-top p-3" alt="@weapon.Name" style="height: 150px; object-fit: contain;" />
@@ -145,11 +211,13 @@
                             <span class="badge bg-danger">💥 @weapon.Damage DMG</span><br />
                             <span class="badge bg-info mt-1">⏱️ @weapon.Cooldown.ToString("F1")s CD</span>
                             <br />
+                            <span class="badge bg-warning text-dark mt-1">Cena: @price</span>
+                            <br />
                             <span class="badge bg-secondary mt-1">Zablokowana (lvl @requiredLvl)</span>
                         </p>
-                        <form asp-action="SelectWeapon" method="post" class="mt-2">
+                        <form asp-action="BuyWeapon" method="post" class="mt-2">
                             <input type="hidden" name="weaponId" value="@weapon.Id" />
-                            <button type="submit" class="btn btn-primary btn-sm" disabled>Wybierz</button>
+                            <button type="submit" class="btn btn-warning btn-sm" disabled>Kup</button>
                         </form>
                     </div>
                 </div>

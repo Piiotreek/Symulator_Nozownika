@@ -27,6 +27,7 @@ namespace Symulator_Nozownika.Controllers
 
             var user = await _context.UserAccounts
                 .Include(u => u.Statistics)
+                .Include(u => u.CoinWallet)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null)
@@ -51,6 +52,7 @@ namespace Symulator_Nozownika.Controllers
             ViewBag.UserTotalScore = totalScore;
             ViewBag.CurrentLevelThreshold = _levelService.GetTotalScoreThresholdForLevel(level);
             ViewBag.NextLevelThreshold = _levelService.GetNextLevelTotalScoreThreshold(level);
+            ViewBag.CoinBalance = user.CoinWallet?.Balance ?? 0;
            
 
             return View(user);
