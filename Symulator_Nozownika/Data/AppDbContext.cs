@@ -108,7 +108,7 @@ namespace Symulator_Nozownika.Data
                 new Quest
                 {
                     Id = 1,
-                    Name = "Klikacz Dnia",
+                    Name = "Nożownik Dnia",
                     Description = "Kliknij 50 razy w trakcie dzisiejszej sesji.",
                     QuestType = QuestType.Clicks,
                     TargetValue = 50,
@@ -119,7 +119,7 @@ namespace Symulator_Nozownika.Data
                 new Quest
                 {
                     Id = 2,
-                    Name = "Szybkie Tempo",
+                    Name = "Szybkie Paluszki",
                     Description = "Kliknij 150 razy w trakcie dzisiejszej sesji.",
                     QuestType = QuestType.Clicks,
                     TargetValue = 150,
@@ -130,7 +130,7 @@ namespace Symulator_Nozownika.Data
                 new Quest
                 {
                     Id = 3,
-                    Name = "Maratończyk",
+                    Name = "British Special",
                     Description = "Kliknij 300 razy w trakcie dzisiejszej sesji.",
                     QuestType = QuestType.Clicks,
                     TargetValue = 300,
@@ -141,7 +141,7 @@ namespace Symulator_Nozownika.Data
                 new Quest
                 {
                     Id = 4,
-                    Name = "Strzelec Wyborowy",
+                    Name = "Nożyce Jak Brzytwa",
                     Description = "Zdobądź 500 punktów w ciągu dnia.",
                     QuestType = QuestType.Score,
                     TargetValue = 500,
@@ -152,7 +152,7 @@ namespace Symulator_Nozownika.Data
                 new Quest
                 {
                     Id = 5,
-                    Name = "Łowca Punktów",
+                    Name = "Daj mu jeszcze jeden w serce!",
                     Description = "Zdobądź 1500 punktów w ciągu dnia.",
                     QuestType = QuestType.Score,
                     TargetValue = 1500,
@@ -163,7 +163,7 @@ namespace Symulator_Nozownika.Data
                 new Quest
                 {
                     Id = 6,
-                    Name = "Mistrz Noży",
+                    Name = "Prawdziwy Londyńczyk",
                     Description = "Zdobądź 3000 punktów w ciągu dnia.",
                     QuestType = QuestType.Score,
                     TargetValue = 3000,
