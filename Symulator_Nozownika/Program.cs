@@ -20,6 +20,7 @@ namespace Symulator_Nozownika
             //building dependency injection for achievement service
             builder.Services.AddScoped<IAchievementService, AchievementService>();
             builder.Services.AddSingleton<ILevelService, LevelService>();
+            builder.Services.AddScoped<IQuestService, QuestService>();
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())

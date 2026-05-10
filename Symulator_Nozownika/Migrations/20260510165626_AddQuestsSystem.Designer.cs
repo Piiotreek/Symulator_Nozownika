@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Symulator_Nozownika.Data;
 
@@ -11,9 +12,11 @@ using Symulator_Nozownika.Data;
 namespace Symulator_Nozownika.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260510165626_AddQuestsSystem")]
+    partial class AddQuestsSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -295,16 +298,6 @@ namespace Symulator_Nozownika.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<int>("QuestType")
                         .HasColumnType("int");
 
@@ -323,74 +316,6 @@ namespace Symulator_Nozownika.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Quests");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Description = "Kliknij 50 razy w trakcie dzisiejszej sesji.",
-                            Name = "Klikacz Dnia",
-                            QuestType = 0,
-                            ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
-                            RewardCoins = 10,
-                            RewardXp = 25,
-                            TargetValue = 50
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Description = "Kliknij 150 razy w trakcie dzisiejszej sesji.",
-                            Name = "Szybkie Tempo",
-                            QuestType = 0,
-                            ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
-                            RewardCoins = 25,
-                            RewardXp = 60,
-                            TargetValue = 150
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Description = "Kliknij 300 razy w trakcie dzisiejszej sesji.",
-                            Name = "Maratończyk",
-                            QuestType = 0,
-                            ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
-                            RewardCoins = 50,
-                            RewardXp = 120,
-                            TargetValue = 300
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Description = "Zdobądź 500 punktów w ciągu dnia.",
-                            Name = "Strzelec Wyborowy",
-                            QuestType = 1,
-                            ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
-                            RewardCoins = 15,
-                            RewardXp = 40,
-                            TargetValue = 500
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Description = "Zdobądź 1500 punktów w ciągu dnia.",
-                            Name = "Łowca Punktów",
-                            QuestType = 1,
-                            ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
-                            RewardCoins = 35,
-                            RewardXp = 90,
-                            TargetValue = 1500
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Description = "Zdobądź 3000 punktów w ciągu dnia.",
-                            Name = "Mistrz Noży",
-                            QuestType = 1,
-                            ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
-                            RewardCoins = 75,
-                            RewardXp = 200,
-                            TargetValue = 3000
-                        });
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.SavedScore", b =>
@@ -515,9 +440,6 @@ namespace Symulator_Nozownika.Migrations
 
                     b.Property<bool>("IsRewardClaimed")
                         .HasColumnType("bit");
-
-                    b.Property<DateTime>("ProgressDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<int>("QuestId")
                         .HasColumnType("int");

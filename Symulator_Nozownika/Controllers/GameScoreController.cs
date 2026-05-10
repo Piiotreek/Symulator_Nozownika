@@ -35,13 +35,15 @@ namespace Symulator_Nozownika.Controllers
         // creating this service to handle achievement unlocking logic when user reaches certain total score milestones
         private readonly IAchievementService _achievementService;
         private readonly ILevelService _levelService;
+        private readonly IQuestService _questService;
 
         //recreating constructor to inject achievement service into controller
-        public GameScoreController(AppDbContext context, IAchievementService achievementService, ILevelService levelService)
+        public GameScoreController(AppDbContext context, IAchievementService achievementService, ILevelService levelService, IQuestService questService)
         {
             _context = context;
             _achievementService = achievementService;
             _levelService = levelService;
+            _questService = questService;
         }
         private static string NormalizeCountryName(string country)
         {
@@ -273,6 +275,9 @@ namespace Symulator_Nozownika.Controllers
                         if (totalClicksAch != null && totalClicksAch.Any()) unlockedAchievements.AddRange(totalClicksAch);
                     }
 
+                    // 5. Aktualizacja postępu questów
+                    var completedQuests = await _questService.UpdateProgressAsync(parsedUserId, request.Score, request.Clicks);
+
                     //logic to determine if the new score is a personal best and update the high score table accordingly, while also ensuring that only the best score for each user is kept in the high score table
                     var userScores = await _context.HighScores
                         .Where(h => h.UserId == parsedUserId)
@@ -307,7 +312,7 @@ namespace Symulator_Nozownika.Controllers
                         await _context.SaveChangesAsync();
                         System.Console.WriteLine($"✅ Wynik zapisany pomyślnie!");
                         
-                        return Json(new { success = true, message = "Wynik zapisany!", newRecord = true , achievements = unlockedAchievements });
+                        return Json(new { success = true, message = "Wynik zapisany!", newRecord = true, achievements = unlockedAchievements, completedQuests = completedQuests });
                     }
 
                     // Jeśli nowy wynik jest lepszy od najlepszego
@@ -322,14 +327,14 @@ namespace Symulator_Nozownika.Controllers
                         await _context.SaveChangesAsync();
                         System.Console.WriteLine($"✅ Nowy Personal Best zapisany!");
 
-                        return Json(new { success = true, message = "Nowy Personal Best zapisany!", newRecord = false, achievements = unlockedAchievements });
+                        return Json(new { success = true, message = "Nowy Personal Best zapisany!", newRecord = false, achievements = unlockedAchievements, completedQuests = completedQuests });
                     }
 
                     // Zapisz statystyki (np. streak) nawet jeśli wynik nie jest nowym rekordem
                     await _context.SaveChangesAsync();
 
                     System.Console.WriteLine($"⚠️ Wynik {score} nie jest lepszy niż {personalBest.Score}");
-                    return Json(new { success = false, message = $"Twój najlepszy wynik to {personalBest.Score}. Spróbuj jeszcze raz!", achievements = unlockedAchievements });
+                    return Json(new { success = false, message = $"Twój najlepszy wynik to {personalBest.Score}. Spróbuj jeszcze raz!", achievements = unlockedAchievements, completedQuests = completedQuests });
                 }
                 else
                 {

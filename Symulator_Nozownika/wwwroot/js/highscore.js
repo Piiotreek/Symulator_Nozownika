@@ -49,6 +49,13 @@ async function submitGameScore(score,clicks) {
             });
         }
 
+        // show quest completed toast
+        if (result.completedQuests && result.completedQuests.length > 0) {
+            result.completedQuests.forEach(q => {
+                showQuestCompletedToast(q.name || q.Name, q.rewardCoins || q.RewardCoins, q.rewardXp || q.RewardXp);
+            });
+        }
+
         // slowed alert
         setTimeout(() => {
             if (result.success) {
@@ -169,6 +176,31 @@ async function displayHighScores(containerId) {
 // Funkcja pomocnicza do wyświetlania alertów
 function showAlert(title, message) {
     alert(`${title}\n\n${message}`);
+}
+
+// Toast o ukończeniu questa
+function showQuestCompletedToast(questName, coins, xp) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const id = 'toast-quest-' + Date.now();
+    const html = `
+        <div id="${id}" class="toast align-items-center text-bg-dark border-success shadow-lg" role="alert" data-bs-delay="8000">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center p-3 gap-3">
+                    <span style="font-size:2rem;">📋</span>
+                    <div>
+                        <strong class="text-success d-block">Quest ukończony!</strong>
+                        <span class="text-white">${questName}</span><br>
+                        <small class="text-warning">+${coins} 🪙 &nbsp; +${xp} ✨ XP — <a href="/Quest/Index" style="color:#ffc107;">Odbierz nagrodę</a></small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-3 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+    const el = document.getElementById(id);
+    new bootstrap.Toast(el).show();
+    el.addEventListener('hidden.bs.toast', () => el.remove());
 }
 
 // Sprawdź czy jest pending score po zalogowaniu

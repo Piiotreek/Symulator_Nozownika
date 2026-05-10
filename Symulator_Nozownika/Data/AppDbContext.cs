@@ -23,6 +23,9 @@ namespace Symulator_Nozownika.Data
         public DbSet<Achievement> Achievements { get; set; }
         public DbSet<UserAchievement> UserAchievements { get; set; }
 
+        public DbSet<Quest> Quests { get; set; }
+        public DbSet<UserQuestProgress> UserQuestProgresses { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -84,6 +87,90 @@ namespace Symulator_Nozownika.Data
                 .WithMany()
                 .HasForeignKey(ss => ss.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserQuestProgress>()
+                .HasOne(uqp => uqp.User)
+                .WithMany()
+                .HasForeignKey(uqp => uqp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserQuestProgress>()
+                .HasOne(uqp => uqp.Quest)
+                .WithMany()
+                .HasForeignKey(uqp => uqp.QuestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserQuestProgress>()
+                .HasIndex(uqp => new { uqp.UserId, uqp.QuestId })
+                .IsUnique();
+
+            modelBuilder.Entity<Quest>().HasData(
+                new Quest
+                {
+                    Id = 1,
+                    Name = "Klikacz Dnia",
+                    Description = "Kliknij 50 razy w trakcie dzisiejszej sesji.",
+                    QuestType = QuestType.Clicks,
+                    TargetValue = 50,
+                    RewardCoins = 10,
+                    RewardXp = 25,
+                    ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Quest
+                {
+                    Id = 2,
+                    Name = "Szybkie Tempo",
+                    Description = "Kliknij 150 razy w trakcie dzisiejszej sesji.",
+                    QuestType = QuestType.Clicks,
+                    TargetValue = 150,
+                    RewardCoins = 25,
+                    RewardXp = 60,
+                    ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Quest
+                {
+                    Id = 3,
+                    Name = "Maratończyk",
+                    Description = "Kliknij 300 razy w trakcie dzisiejszej sesji.",
+                    QuestType = QuestType.Clicks,
+                    TargetValue = 300,
+                    RewardCoins = 50,
+                    RewardXp = 120,
+                    ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Quest
+                {
+                    Id = 4,
+                    Name = "Strzelec Wyborowy",
+                    Description = "Zdobądź 500 punktów w ciągu dnia.",
+                    QuestType = QuestType.Score,
+                    TargetValue = 500,
+                    RewardCoins = 15,
+                    RewardXp = 40,
+                    ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Quest
+                {
+                    Id = 5,
+                    Name = "Łowca Punktów",
+                    Description = "Zdobądź 1500 punktów w ciągu dnia.",
+                    QuestType = QuestType.Score,
+                    TargetValue = 1500,
+                    RewardCoins = 35,
+                    RewardXp = 90,
+                    ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, DateTimeKind.Utc)
+                },
+                new Quest
+                {
+                    Id = 6,
+                    Name = "Mistrz Noży",
+                    Description = "Zdobądź 3000 punktów w ciągu dnia.",
+                    QuestType = QuestType.Score,
+                    TargetValue = 3000,
+                    RewardCoins = 75,
+                    RewardXp = 200,
+                    ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, DateTimeKind.Utc)
+                });
 
             modelBuilder.Entity<Weapon>().HasData(
                 new Weapon { Id = 1, Name = "Kitchen Knife", Damage = 10, Cooldown = 0.4, ImageUrl = "/images/knife.png" },

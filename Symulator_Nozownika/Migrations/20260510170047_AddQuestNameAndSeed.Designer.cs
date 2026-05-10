@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Symulator_Nozownika.Data;
 
@@ -11,9 +12,11 @@ using Symulator_Nozownika.Data;
 namespace Symulator_Nozownika.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260510170047_AddQuestNameAndSeed")]
+    partial class AddQuestNameAndSeed
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -515,9 +518,6 @@ namespace Symulator_Nozownika.Migrations
 
                     b.Property<bool>("IsRewardClaimed")
                         .HasColumnType("bit");
-
-                    b.Property<DateTime>("ProgressDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<int>("QuestId")
                         .HasColumnType("int");
