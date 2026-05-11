@@ -1,0 +1,129 @@
+@model List<Symulator_Nozownika.Models.ClubMessage>
+
+@{
+    ViewData["Title"] = "Czat - " + ViewBag.ClubName;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h2>💬 Czat klubu: @ViewBag.ClubName</h2>
+            <hr />
+
+            <div class="chat-container" style="height: 500px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; background-color: #f9f9f9; border-radius: 8px;">
+                @if (Model.Count == 0)
+                {
+                    <div class="text-center text-muted">
+                        <p>Brak wiadomości. Bądź pierwszy aby napisać!</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var message in Model)
+                    {
+                        <div class="message mb-3" style="padding: 10px; background: white; border-radius: 6px; border-left: 4px solid #007bff;">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong style="color: #007bff;">@message.User.UserName</strong>
+                                    <span style="color: #999; font-size: 0.85em;">
+                                        @message.CreatedAt.ToString("g")
+                                        @if (message.EditedAt.HasValue)
+                                        {
+                                            <em>(edytowana)</em>
+                                        }
+                                    </span>
+                                </div>
+                                @{
+                                    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                                    var canDelete = message.UserId.ToString() == currentUserId || 
+                                                   (User.IsInRole("Admin") || 
+                                                    int.TryParse(currentUserId, out int uid) && 
+                                                    ViewContext.RouteData.Values.ContainsKey("clubId"));
+                                }
+                                @if (canDelete && message.UserId.ToString() == currentUserId)
+                                {
+                                    <form method="post" action="@Url.Action("DeleteMessage")" style="display: inline;">
+                                        <input type="hidden" name="messageId" value="@message.Id" />
+                                        <input type="hidden" name="clubId" value="@ViewBag.ClubId" />
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Na pewno chcesz usunąć tę wiadomość?');">×</button>
+                                    </form>
+                                }
+                            </div>
+                            <p class="mt-2 mb-0" style="word-wrap: break-word; color: #000;">@message.Content</p>
+                        </div>
+                    }
+                }
+            </div>
+
+            <form method="post" action="@Url.Action("SendMessage")">
+                <input type="hidden" name="clubId" value="@ViewBag.ClubId" />
+                <div class="form-group">
+                    <label for="content" class="form-label">Twoja wiadomość:</label>
+                    <textarea name="content" id="content" class="form-control" placeholder="Wpisz wiadomość..." required rows="4" maxlength="500"></textarea>
+                    <small class="form-text text-muted">Maksymalnie 500 znaków</small>
+                </div>
+                <button type="submit" class="btn btn-primary">📤 Wyślij</button>
+                <a href="@Url.Action("Details", "Club", new { id = ViewBag.ClubId })" class="btn btn-secondary">Powrót do klubu</a>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">ℹ️ Informacje</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Czat klubu jest dostępny tylko dla członków.</strong></p>
+                    <p>Tutaj możecie rozmawiać i dzielić się informacjami dotyczącymi klubu.</p>
+                    <hr />
+                    <p class="text-muted small">Wiadomości są sortowane chronologicznie. Możesz usunąć tylko swoje wiadomości.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .chat-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .chat-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .chat-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+
+    .chat-container::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    .message {
+        animation: slideIn 0.3s ease-in;
+    }
+</style>
+
+<style>
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<script>
+    // Auto-scroll do dołu gdy załaduje się strona
+    document.addEventListener('DOMContentLoaded', function () {
+        const chatContainer = document.querySelector('.chat-container');
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    });
+</script>

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Symulator_Nozownika.Data;
@@ -21,12 +23,25 @@ namespace Symulator_Nozownika
             builder.Services.AddScoped<IAchievementService, AchievementService>();
             builder.Services.AddSingleton<ILevelService, LevelService>();
             builder.Services.AddScoped<IQuestService, QuestService>();
+            //building dependency injection for club services
+            builder.Services.AddScoped<IClubService, ClubService>();
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                dbContext.Database.Migrate();
+                
+                if (app.Environment.IsDevelopment())
+                {
+                    // W trybie dev - usuń i utwórz nową bazę (w razie zmian modelu)
+                    dbContext.Database.EnsureDeleted();
+                    dbContext.Database.EnsureCreated();
+                }
+                else
+                {
+                    // W production - zastosuj migracje
+                    dbContext.Database.Migrate();
+                }
             }
 
             // Configure the HTTP request pipeline.
@@ -53,5 +68,18 @@ namespace Symulator_Nozownika
 
             app.Run();
         }
+    }
+}
+
+namespace Symulator_Nozownika.Services
+{
+    public interface IClubService
+    {
+        // Dodaj tutaj metody, które powinny być zaimplementowane przez ClubService
+    }
+
+    public class ClubService : IClubService
+    {
+        // Implementacja metod z interfejsu IClubService
     }
 }

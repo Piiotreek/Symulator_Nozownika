@@ -19,6 +19,9 @@ namespace Symulator_Nozownika.Data
         public DbSet<Level> Levels { get; set; }
         public DbSet<CoinWallet> CoinWallets { get; set; }
         public DbSet<PurchasedWeapon> PurchasedWeapons { get; set; }
+        public DbSet<Club> Clubs { get; set; }
+        public DbSet<ClubMember> ClubMembers { get; set; }
+        public DbSet<ClubMessage> ClubMessages { get; set; }
 
         public DbSet<Achievement> Achievements { get; set; }
         public DbSet<UserAchievement> UserAchievements { get; set; }
@@ -29,6 +32,36 @@ namespace Symulator_Nozownika.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Club>()
+                .HasOne(c => c.Owner)
+                .WithMany()
+                .HasForeignKey(c => c.OwnerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<ClubMember>()
+                .HasOne(cm => cm.Club)
+                .WithMany(c => c.Members)
+                .HasForeignKey(cm => cm.ClubId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ClubMember>()
+                .HasOne(cm => cm.User)
+                .WithMany()
+                .HasForeignKey(cm => cm.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<ClubMessage>()
+                .HasOne(cm => cm.Club)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(cm => cm.ClubId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ClubMessage>()
+                .HasOne(cm => cm.User)
+                .WithMany()
+                .HasForeignKey(cm => cm.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
 
             modelBuilder.Entity<HighScore>()
                 .HasOne(h => h.UserAccount)

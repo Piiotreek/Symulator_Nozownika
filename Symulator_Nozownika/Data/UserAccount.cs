@@ -31,6 +31,11 @@ namespace Symulator_Nozownika.Models
         [ForeignKey("SelectedWeaponId")]
         public virtual Weapon? SelectedWeapon { get; set; }
 
+        public int? ClubId { get; set; }
+
+        [ForeignKey("ClubId")]
+        public virtual Club? Club { get; set; }
+
         // WŁAŚCIWOŚĆ NAWIGACYJNA - Statystyki (DODAJ TO!)
         public virtual UserStatistics? Statistics { get; set; }
 
