@@ -33,6 +33,12 @@ namespace Symulator_Nozownika.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<UserAccount>()
+            .HasOne(u => u.Club)
+            .WithMany() 
+            .HasForeignKey(u => u.ClubId)
+            .OnDelete(DeleteBehavior.SetNull);
+
             modelBuilder.Entity<Club>()
                 .HasOne(c => c.Owner)
                 .WithMany()

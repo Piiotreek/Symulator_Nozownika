@@ -139,6 +139,105 @@ namespace Symulator_Nozownika.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.Club", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("MaxMembers")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OwnerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId");
+
+                    b.ToTable("Clubs");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.ClubMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ClubMembers");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.ClubMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EditedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ClubMessages");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.CoinWallet", b =>
                 {
                     b.Property<int>("Id")
@@ -435,6 +534,9 @@ namespace Symulator_Nozownika.Migrations
                     b.Property<string>("AvatarPath")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ClubId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Country")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -466,6 +568,8 @@ namespace Symulator_Nozownika.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
 
                     b.HasIndex("SelectedWeaponId");
 
@@ -690,6 +794,55 @@ namespace Symulator_Nozownika.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.Club", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.ClubMember", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.Club", "Club")
+                        .WithMany("Members")
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Club");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.ClubMessage", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.Club", "Club")
+                        .WithMany("Messages")
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Club");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.CoinWallet", b =>
                 {
                     b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
@@ -773,9 +926,16 @@ namespace Symulator_Nozownika.Migrations
 
             modelBuilder.Entity("Symulator_Nozownika.Models.UserAccount", b =>
                 {
+                    b.HasOne("Symulator_Nozownika.Models.Club", "Club")
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Symulator_Nozownika.Models.Weapon", "SelectedWeapon")
                         .WithMany()
                         .HasForeignKey("SelectedWeaponId");
+
+                    b.Navigation("Club");
 
                     b.Navigation("SelectedWeapon");
                 });
@@ -827,6 +987,13 @@ namespace Symulator_Nozownika.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.Club", b =>
+                {
+                    b.Navigation("Members");
+
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.UserAccount", b =>

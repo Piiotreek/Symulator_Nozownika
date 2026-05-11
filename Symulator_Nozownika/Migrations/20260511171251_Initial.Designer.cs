@@ -12,8 +12,8 @@ using Symulator_Nozownika.Data;
 namespace Symulator_Nozownika.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260505213233_AddLevelEntity")]
-    partial class AddLevelEntity
+    [Migration("20260511171251_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -85,7 +85,185 @@ namespace Symulator_Nozownika.Migrations
                             Name = "Weteran",
                             TargetValue = 10000,
                             Type = 2
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Description = "Zagraj w swoją pierwszą grę.",
+                            ImagePath = "/images/achiv/first-game.png",
+                            Name = "Pierwsza krew",
+                            TargetValue = 1,
+                            Type = 0
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Description = "Kliknij 100 razy w trakcie jednej gry.",
+                            ImagePath = "/images/achiv/100-clicks-in-one-game.png",
+                            Name = "Szybkie palce",
+                            TargetValue = 100,
+                            Type = 4
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Description = "Zdobądź łącznie 300 kliknięć we wszystkich grach.",
+                            ImagePath = "/images/achiv/300-clicks.png",
+                            Name = "Klikacz",
+                            TargetValue = 300,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Description = "Zdobądź łącznie 500 kliknięć we wszystkich grach.",
+                            ImagePath = "/images/achiv/500-clicks.png",
+                            Name = "Wprawiony Klikacz",
+                            TargetValue = 500,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Description = "Zdobądź łącznie 1000 kliknięć we wszystkich grach.",
+                            ImagePath = "/images/achiv/1000-clicks.png",
+                            Name = "Maniak",
+                            TargetValue = 1000,
+                            Type = 1
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Description = "Zdobądź łącznie 3000 kliknięć we wszystkich grach.",
+                            ImagePath = "/images/achiv/3000-clicks.png",
+                            Name = "3000 GWIAZD!",
+                            TargetValue = 3000,
+                            Type = 1
                         });
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.Club", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("MaxMembers")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OwnerName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId");
+
+                    b.ToTable("Clubs");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.ClubMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ClubMembers");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.ClubMessage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClubId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EditedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ClubMessages");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.CoinWallet", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Balance")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("CoinWallets");
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.FavoriteWeapon", b =>
@@ -181,6 +359,142 @@ namespace Symulator_Nozownika.Migrations
                     b.ToTable("Levels");
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.PurchasedWeapon", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PricePaid")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PurchasedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WeaponId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WeaponId");
+
+                    b.HasIndex("UserId", "WeaponId")
+                        .IsUnique();
+
+                    b.ToTable("PurchasedWeapons");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.Quest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("QuestType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ResetsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RewardCoins")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RewardXp")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TargetValue")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Quests");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Kliknij 50 razy w trakcie dzisiejszej sesji.",
+                            Name = "Nożownik Dnia",
+                            QuestType = 0,
+                            ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            RewardCoins = 10,
+                            RewardXp = 25,
+                            TargetValue = 50
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Kliknij 150 razy w trakcie dzisiejszej sesji.",
+                            Name = "Szybkie Paluszki",
+                            QuestType = 0,
+                            ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            RewardCoins = 25,
+                            RewardXp = 60,
+                            TargetValue = 150
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Kliknij 300 razy w trakcie dzisiejszej sesji.",
+                            Name = "British Special",
+                            QuestType = 0,
+                            ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            RewardCoins = 50,
+                            RewardXp = 120,
+                            TargetValue = 300
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Description = "Zdobądź 500 punktów w ciągu dnia.",
+                            Name = "Nożyce Jak Brzytwa",
+                            QuestType = 1,
+                            ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            RewardCoins = 15,
+                            RewardXp = 40,
+                            TargetValue = 500
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Description = "Zdobądź 1500 punktów w ciągu dnia.",
+                            Name = "Daj mu jeszcze jeden w serce!",
+                            QuestType = 1,
+                            ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            RewardCoins = 35,
+                            RewardXp = 90,
+                            TargetValue = 1500
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Description = "Zdobądź 3000 punktów w ciągu dnia.",
+                            Name = "Prawdziwy Londyńczyk",
+                            QuestType = 1,
+                            ResetsAt = new DateTime(2024, 1, 2, 0, 0, 0, 0, DateTimeKind.Utc),
+                            RewardCoins = 75,
+                            RewardXp = 200,
+                            TargetValue = 3000
+                        });
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.SavedScore", b =>
                 {
                     b.Property<int>("Id")
@@ -223,6 +537,9 @@ namespace Symulator_Nozownika.Migrations
                     b.Property<string>("AvatarPath")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ClubId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Country")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -254,6 +571,8 @@ namespace Symulator_Nozownika.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ClubId");
 
                     b.HasIndex("SelectedWeaponId");
 
@@ -287,6 +606,45 @@ namespace Symulator_Nozownika.Migrations
                     b.ToTable("UserAchievements");
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.UserQuestProgress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CurrentValue")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsRewardClaimed")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("ProgressDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("QuestId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuestId");
+
+                    b.HasIndex("UserId", "QuestId")
+                        .IsUnique();
+
+                    b.ToTable("UserQuestProgresses");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.UserStatistics", b =>
                 {
                     b.Property<int>("Id")
@@ -305,6 +663,9 @@ namespace Symulator_Nozownika.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("LongestStreak")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalClicks")
                         .HasColumnType("int");
 
                     b.Property<int>("TotalGamesPlayed")
@@ -436,6 +797,66 @@ namespace Symulator_Nozownika.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.Club", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.ClubMember", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.Club", "Club")
+                        .WithMany("Members")
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Club");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.ClubMessage", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.Club", "Club")
+                        .WithMany("Messages")
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Club");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.CoinWallet", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
+                        .WithOne("CoinWallet")
+                        .HasForeignKey("Symulator_Nozownika.Models.CoinWallet", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.FavoriteWeapon", b =>
                 {
                     b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
@@ -476,6 +897,25 @@ namespace Symulator_Nozownika.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.PurchasedWeapon", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
+                        .WithMany("PurchasedWeapons")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.Weapon", "Weapon")
+                        .WithMany()
+                        .HasForeignKey("WeaponId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("Weapon");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.SavedScore", b =>
                 {
                     b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
@@ -489,9 +929,16 @@ namespace Symulator_Nozownika.Migrations
 
             modelBuilder.Entity("Symulator_Nozownika.Models.UserAccount", b =>
                 {
+                    b.HasOne("Symulator_Nozownika.Models.Club", "Club")
+                        .WithMany()
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Symulator_Nozownika.Models.Weapon", "SelectedWeapon")
                         .WithMany()
                         .HasForeignKey("SelectedWeaponId");
+
+                    b.Navigation("Club");
 
                     b.Navigation("SelectedWeapon");
                 });
@@ -515,6 +962,25 @@ namespace Symulator_Nozownika.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.UserQuestProgress", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.Quest", "Quest")
+                        .WithMany()
+                        .HasForeignKey("QuestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quest");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.UserStatistics", b =>
                 {
                     b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
@@ -526,9 +992,20 @@ namespace Symulator_Nozownika.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.Club", b =>
+                {
+                    b.Navigation("Members");
+
+                    b.Navigation("Messages");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.UserAccount", b =>
                 {
+                    b.Navigation("CoinWallet");
+
                     b.Navigation("Level");
+
+                    b.Navigation("PurchasedWeapons");
 
                     b.Navigation("Statistics");
 
