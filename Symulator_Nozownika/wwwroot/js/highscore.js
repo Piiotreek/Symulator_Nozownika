@@ -56,21 +56,11 @@ async function submitGameScore(score,clicks) {
             });
         }
 
-        // slowed alert
-        setTimeout(() => {
-            if (result.success) {
-                showAlert('Sukces! ✓', result.message);
-            } else if (result.needsLogin) {
-                //added clicks
-                showLoginPrompt(score,clicks);
-            } else {
-                showAlert('Informacje o wyniku', result.message); 
-            }
-        }, 300);
+      
 
     } catch (error) {
         console.error('❌ Błąd przy zapisywaniu wyniku:', error);
-        showAlert('Błąd', 'Nie udało się zapisać wyniku');
+        
     }
 }
 
@@ -91,34 +81,25 @@ function showLoginPrompt(score, clicks) {
     }
 }
 
-// Opcjonalnie: zapis anonimowego wyniku
-async function showAnonymousScoreSave(score) {
-    const playerName = prompt('Wpisz swoją nazwę (opcjonalnie):');
+//// Opcjonalnie: zapis anonimowego wyniku
+//async function showAnonymousScoreSave(score) {
+//    const playerName = prompt('Wpisz swoją nazwę (opcjonalnie):');
     
-    if (playerName !== null) {
-        try {
-            const response = await fetch('/GameScore/SaveAnonymousScore', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ 
-                    score: score,
-                    //adding clicks to json
-                    clicks: clicks,
-                    playerName: playerName || 'Anonimowy gracz'
-                })
-            });
-
-            const result = await response.json();
-            if (result.success) {
-                showAlert('Sukces!', result.message);
-            }
-        } catch (error) {
-            console.error('Błąd:', error);
-        }
-    }
-}
+//    if (playerName !== null) {
+//        try {
+//            const response = await fetch('/GameScore/SaveAnonymousScore', {
+//                method: 'POST',
+//                headers: {
+//                    'Content-Type': 'application/json'
+//                },
+//                body: JSON.stringify({ 
+//                    score: score,
+//                    //adding clicks to json
+//                    clicks: clicks,
+//                    playerName: playerName || 'Anonimowy gracz'
+//                })
+//            });
+//}
 
 // Pobierz najlepszy wynik zalogowanego użytkownika
 async function getUserHighScore() {

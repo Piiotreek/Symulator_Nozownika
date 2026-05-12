@@ -156,7 +156,7 @@
 
         const finalScore = 10000 - hp;
         console.log(`🎮 Koniec gry! HP: ${hp}, Wynik: ${finalScore}`);
-        alert(message + "\nPozostałe HP: " + hp + "\nWynik: " + finalScore);
+        // alert(message + "\nPozostałe HP: " + hp + "\nWynik: " + finalScore);
 
         // Opóźnienie aby alert nie blokował
         setTimeout(() => {
@@ -186,9 +186,9 @@
             body: JSON.stringify({ score: _pendingPinScore, note })
         });
         const result = await response.json();
-        if (result.success) {
-            alert('📌 Wynik przypiąty do ulubionych!');
-        }
+        // if (result.success) {
+        //     console.log('📌 Wynik przypiąty do ulubionych!');
+        // }
     }
 
     function setupOrganListeners() {

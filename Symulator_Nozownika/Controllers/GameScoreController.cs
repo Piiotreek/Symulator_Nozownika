@@ -312,7 +312,7 @@ namespace Symulator_Nozownika.Controllers
                         await _context.SaveChangesAsync();
                         System.Console.WriteLine($"✅ Wynik zapisany pomyślnie!");
                         
-                        return Json(new { success = true, message = "Wynik zapisany!", newRecord = true, achievements = unlockedAchievements, completedQuests = completedQuests });
+                        return Json(new { success = true, newRecord = true, achievements = unlockedAchievements, completedQuests = completedQuests });
                     }
 
                     // Jeśli nowy wynik jest lepszy od najlepszego
@@ -327,14 +327,14 @@ namespace Symulator_Nozownika.Controllers
                         await _context.SaveChangesAsync();
                         System.Console.WriteLine($"✅ Nowy Personal Best zapisany!");
 
-                        return Json(new { success = true, message = "Nowy Personal Best zapisany!", newRecord = false, achievements = unlockedAchievements, completedQuests = completedQuests });
+                        return Json(new { success = true, newRecord = false, achievements = unlockedAchievements, completedQuests = completedQuests });
                     }
 
                     // Zapisz statystyki (np. streak) nawet jeśli wynik nie jest nowym rekordem
                     await _context.SaveChangesAsync();
 
                     System.Console.WriteLine($"⚠️ Wynik {score} nie jest lepszy niż {personalBest.Score}");
-                    return Json(new { success = false, message = $"Twój najlepszy wynik to {personalBest.Score}. Spróbuj jeszcze raz!", achievements = unlockedAchievements, completedQuests = completedQuests });
+                    return Json(new { success = false, achievements = unlockedAchievements, completedQuests = completedQuests });
                 }
                 else
                 {
@@ -372,7 +372,7 @@ namespace Symulator_Nozownika.Controllers
             _context.HighScores.Add(highScore);
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "Wynik zapisany!" });
+            return Json(new { success = true });
         }
 
         [HttpGet]
@@ -507,7 +507,7 @@ namespace Symulator_Nozownika.Controllers
             _context.SavedScores.Add(saved);
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "Wynik zapisany do ulubionych!", id = saved.Id });
+            return Json(new { success = true, id = saved.Id });
         }
 
         [HttpPost]
