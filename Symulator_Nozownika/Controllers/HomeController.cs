@@ -20,6 +20,8 @@ namespace Symulator_Nozownika.Controllers
             _levelService = levelService;
         }
 
+        
+
         [Authorize]
         public async Task<IActionResult> Index()
         {
@@ -59,6 +61,10 @@ namespace Symulator_Nozownika.Controllers
         }
 
         public IActionResult Privacy()
+        {
+            return View();
+        }
+        public IActionResult StartView()
         {
             return View();
         }

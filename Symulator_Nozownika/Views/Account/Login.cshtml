@@ -5,6 +5,7 @@
 }
 
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+<script src="~/js/startAudio.js"></script>
 
 <div class="container mt-5" style="max-width: 500px;">
     <ul class="nav nav-pills nav-justified mb-3" id="ex1" role="tablist">
@@ -26,16 +27,15 @@
                 
 
                 
-
                 <div class="mb-4">
                     <label class="form-label" asp-for="UserNameOrEmail">Email or username</label>
-                    <input asp-for="UserNameOrEmail" class="form-control" />
+                    <input asp-for="UserNameOrEmail" class="form-control" autocomplete="username" />
                     <span asp-validation-for="UserNameOrEmail" class="text-danger small"></span>
                 </div>
 
                 <div class="mb-4">
                     <label class="form-label" asp-for="Password">Password</label>
-                    <input asp-for="Password" type="password" class="form-control" />
+                    <input asp-for="Password" type="password" class="form-control" autocomplete="current-password" />
                     <span asp-validation-for="Password" class="text-danger small"></span>
                 </div>
 

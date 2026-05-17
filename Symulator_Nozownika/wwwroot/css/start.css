@@ -1,4 +1,4 @@
-body, html {
+﻿body, html {
     margin: 0;
     padding: 0;
     height: 100%;
@@ -83,7 +83,7 @@ body, html {
         transform: scale(1.1);
     }
 
-
+/* --- KREW CIĄGNĄCA SIĘ Z KRAWĘDZI EKRANU --- */
 .blood-background {
     position: absolute;
     top: 0;
@@ -92,27 +92,28 @@ body, html {
     height: 100%;
     pointer-events: none;
     z-index: 1;
-    filter: url('#goo'); 
+    filter: url('#goo'); /* Zachowujemy efekt lepkiej cieczy */
 }
 
-
+/* Ukryta kotwica wyrzucona poza górną krawędź ekranu */
 .blood-top-anchor {
     position: absolute;
     top: -30px;
     left: -5%;
     width: 110%;
     height: 35px;
-    background-color: #8A0303; 
+    background-color: #8A0303; /* Klasyczny, głęboki odcień krwi */
 }
 
 .blood-drop {
     position: absolute;
- 
+    /* Krople startują z ukrytej kotwicy, więc widać tylko jak wyłaniają się z krawędzi */
     top: -20px;
-    background-color: #8A0303; 
+    background-color: #8A0303; /* Ten sam krwisty odcień */
     border-radius: 50px;
 }
 
+/* Fazy ściekania - Krew bardzo mocno się ciągnie, a potem odrywa grubą kroplą */
 @keyframes ooze-long {
     0% {
         height: 20px;
@@ -123,7 +124,7 @@ body, html {
         height: 280px;
         transform: translateY(0);
     }
-    
+    /* Mocne rozciągnięcie w dół */
     45% {
         height: 60px;
         transform: translateY(35vh);
@@ -135,7 +136,7 @@ body, html {
         transform: translateY(110vh);
         opacity: 0;
     }
-    
+    /* Spadek poza ekran */
     100% {
         height: 20px;
         transform: translateY(0);
@@ -173,7 +174,7 @@ body, html {
     }
 }
 
-
+/* Grube strużki (szerokości od 15px do 35px) rozmieszczone po ekranie */
 .drip-1 {
     left: 8%;
     width: 25px;
@@ -222,6 +223,7 @@ body, html {
     animation: ooze-long 9.5s infinite 3.3s ease-in;
 }
 
+/* --- ANIMACJA SPADANIA PRZYCISKU --- */
 .btn-fall {
     animation: dropDown 0.8s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53);
     pointer-events: none;
@@ -244,6 +246,7 @@ body, html {
     }
 }
 
+/* --- CZARNY EKRAN --- */
 .black-overlay {
     position: fixed;
     top: 0;

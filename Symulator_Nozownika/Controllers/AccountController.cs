@@ -171,6 +171,51 @@ namespace Symulator_Nozownika.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        [Authorize]
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            return View(new ChangePasswordViewModel());
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Pobranie nazwy użytkownika z Claimów (tak jak w SelectWeapon)
+            var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
+            if (string.IsNullOrEmpty(userName))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var user = await _context.UserAccounts.FirstOrDefaultAsync(u => u.UserName == userName);
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            // Weryfikacja obecnego hasła 
+            if (user.Password != model.CurrentPassword)
+            {
+                ModelState.AddModelError("CurrentPassword", "Podane obecne hasło jest niepoprawne.");
+                return View(model);
+            }
+
+            // Przypisanie nowego hasła i zapis w bazie danych
+            user.Password = model.NewPassword;
+            await _context.SaveChangesAsync();
+
+            // Przekazanie komunikatu o sukcesie
+            TempData["Message"] = "Twoje hasło zostało pomyślnie zmienione.";
+            return RedirectToAction("SecurePage");
+        }
+
 
         [HttpPost]
         public async Task<IActionResult> SelectWeapon(int weaponId)

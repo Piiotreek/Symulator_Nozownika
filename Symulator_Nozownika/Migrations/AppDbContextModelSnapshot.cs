@@ -53,7 +53,7 @@ namespace Symulator_Nozownika.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Achievements");
+                    b.ToTable("Achievements", (string)null);
 
                     b.HasData(
                         new
@@ -173,7 +173,7 @@ namespace Symulator_Nozownika.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("Clubs");
+                    b.ToTable("Clubs", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.ClubMember", b =>
@@ -202,7 +202,7 @@ namespace Symulator_Nozownika.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ClubMembers");
+                    b.ToTable("ClubMembers", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.ClubMessage", b =>
@@ -235,7 +235,7 @@ namespace Symulator_Nozownika.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ClubMessages");
+                    b.ToTable("ClubMessages", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.CoinWallet", b =>
@@ -260,7 +260,7 @@ namespace Symulator_Nozownika.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("CoinWallets");
+                    b.ToTable("CoinWallets", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.FavoriteWeapon", b =>
@@ -286,7 +286,7 @@ namespace Symulator_Nozownika.Migrations
 
                     b.HasIndex("WeaponId");
 
-                    b.ToTable("FavoriteWeapons");
+                    b.ToTable("FavoriteWeapons", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.HighScore", b =>
@@ -319,7 +319,7 @@ namespace Symulator_Nozownika.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("HighScores");
+                    b.ToTable("HighScores", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.Level", b =>
@@ -353,7 +353,7 @@ namespace Symulator_Nozownika.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Levels");
+                    b.ToTable("Levels", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.PurchasedWeapon", b =>
@@ -383,7 +383,7 @@ namespace Symulator_Nozownika.Migrations
                     b.HasIndex("UserId", "WeaponId")
                         .IsUnique();
 
-                    b.ToTable("PurchasedWeapons");
+                    b.ToTable("PurchasedWeapons", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.Quest", b =>
@@ -421,7 +421,7 @@ namespace Symulator_Nozownika.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Quests");
+                    b.ToTable("Quests", (string)null);
 
                     b.HasData(
                         new
@@ -520,7 +520,7 @@ namespace Symulator_Nozownika.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SavedScores");
+                    b.ToTable("SavedScores", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.UserAccount", b =>
@@ -573,7 +573,7 @@ namespace Symulator_Nozownika.Migrations
 
                     b.HasIndex("SelectedWeaponId");
 
-                    b.ToTable("UserAccounts");
+                    b.ToTable("UserAccounts", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.UserAchievement", b =>
@@ -600,7 +600,7 @@ namespace Symulator_Nozownika.Migrations
                     b.HasIndex("UserAccountId", "AchievementId")
                         .IsUnique();
 
-                    b.ToTable("UserAchievements");
+                    b.ToTable("UserAchievements", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.UserQuestProgress", b =>
@@ -639,7 +639,7 @@ namespace Symulator_Nozownika.Migrations
                     b.HasIndex("UserId", "QuestId")
                         .IsUnique();
 
-                    b.ToTable("UserQuestProgresses");
+                    b.ToTable("UserQuestProgresses", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.UserStatistics", b =>
@@ -682,7 +682,7 @@ namespace Symulator_Nozownika.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("UserStatistics");
+                    b.ToTable("UserStatistics", (string)null);
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.Weapon", b =>
@@ -709,7 +709,7 @@ namespace Symulator_Nozownika.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Weapons");
+                    b.ToTable("Weapons", (string)null);
 
                     b.HasData(
                         new
