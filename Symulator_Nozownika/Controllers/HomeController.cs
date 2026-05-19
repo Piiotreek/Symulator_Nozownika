@@ -59,11 +59,6 @@ namespace Symulator_Nozownika.Controllers
 
             return View(user);
         }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
         public IActionResult StartView()
         {
             return View();

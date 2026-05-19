@@ -9,6 +9,12 @@
     bgMusic.volume = 0.5;     
     bgMusic.muted = false;   
 
+    const buttonHoverSound = new Audio('/audio/buttonhover.mp3');
+    buttonHoverSound.volume = 1;
+
+    const buttonClickSound = new Audio('/audio/buttonclick.mp3');
+    buttonClickSound.volume = 1;
+
     
     soundBtn.style.backgroundColor = "#5c0000";
     soundBtn.style.borderColor = "#ff3333";
@@ -60,8 +66,14 @@
         }, step);
     }
 
-   
+
     actionButtons.forEach(button => {
+        // Hover sound
+        button.addEventListener('mouseenter', () => {
+            buttonHoverSound.currentTime = 0; // restart od początku przy każdym hover
+            buttonHoverSound.play().catch(() => {}); // ignoruj błędy autoodtwarzania
+        });
+
         button.addEventListener('click', function (e) {
             e.preventDefault();
             const targetUrl = this.getAttribute('data-url');
@@ -75,6 +87,9 @@
             setTimeout(() => {
                 overlay.classList.add('active');
             }, 450);
+
+            buttonClickSound.currentTime = 0;
+            buttonClickSound.play().catch(() => { });
 
             setTimeout(() => {
                 if (targetUrl) {

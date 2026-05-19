@@ -34,8 +34,6 @@ namespace Symulator_Nozownika
                 if (app.Environment.IsDevelopment())
                 {
                     // W trybie dev - usuń i utwórz nową bazę (w razie zmian modelu)
-                    dbContext.Database.EnsureDeleted();
-                    dbContext.Database.EnsureCreated();
                 }
                 else
                 {

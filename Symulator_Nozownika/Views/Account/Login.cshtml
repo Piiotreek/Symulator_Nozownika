@@ -2,74 +2,384 @@
 
 @{
     ViewData["Title"] = "Login";
+    Layout = null;
 }
 
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-<script src="~/js/startAudio.js"></script>
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Symulator Nożownika</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <style>
+            body, html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                background-color: #050000;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                overflow: hidden;
+            }
 
-<div class="container mt-5" style="max-width: 500px;">
-    <ul class="nav nav-pills nav-justified mb-3" id="ex1" role="tablist">
-        <li class="nav-item" role="presentation">
-            <a class="nav-link active" id="tab-login" data-bs-toggle="pill" href="#pills-login" role="tab"
-               aria-controls="pills-login" aria-selected="true">Login</a>
-        </li>
-        <li class="nav-item" role="presentation">
-            <a class="nav-link" id="tab-register" data-bs-toggle="pill" href="#pills-register" role="tab"
-               aria-controls="pills-register" aria-selected="false">Register</a>
-        </li>
-    </ul>
+            .login-screen {
+                height: 100vh;
+                width: 100vw;
+                background: radial-gradient(circle at 35% 50%, rgba(80, 0, 0, 0.3) 0%, rgba(5, 0, 0, 1) 75%);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+            }
 
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="pills-login" role="tabpanel" aria-labelledby="tab-login">
-            <form asp-action="Login" method="post">
+            .login-container {
+                background-color: rgba(20, 0, 0, 0.8);
+                border: 2px solid #8b0000;
+                border-radius: 20px;
+                padding: 40px 50px;
+                max-width: 450px;
+                width: 90%;
+                box-shadow: 0 0 30px rgba(220, 0, 0, 0.5), inset 0 0 20px rgba(180, 0, 0, 0.1);
+                z-index: 10;
+            }
+
+            .login-title {
+                color: #ececec;
+                font-size: 2.5rem;
+                font-weight: 800;
+                text-align: center;
+                margin-bottom: 30px;
+                text-shadow: 0 0 10px rgba(200, 0, 0, 0.8), 0 0 25px rgba(150, 0, 0, 0.5);
+                letter-spacing: 2px;
+            }
+
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+            .form-label {
+                color: #ececec;
+                font-size: 1rem;
+                font-weight: 600;
+                margin-bottom: 8px;
+                display: block;
+            }
+
+            .form-control {
+                background-color: rgba(40, 0, 0, 0.6);
+                border: 2px solid #8b0000;
+                border-radius: 10px;
+                padding: 12px 15px;
+                color: #ececec;
+                font-size: 1rem;
+                width: 100%;
+                box-sizing: border-box;
+                transition: all 0.3s ease;
+            }
+
+                .form-control:focus {
+                    outline: none;
+                    border-color: #cc0000;
+                    box-shadow: 0 0 15px rgba(220, 0, 0, 0.4);
+                    background-color: rgba(50, 0, 0, 0.7);
+                }
+
+                .form-control::placeholder {
+                    color: #999;
+                }
+
+            .text-danger {
+                color: #ff4444;
+                font-size: 0.85rem;
+                margin-top: 5px;
+                display: block;
+            }
+
+            .glowing-btn {
+                background-color: #8b0000;
+                color: white;
+                border: 2px solid #cc0000;
+                border-radius: 15px;
+                padding: 15px 60px;
+                font-size: 1.3rem;
+                font-weight: bold;
+                cursor: pointer;
+                width: 100%;
+                box-shadow: 0 0 15px rgba(220, 0, 0, 0.4), inset 0 0 10px rgba(180, 0, 0, 0.3);
+                transition: all 0.3s ease;
+                text-align: center;
+                margin-top: 10px;
+            }
+
+                .glowing-btn:hover {
+                    background-color: #b30000;
+                    box-shadow: 0 0 25px rgba(255, 0, 0, 0.7), inset 0 0 15px rgba(255, 0, 0, 0.5);
+                    transform: scale(1.05);
+                }
+
+            .form-check {
+                display: flex;
+                align-items: center;
+                color: #ececec;
+            }
+
+            .form-check-input {
+                margin-right: 8px;
+            }
+
+            .options-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                color: #ececec;
+                font-size: 0.9rem;
+            }
+
+                .options-row a {
+                    color: #ff6666;
+                    text-decoration: none;
+                    transition: color 0.3s ease;
+                }
+
+                    .options-row a:hover {
+                        color: #ff3333;
+                        text-decoration: underline;
+                    }
+
+            .register-link {
+                text-align: center;
+                margin-top: 20px;
+                color: #ccc;
+                font-size: 0.95rem;
+            }
+
+                .register-link a {
+                    color: #ff6666;
+                    text-decoration: none;
+                    font-weight: bold;
+                    transition: color 0.3s ease;
+                }
+
+                    .register-link a:hover {
+                        color: #ff3333;
+                        text-decoration: underline;
+                    }
+
+            .back-btn {
+                position: absolute;
+                top: 30px;
+                left: 30px;
+                background-color: #8b0000;
+                color: white;
+                border: 2px solid #cc0000;
+                border-radius: 10px;
+                padding: 10px 25px;
+                font-size: 1rem;
+                font-weight: bold;
+                cursor: pointer;
+                box-shadow: 0 0 15px rgba(220, 0, 0, 0.4);
+                transition: all 0.3s ease;
+                text-decoration: none;
+                display: inline-block;
+                z-index: 20;
+            }
+
+                .back-btn:hover {
+                    background-color: #b30000;
+                    box-shadow: 0 0 25px rgba(255, 0, 0, 0.7);
+                    transform: scale(1.05);
+                    color: white;
+                }
+
+            /* Czarny overlay dla efektu odkrywania */
+            .reveal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: #000;
+                z-index: 9999;
+                transition: left 0.8s cubic-bezier(0.8, 0, 0.2, 1);
+            }
+
+                .reveal-overlay.slide-out {
+                    left: 100%;
+                }
+
+            .page-transition-overlay {
+                position: fixed;
+                top: 0;
+                left: -100%;
+                width: 100%;
+                height: 100%;
+                background-color: #000;
+                z-index: 9998;
+                transition: left 0.5s cubic-bezier(0.8, 0, 0.2, 1);
+            }
+
+                .page-transition-overlay.active {
+                    left: 0;
+                }
+
+            .transition-link {
+                display: inline-block;
+                transition: transform 0.3s ease, opacity 0.3s ease;
+            }
+
+            .back-transition-overlay {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 100%;
+                height: 100%;
+                background-color: #000;
+                z-index: 9998;
+                transition: right 0.5s cubic-bezier(0.8, 0, 0.2, 1);
+            }
+
+                .back-transition-overlay.active {
+                    right: 0;
+                }
+
+    </style>
+</head>
+<body>
+    <!-- Overlay odkrywający stronę -->
+    <div id="revealOverlay" class="reveal-overlay"></div>
+    <div id="pageTransitionOverlay" class="page-transition-overlay"></div>
+    <div id="backTransitionOverlay" class="back-transition-overlay"></div>
+
+    <div class="login-screen">
+        <a href="@Url.Action("StartView", "Home")" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+
+        <div class="login-container">
+            <h1 class="login-title">LOGIN</h1>
+
+            <form asp-action="Login" method="post" autocomplete="on" id="loginForm">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-                
-
-                
-                <div class="mb-4">
-                    <label class="form-label" asp-for="UserNameOrEmail">Email or username</label>
-                    <input asp-for="UserNameOrEmail" class="form-control" autocomplete="username" />
-                    <span asp-validation-for="UserNameOrEmail" class="text-danger small"></span>
+                <div class="form-group">
+                    <label class="form-label" for="loginIdentifier">E-mail i nazwa użytkownika</label>
+                    <input type="text"
+                           id="loginIdentifier"
+                           name="username"
+                           class="form-control"
+                           autocomplete="username"
+                           value="@Model?.UserNameOrEmail"
+                           placeholder="Wprowadź swój e-mail lub nazwę użytkownika" />
+                    <input asp-for="UserNameOrEmail" type="hidden" id="UserNameOrEmail" />
+                    <span asp-validation-for="UserNameOrEmail" class="text-danger"></span>
                 </div>
 
-                <div class="mb-4">
-                    <label class="form-label" asp-for="Password">Password</label>
-                    <input asp-for="Password" type="password" class="form-control" autocomplete="current-password" />
-                    <span asp-validation-for="Password" class="text-danger small"></span>
+                <div class="form-group">
+                    <label class="form-label" asp-for="Password">Hasło</label>
+                    <input asp-for="Password"
+                           type="password"
+                           name="Password"
+                           class="form-control"
+                           autocomplete="current-password"
+                           placeholder="Wprowadź swoje hasło" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
                 </div>
 
-                <div class="row mb-4">
-                    <div class="col-md-6 d-flex justify-content-center">
-                        <div class="form-check mb-3 mb-md-0">
-                            <input class="form-check-input" type="checkbox" id="loginCheck" checked />
-                            <label class="form-check-label" for="loginCheck"> Remember me </label>
-                        </div>
+                <div class="options-row">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="loginCheck" checked />
+                        <label class="form-check-label" for="loginCheck">Zapamiętaj mnie</label>
                     </div>
-                    <div class="col-md-6 d-flex justify-content-center">
-                        <a href="#!">Forgot password?</a>
-                    </div>
+                    <a href="#!">Zapomniałeś hasła?</a>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block mb-4">Sign in</button>
+                <button type="submit" class="glowing-btn">Zaloguj się</button>
 
-                <div class="text-center">
-                    <p>Not a member? <a asp-action="Registration">Register</a></p>
+                <div class="register-link">
+                    Nie masz konta? <a asp-action="Registration" id="registerTransitionLink" class="transition-link">Zarejestruj się</a>
                 </div>
             </form>
         </div>
-
-        <div class="tab-pane fade" id="pills-register" role="tabpanel" aria-labelledby="tab-register">
-            <div class="text-center">
-                <p>Użyj formularza rejestracji, aby założyć konto:</p>
-                <a asp-action="Registration" class="btn btn-outline-primary">Przejdź do pełnej rejestracji</a>
-            </div>
-        </div>
     </div>
-</div>
 
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        window.addEventListener('load', function () {
+            const overlay = document.getElementById('revealOverlay');
+            const hasSeenTransition = sessionStorage.getItem('loginTransitionSeen');
+
+            if (!hasSeenTransition) {
+                setTimeout(function () {
+                    overlay.classList.add('slide-out');
+                    sessionStorage.setItem('loginTransitionSeen', 'true');
+                }, 100);
+            } else {
+                overlay.style.display = 'none';
+            }
+        });
+
+        document.querySelector('.back-btn').addEventListener('click', function () {
+            sessionStorage.removeItem('loginTransitionSeen');
+        });
+
+        document.querySelector('.register-link').addEventListener('click', function () {
+            sessionStorage.removeItem('loginTransitionSeen');
+        });
+
+        const loginForm = document.getElementById('loginForm');
+        const loginIdentifier = document.getElementById('loginIdentifier');
+        const hiddenLoginField = document.getElementById('UserNameOrEmail');
+        const registerTransitionLink = document.getElementById('registerTransitionLink');
+        const pageTransitionOverlay = document.getElementById('pageTransitionOverlay');
+        const backTransitionOverlay = document.getElementById('backTransitionOverlay');
+        const backBtn = document.querySelector('.back-btn');
+
+        if (backBtn && backTransitionOverlay) {
+            backBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                sessionStorage.removeItem('loginTransitionSeen');
+
+                const targetUrl = this.href;
+
+                backTransitionOverlay.classList.add('active');
+
+                setTimeout(function () {
+                    window.location.href = targetUrl;
+                }, 500); 
+            });
+        }
+
+        if (loginIdentifier && hiddenLoginField) {
+            loginIdentifier.addEventListener('input', function () {
+                hiddenLoginField.value = loginIdentifier.value;
+            });
+
+            loginForm.addEventListener('submit', function () {
+                hiddenLoginField.value = loginIdentifier.value;
+            });
+        }
+
+        if (registerTransitionLink && pageTransitionOverlay) {
+            registerTransitionLink.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const targetUrl = this.href;
+                this.classList.add('link-fall');
+
+                setTimeout(function () {
+                    pageTransitionOverlay.classList.add('active');
+                }, 450);
+
+                setTimeout(function () {
+                    window.location.href = targetUrl;
+                }, 950);
+            });
+        }
+    </script>
+</body>
+</html>

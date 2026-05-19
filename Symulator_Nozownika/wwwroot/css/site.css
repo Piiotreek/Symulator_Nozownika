@@ -1,10 +1,19 @@
 body, html {
     margin: 0;
     padding: 0;
-    height: 100%;
+    min-height: 100%;
     background-color: #050000;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+main {
+    flex: 1;
 }
 
 .start-screen {
@@ -15,6 +24,7 @@ body, html {
     align-items: center;
     justify-content: center;
     position: relative;
+    overflow: hidden;
 }
 
 .content-container {
