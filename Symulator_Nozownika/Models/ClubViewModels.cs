@@ -32,9 +32,11 @@ namespace Symulator_Nozownika.Models
     public class ClubMemberViewModel
     {
         public int Id { get; set; }
+        public int UserId { get; set; }
         public string FullName { get; set; }
         public string UserName { get; set; }
         public string Country { get; set; }
+        public ClubRole Role { get; set; }
     }
 
     public class ClubListViewModel

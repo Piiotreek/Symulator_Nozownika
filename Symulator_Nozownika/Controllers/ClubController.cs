@@ -87,9 +87,11 @@ namespace Symulator_Nozownika.Controllers
                 Members = club.Members.Select(m => new ClubMemberViewModel
                 {
                     Id = m.Id,
+                    UserId = m.UserId,
                     FullName = $"{m.User.FirstName} {m.User.LastName}",
                     UserName = m.User.UserName,
-                    Country = m.User.Country
+                    Country = m.User.Country,
+                    Role = m.Role
                 }).ToList()
             };
 
@@ -121,7 +123,10 @@ namespace Symulator_Nozownika.Controllers
                 return View(model);
             }
 
-            var user = await _context.UserAccounts.FindAsync(userId.Value);
+            var user = await _context.UserAccounts
+                .Include(u => u.Level)
+                .Include(u => u.CoinWallet)
+                .FirstOrDefaultAsync(u => u.Id == userId.Value);
             if (user == null)
             {
                 return NotFound();
@@ -131,6 +136,24 @@ namespace Symulator_Nozownika.Controllers
             if (user.ClubId.HasValue)
             {
                 ModelState.AddModelError("", "You are already a member of a club. Leave your current club first.");
+                return View(model);
+            }
+
+            // Sprawdzenie wymagań do utworzenia klubu (level 7 lub 500 gold)
+            var userLevel = user.Level?.CurrentLevel ?? 1;
+            var userGold = user.CoinWallet?.Balance ?? 0;
+            if (userLevel < 7 && userGold < 500)
+            {
+                ModelState.AddModelError("", "You need at least level 7 or 500 coins to create a club.");
+                return View(model);
+            }
+
+            // Sprawdzenie czy klub o tej nazwie już istnieje
+            var existingClub = await _context.Clubs
+                .FirstOrDefaultAsync(c => c.Name == model.Name);
+            if (existingClub != null)
+            {
+                ModelState.AddModelError("", "A club with this name already exists.");
                 return View(model);
             }
 
@@ -228,6 +251,7 @@ namespace Symulator_Nozownika.Controllers
 
             var club = await _context.Clubs
                 .Include(c => c.Members)
+                    .ThenInclude(cm => cm.User)
                 .FirstOrDefaultAsync(c => c.Id == clubId);
 
             if (club == null)
@@ -244,8 +268,28 @@ namespace Symulator_Nozownika.Controllers
             // Sprawdzenie czy użytkownik jest właścicielem
             if (club.IsOwner(userId.Value))
             {
-                TempData["Error"] = "Club owner cannot leave. Delete the club or transfer ownership.";
-                return RedirectToAction("Details", new { id = clubId });
+                // Jeśli owner odchodzi - przesuń uprawnienia na najstarszego członka (po ownerze)
+                var oldestMember = club.Members
+                    .Where(m => m.UserId != userId.Value)
+                    .OrderBy(m => m.JoinedAt)
+                    .FirstOrDefault();
+
+                if (oldestMember != null)
+                {
+                    oldestMember.Role = ClubRole.Owner;
+                    club.OwnerId = oldestMember.UserId;
+                    club.OwnerName = $"{oldestMember.User.FirstName} {oldestMember.User.LastName}";
+                    TempData["Info"] = $"Ownership transferred to {oldestMember.User.UserName}.";
+                }
+                else
+                {
+                    // Jeśli owner to jedyny członek - usuń klub
+                    _context.Clubs.Remove(club);
+                    user.ClubId = null;
+                    await _context.SaveChangesAsync();
+                    TempData["Success"] = "Club has been deleted because you were the only member.";
+                    return RedirectToAction("Index");
+                }
             }
 
             user.ClubId = null;
@@ -312,6 +356,7 @@ namespace Symulator_Nozownika.Controllers
 
             var club = await _context.Clubs
                 .Include(c => c.Members)
+                    .ThenInclude(cm => cm.User)
                 .FirstOrDefaultAsync(c => c.Id == clubId);
 
             if (club == null)
@@ -319,9 +364,18 @@ namespace Symulator_Nozownika.Controllers
                 return NotFound();
             }
 
-            if (!club.IsOwner(userId.Value))
+            // Sprawdzenie czy użytkownik jest ownerem lub moderatorem
+            var currentUserMember = club.Members.FirstOrDefault(m => m.UserId == userId.Value);
+            if (currentUserMember?.Role != ClubRole.Owner && currentUserMember?.Role != ClubRole.Moderator)
             {
-                TempData["Error"] = "Only the club owner can remove members.";
+                TempData["Error"] = "Only the club owner or moderator can remove members.";
+                return RedirectToAction("Details", new { id = clubId });
+            }
+
+            // Nie można usunąć ownera (chyba że sam się usuwa)
+            if (memberId == club.OwnerId && userId.Value != club.OwnerId)
+            {
+                TempData["Error"] = "You cannot remove the club owner.";
                 return RedirectToAction("Details", new { id = clubId });
             }
 
