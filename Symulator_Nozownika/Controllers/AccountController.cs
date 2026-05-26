@@ -135,12 +135,34 @@ namespace Symulator_Nozownika.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
+            // If the visible input used in the form wasn't bound correctly to UserNameOrEmail,
+            // accept fallback from Request.Form["username"] (loginIdentifier field in the view)
+            if (string.IsNullOrWhiteSpace(model?.UserNameOrEmail))
+            {
+                var fallback = Request.Form["username"].FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(fallback))
+                {
+                    model ??= new LoginViewModel();
+                    model.UserNameOrEmail = fallback?.Trim();
+                }
+            }
+
+            if (model == null)
+            {
+                return View();
+            }
+
             if (ModelState.IsValid)
             {
-                var user = _context.UserAccounts.Where(x => (x.UserName == model.UserNameOrEmail || x.Email == model.UserNameOrEmail)
-                && x.Password == model.Password).FirstOrDefault();
+                var usernameOrEmail = model.UserNameOrEmail?.Trim();
+                var password = model.Password;
+
+                var user = await _context.UserAccounts
+                    .FirstOrDefaultAsync(x => (x.UserName == usernameOrEmail || x.Email == usernameOrEmail)
+                        && x.Password == password);
+
                 if (user != null)
                 {
                     //Successful login logic 
@@ -161,7 +183,8 @@ namespace Symulator_Nozownika.Controllers
                     ModelState.AddModelError("", "Invalid username/email or password. Please try again.");
                 }
             }
-            return View();
+            // Return view with model to preserve entered username/email
+            return View(model);
         }
         //changed login
         [HttpPost]
@@ -187,7 +210,7 @@ namespace Symulator_Nozownika.Controllers
                 return View(model);
             }
 
-            // Pobranie nazwy użytkownika z Claimów (tak jak w SelectWeapon)
+            // Pobranie nazwy użytkownika z Claimu (tak jak w SelectWeapon)
             var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
             if (string.IsNullOrEmpty(userName))
             {

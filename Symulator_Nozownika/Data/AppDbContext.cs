@@ -312,6 +312,61 @@ namespace Symulator_Nozownika.Data
                     Type = AchievementType.TotalClicks,
                     TargetValue = 3000
                 });
+
+            // Seed a debug user account with wallet and level
+            modelBuilder.Entity<UserAccount>().HasData(
+                new UserAccount
+                {
+                    Id = 9999,
+                    FirstName = "Debug",
+                    LastName = "Account",
+                    Email = "debug@example.local",
+                    Country = "Poland",
+                    UserName = "debug",
+                    Password = "debugdebug1",
+                    CreatedAt = new DateTime(2025, 1, 1)
+                }
+            );
+            
+            modelBuilder.Entity<UserStatistics>().HasData(
+                new UserStatistics
+                {
+                    Id = 9999,
+                    UserId = 9999,
+                    TotalGamesPlayed = 0,
+                    TotalScore = 5500,
+                    TotalClicks = 0,
+                    HighestScore = 0,
+                    TotalPlayTime = TimeSpan.Zero,
+                    CurrentStreak = 0,
+                    LongestStreak = 0,
+                    LastPlayedAt = new DateTime(2025, 1, 1)
+                }
+            );
+            
+            modelBuilder.Entity<Level>().HasData(
+                new Level
+                {
+                    Id = 9999,
+                    UserId = 9999,
+                    CurrentLevel = 10,
+                    CurrentLevelThreshold = 5040,
+                    NextLevelThreshold = 6000,
+                    TotalScoreSnapshot = 5500,
+                    UpdatedAt = new DateTime(2025, 1, 1)
+                }
+            );
+            
+            modelBuilder.Entity<CoinWallet>().HasData(
+                new CoinWallet
+                {
+                    Id = 9999,
+                    UserId = 9999,
+                    Balance = 9999,
+                    UpdatedAt = new DateTime(2025, 1, 1)
+                }
+            );
+
         }
     }
 }
