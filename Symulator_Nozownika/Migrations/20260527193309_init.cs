@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Symulator_Nozownika.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -28,6 +28,20 @@ namespace Symulator_Nozownika.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Achievements", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DemoLockouts",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    LockedUntil = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DemoLockouts", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -129,6 +143,8 @@ namespace Symulator_Nozownika.Migrations
                     UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsDemo = table.Column<bool>(type: "bit", nullable: false),
+                    DemoGamesPlayed = table.Column<int>(type: "int", nullable: false),
                     SelectedWeaponId = table.Column<int>(type: "int", nullable: true),
                     ClubId = table.Column<int>(type: "int", nullable: true),
                     AvatarPath = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -411,6 +427,11 @@ namespace Symulator_Nozownika.Migrations
                 });
 
             migrationBuilder.InsertData(
+                table: "UserAccounts",
+                columns: new[] { "Id", "AvatarPath", "ClubId", "Country", "CreatedAt", "DemoGamesPlayed", "Email", "FirstName", "IsDemo", "LastName", "Password", "SelectedWeaponId", "UserName" },
+                values: new object[] { 9999, null, null, "Poland", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "debug@example.local", "Debug", false, "Account", "debugdebug1", null, "debug" });
+
+            migrationBuilder.InsertData(
                 table: "Weapons",
                 columns: new[] { "Id", "Cooldown", "Damage", "ImageUrl", "Name" },
                 values: new object[,]
@@ -426,6 +447,21 @@ namespace Symulator_Nozownika.Migrations
                     { 9, 0.5, 50, "/images/katana.png", "Katana" },
                     { 10, 0.10000000000000001, 2, "/images/scissors.png", "Scissors" }
                 });
+
+            migrationBuilder.InsertData(
+                table: "CoinWallets",
+                columns: new[] { "Id", "Balance", "UpdatedAt", "UserId" },
+                values: new object[] { 9999, 9999, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 9999 });
+
+            migrationBuilder.InsertData(
+                table: "Levels",
+                columns: new[] { "Id", "CurrentLevel", "CurrentLevelThreshold", "NextLevelThreshold", "TotalScoreSnapshot", "UpdatedAt", "UserId" },
+                values: new object[] { 9999, 10, 5040, 6000, 5500, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 9999 });
+
+            migrationBuilder.InsertData(
+                table: "UserStatistics",
+                columns: new[] { "Id", "CurrentStreak", "HighestScore", "LastPlayedAt", "LongestStreak", "TotalClicks", "TotalGamesPlayed", "TotalPlayTime", "TotalScore", "UserId" },
+                values: new object[] { 9999, 0, 0, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, 0, 0, new TimeSpan(0, 0, 0, 0, 0), 5500, 9999 });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ClubMembers_ClubId",
@@ -586,6 +622,9 @@ namespace Symulator_Nozownika.Migrations
 
             migrationBuilder.DropTable(
                 name: "CoinWallets");
+
+            migrationBuilder.DropTable(
+                name: "DemoLockouts");
 
             migrationBuilder.DropTable(
                 name: "FavoriteWeapons");

@@ -255,28 +255,39 @@ namespace Symulator_Nozownika.Controllers
 
                     //checking for achievements after updating statistics, so we have the latest total score to compare against achievement thresholds
                     var unlockedAchievements = new List<Achievement>();
-                    var userStats = await _context.UserStatistics.FirstOrDefaultAsync(u => u.UserId == parsedUserId);
-                    if (userStats != null)
+
+                    // Block demo users from unlocking achievements
+                    var isDemo = User.FindFirst("IsDemo")?.Value == "true";
+
+                    if (!isDemo)
                     {
-                        // 1. Sprawdzanie Total Score
-                        var scoreAch = await _achievementService.CheckTotalScoreAchievementsAsync(parsedUserId, userStats.TotalScore);
-                        if (scoreAch != null && scoreAch.Any()) unlockedAchievements.AddRange(scoreAch);
+                        var userStats = await _context.UserStatistics.FirstOrDefaultAsync(u => u.UserId == parsedUserId);
+                        if (userStats != null)
+                        {
+                            // 1. Sprawdzanie Total Score
+                            var scoreAch = await _achievementService.CheckTotalScoreAchievementsAsync(parsedUserId, userStats.TotalScore);
+                            if (scoreAch != null && scoreAch.Any()) unlockedAchievements.AddRange(scoreAch);
 
-                        // 2. Sprawdzanie Pierwszej Gry
-                        var firstGameAch = await _achievementService.CheckFirstGameAchievementAsync(parsedUserId, userStats.TotalGamesPlayed);
-                        if (firstGameAch != null && firstGameAch.Any()) unlockedAchievements.AddRange(firstGameAch);
+                            // 2. Sprawdzanie Pierwszej Gry
+                            var firstGameAch = await _achievementService.CheckFirstGameAchievementAsync(parsedUserId, userStats.TotalGamesPlayed);
+                            if (firstGameAch != null && firstGameAch.Any()) unlockedAchievements.AddRange(firstGameAch);
 
-                        // 3. Sprawdzanie kliknięć w TEJ konkretnej grze
-                        var singleGameAch = await _achievementService.CheckSingleGameClicksAchievementAsync(parsedUserId, request.Clicks);
-                        if (singleGameAch != null && singleGameAch.Any()) unlockedAchievements.AddRange(singleGameAch);
+                            // 3. Sprawdzanie kliknięć w TEJ konkretnej grze
+                            var singleGameAch = await _achievementService.CheckSingleGameClicksAchievementAsync(parsedUserId, request.Clicks);
+                            if (singleGameAch != null && singleGameAch.Any()) unlockedAchievements.AddRange(singleGameAch);
 
-                        // 4. Sprawdzanie łącznej sumy kliknięć
-                        var totalClicksAch = await _achievementService.CheckTotalClicksAchievementsAsync(parsedUserId, userStats.TotalClicks);
-                        if (totalClicksAch != null && totalClicksAch.Any()) unlockedAchievements.AddRange(totalClicksAch);
+                            // 4. Sprawdzanie łącznej sumy kliknięć
+                            var totalClicksAch = await _achievementService.CheckTotalClicksAchievementsAsync(parsedUserId, userStats.TotalClicks);
+                            if (totalClicksAch != null && totalClicksAch.Any()) unlockedAchievements.AddRange(totalClicksAch);
+                        }
                     }
 
-                    // 5. Aktualizacja postępu questów
-                    var completedQuests = await _questService.UpdateProgressAsync(parsedUserId, request.Score, request.Clicks);
+                    // 5. Aktualizacja postępu questów - tylko dla non-demo userów
+                    var completedQuests = new List<Quest>();
+                    if (!isDemo)
+                    {
+                        completedQuests = await _questService.UpdateProgressAsync(parsedUserId, request.Score, request.Clicks);
+                    }
 
                     //logic to determine if the new score is a personal best and update the high score table accordingly, while also ensuring that only the best score for each user is kept in the high score table
                     var userScores = await _context.HighScores
@@ -334,7 +345,7 @@ namespace Symulator_Nozownika.Controllers
                     await _context.SaveChangesAsync();
 
                     System.Console.WriteLine($"⚠️ Wynik {score} nie jest lepszy niż {personalBest.Score}");
-                    return Json(new { success = false, achievements = unlockedAchievements, completedQuests = completedQuests });
+                    return Json(new { success = true, newRecord = false, achievements = unlockedAchievements, completedQuests = completedQuests });
                 }
                 else
                 {
@@ -416,6 +427,13 @@ namespace Symulator_Nozownika.Controllers
         [HttpGet]
         public async Task<IActionResult> Highscores()
         {
+            // Block demo users from accessing rankings
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                TempData["DemoError"] = "Rankings are not available in Demo mode";
+                return RedirectToAction("SecurePage", "Account");
+            }
+
             var topScores = await _context.HighScores
                 .Include(h => h.UserAccount)
                 .OrderByDescending(h => h.Score)
@@ -490,6 +508,10 @@ namespace Symulator_Nozownika.Controllers
         [HttpPost]
         public async Task<IActionResult> PinScore([FromBody] PinScoreRequest request)
         {
+            // Block demo users from saving scores
+            if (User.FindFirst("IsDemo")?.Value == "true")
+                return Json(new { success = false, message = "Saving scores is not available in Demo mode" });
+
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int parsedUserId))
@@ -513,6 +535,10 @@ namespace Symulator_Nozownika.Controllers
         [HttpPost]
         public async Task<IActionResult> UnpinScore([FromBody] UnpinScoreRequest request)
         {
+            // Block demo users from saving scores
+            if (User.FindFirst("IsDemo")?.Value == "true")
+                return Json(new { success = false, message = "Saving scores is not available in Demo mode" });
+
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userId) || !int.TryParse(userId, out int parsedUserId))

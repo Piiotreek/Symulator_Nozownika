@@ -528,6 +528,13 @@ namespace Symulator_Nozownika.Controllers
         [HttpPost]
         public async Task<IActionResult> BuyWeapon(int weaponId)
         {
+            // Block demo users from buying weapons
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                TempData["WeaponSelectError"] = "Buying weapons is not available in demo mode.";
+                return RedirectToAction("SelectWeapon");
+            }
+
             var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
 
             if (string.IsNullOrEmpty(userName))

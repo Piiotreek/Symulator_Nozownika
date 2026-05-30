@@ -29,6 +29,8 @@ namespace Symulator_Nozownika.Data
         public DbSet<Quest> Quests { get; set; }
         public DbSet<UserQuestProgress> UserQuestProgresses { get; set; }
 
+        public DbSet<DemoLockout> DemoLockouts { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

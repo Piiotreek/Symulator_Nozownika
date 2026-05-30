@@ -18,6 +18,13 @@ namespace Symulator_Nozownika.Controllers
         // GET: /Quest/Index
         public async Task<IActionResult> Index()
         {
+            // Block demo users from quests
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                TempData["DemoError"] = "Quests are not available in Demo mode";
+                return RedirectToAction("SecurePage", "Account");
+            }
+
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var quests = await _questService.GetTodayQuestsAsync(userId);
             return View(quests);
@@ -27,6 +34,12 @@ namespace Symulator_Nozownika.Controllers
         [HttpPost]
         public async Task<IActionResult> ClaimReward([FromBody] ClaimRewardRequest request)
         {
+            // Block demo users from claiming quest rewards
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                return Json(new { success = false, message = "Quest rewards are not available in Demo mode" });
+            }
+
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var success = await _questService.ClaimRewardAsync(userId, request.QuestProgressId);
 

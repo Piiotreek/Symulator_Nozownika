@@ -28,6 +28,8 @@ namespace Symulator_Nozownika
             builder.Services.AddScoped<IClubService, ClubService>();
             // Register report service
             builder.Services.AddScoped<IReportService, ReportService>();
+            // Register demo service
+            builder.Services.AddScoped<IDemoService, DemoService>();
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())

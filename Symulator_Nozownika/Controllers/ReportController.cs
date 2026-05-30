@@ -25,6 +25,10 @@ namespace Symulator_Nozownika.Controllers
         [HttpGet]
         public async Task<IActionResult> MyStatisticsCsv()
         {
+            // Block demo users from exporting statistics
+            if (User.FindFirst("IsDemo")?.Value == "true")
+                return Unauthorized();
+
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out var userId)) return Unauthorized();
 
@@ -36,6 +40,10 @@ namespace Symulator_Nozownika.Controllers
         [HttpGet]
         public async Task<IActionResult> AllStatisticsCsv()
         {
+            // Block demo users from exporting statistics
+            if (User.FindFirst("IsDemo")?.Value == "true")
+                return Unauthorized();
+
             var csv = await _reportService.GenerateAllStatisticsCsvAsync();
             if (csv.Length == 0) return NotFound();
             return File(csv, "text/csv", "all-user-statistics.csv");
@@ -44,6 +52,10 @@ namespace Symulator_Nozownika.Controllers
         [HttpGet]
         public async Task<IActionResult> HighscoresCsv()
         {
+            // Block demo users from exporting highscores
+            if (User.FindFirst("IsDemo")?.Value == "true")
+                return Unauthorized();
+
             var csv = await _reportService.GenerateHighscoresCsvAsync();
             if (csv.Length == 0) return NotFound();
             return File(csv, "text/csv", "highscores.csv");

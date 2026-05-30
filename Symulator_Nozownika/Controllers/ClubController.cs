@@ -28,6 +28,13 @@ namespace Symulator_Nozownika.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
+            // Block demo users from accessing clubs
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                TempData["DemoError"] = "Clubs are not available in Demo mode";
+                return RedirectToAction("SecurePage", "Account");
+            }
+
             var userId = GetCurrentUserId();
 
             var clubs = await _context.Clubs
@@ -101,6 +108,13 @@ namespace Symulator_Nozownika.Controllers
         [HttpGet]
         public IActionResult Create()
         {
+            // Block demo users from creating clubs
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                TempData["DemoError"] = "Club creation is not available in Demo mode";
+                return RedirectToAction("SecurePage", "Account");
+            }
+
             if (!GetCurrentUserId().HasValue)
             {
                 return Redirect("/Account/Login");
@@ -112,6 +126,13 @@ namespace Symulator_Nozownika.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreateClubViewModel model)
         {
+            // Block demo users from creating clubs
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                TempData["DemoError"] = "Club creation is not available in Demo mode";
+                return RedirectToAction("SecurePage", "Account");
+            }
+
             var userId = GetCurrentUserId();
             if (!userId.HasValue)
             {
@@ -188,6 +209,13 @@ namespace Symulator_Nozownika.Controllers
         [HttpPost]
         public async Task<IActionResult> JoinClub(int clubId)
         {
+            // Block demo users from joining clubs
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                TempData["DemoError"] = "Club features are not available in Demo mode";
+                return RedirectToAction("SecurePage", "Account");
+            }
+
             var userId = GetCurrentUserId();
             if (!userId.HasValue)
             {
@@ -243,6 +271,13 @@ namespace Symulator_Nozownika.Controllers
         [HttpPost]
         public async Task<IActionResult> LeaveClub(int clubId)
         {
+            // Block demo users from club operations
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                TempData["DemoError"] = "Club features are not available in Demo mode";
+                return RedirectToAction("SecurePage", "Account");
+            }
+
             var userId = GetCurrentUserId();
             if (!userId.HasValue)
             {
@@ -308,6 +343,13 @@ namespace Symulator_Nozownika.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteClub(int clubId)
         {
+            // Block demo users from club operations
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                TempData["DemoError"] = "Club features are not available in Demo mode";
+                return RedirectToAction("SecurePage", "Account");
+            }
+
             var userId = GetCurrentUserId();
             if (!userId.HasValue)
             {
@@ -430,6 +472,13 @@ namespace Symulator_Nozownika.Controllers
         [HttpPost]
         public async Task<IActionResult> SendMessage(int clubId, string content)
         {
+            // Block demo users from club chat
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                TempData["DemoError"] = "Club features are not available in Demo mode";
+                return RedirectToAction("SecurePage", "Account");
+            }
+
             var userId = GetCurrentUserId();
             if (!userId.HasValue)
                 return Redirect("/Account/Login");

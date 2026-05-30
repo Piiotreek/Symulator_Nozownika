@@ -12,8 +12,8 @@ using Symulator_Nozownika.Data;
 namespace Symulator_Nozownika.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260511171251_Initial")]
-    partial class Initial
+    [Migration("20260527193309_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -264,6 +264,34 @@ namespace Symulator_Nozownika.Migrations
                         .IsUnique();
 
                     b.ToTable("CoinWallets");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9999,
+                            Balance = 9999,
+                            UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            UserId = 9999
+                        });
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.DemoLockout", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("LockedUntil")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DemoLockouts");
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.FavoriteWeapon", b =>
@@ -357,6 +385,18 @@ namespace Symulator_Nozownika.Migrations
                         .IsUnique();
 
                     b.ToTable("Levels");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9999,
+                            CurrentLevel = 10,
+                            CurrentLevelThreshold = 5040,
+                            NextLevelThreshold = 6000,
+                            TotalScoreSnapshot = 5500,
+                            UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            UserId = 9999
+                        });
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.PurchasedWeapon", b =>
@@ -547,6 +587,9 @@ namespace Symulator_Nozownika.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("DemoGamesPlayed")
+                        .HasColumnType("int");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -554,6 +597,9 @@ namespace Symulator_Nozownika.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDemo")
+                        .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -577,6 +623,21 @@ namespace Symulator_Nozownika.Migrations
                     b.HasIndex("SelectedWeaponId");
 
                     b.ToTable("UserAccounts");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9999,
+                            Country = "Poland",
+                            CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DemoGamesPlayed = 0,
+                            Email = "debug@example.local",
+                            FirstName = "Debug",
+                            IsDemo = false,
+                            LastName = "Account",
+                            Password = "debugdebug1",
+                            UserName = "debug"
+                        });
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.UserAchievement", b =>
@@ -686,6 +747,21 @@ namespace Symulator_Nozownika.Migrations
                         .IsUnique();
 
                     b.ToTable("UserStatistics");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 9999,
+                            CurrentStreak = 0,
+                            HighestScore = 0,
+                            LastPlayedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            LongestStreak = 0,
+                            TotalClicks = 0,
+                            TotalGamesPlayed = 0,
+                            TotalPlayTime = new TimeSpan(0, 0, 0, 0, 0),
+                            TotalScore = 5500,
+                            UserId = 9999
+                        });
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.Weapon", b =>

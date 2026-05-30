@@ -1,0 +1,87 @@
+@{
+    var isDemoUser = Context.User.FindFirst("IsDemo")?.Value == "true";
+}
+
+@if (isDemoUser)
+{
+    <li class="nav-item dropdown">
+        <a class="nav-link text-warning dropdown-toggle" href="#" id="demoMenuToggle" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Demo mode - Features restricted">
+            🎮 DEMO
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="demoMenuToggle" style="min-width: 350px;">
+            <li><h6 class="dropdown-header">📋 Demo Mode Restrictions</h6></li>
+            <li><hr class="dropdown-divider"></li>
+            
+            <li>
+                <a class="dropdown-item" href="#" onclick="return false;" style="cursor: not-allowed; opacity: 0.6;">
+                    <span class="text-danger">❌ Buy Weapons</span>
+                    <br><small class="text-muted">Limited to scissors only</small>
+                </a>
+            </li>
+            
+            <li>
+                <a class="dropdown-item" href="#" onclick="return false;" style="cursor: not-allowed; opacity: 0.6;">
+                    <span class="text-danger">❌ Unlock Achievements</span>
+                    <br><small class="text-muted">Achievements disabled</small>
+                </a>
+            </li>
+            
+            <li>
+                <a class="dropdown-item" href="#" onclick="return false;" style="cursor: not-allowed; opacity: 0.6;">
+                    <span class="text-danger">❌ Access Quests</span>
+                    <br><small class="text-muted">Quests unavailable</small>
+                </a>
+            </li>
+            
+            <li>
+                <a class="dropdown-item" href="#" onclick="return false;" style="cursor: not-allowed; opacity: 0.6;">
+                    <span class="text-danger">❌ Join Clubs</span>
+                    <br><small class="text-muted">Clubs unavailable</small>
+                </a>
+            </li>
+            
+            <li>
+                <a class="dropdown-item" href="#" onclick="return false;" style="cursor: not-allowed; opacity: 0.6;">
+                    <span class="text-danger">❌ View Rankings</span>
+                    <br><small class="text-muted">Leaderboards disabled</small>
+                </a>
+            </li>
+            
+            <li>
+                <a class="dropdown-item" href="#" onclick="return false;" style="cursor: not-allowed; opacity: 0.6;">
+                    <span class="text-danger">❌ Pin Scores</span>
+                    <br><small class="text-muted">Score saving disabled</small>
+                </a>
+            </li>
+            
+            <li>
+                <a class="dropdown-item" href="#" onclick="return false;" style="cursor: not-allowed; opacity: 0.6;">
+                    <span class="text-danger">❌ Export Statistics</span>
+                    <br><small class="text-muted">CSV export disabled</small>
+                </a>
+            </li>
+            
+            <li>
+                <a class="dropdown-item" href="#" onclick="return false;" style="cursor: not-allowed; opacity: 0.6;">
+                    <span class="text-danger">❌ Change Weapons</span>
+                    <br><small class="text-muted">Weapon selection disabled</small>
+                </a>
+            </li>
+            
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item" href="#" onclick="return false;" style="cursor: not-allowed;">
+                    <span class="text-info">⏱️ 3 Games Limit</span>
+                    <br><small class="text-muted">After 3 games: 6h lockout</small>
+                </a>
+            </li>
+            
+            <li>
+                <a class="dropdown-item" href="#" onclick="return false;" style="cursor: not-allowed;">
+                    <span class="text-success">✅ Create Account</span>
+                    <br><small class="text-muted">Full features unlocked</small>
+                </a>
+            </li>
+        </ul>
+    </li>
+}

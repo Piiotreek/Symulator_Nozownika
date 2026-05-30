@@ -24,6 +24,10 @@ namespace Symulator_Nozownika.Models
         
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
+        public bool IsDemo { get; set; } = false;
+
+        public int DemoGamesPlayed { get; set; } = 0;
+
         // Klucz obcy
         public int? SelectedWeaponId { get; set; }
 

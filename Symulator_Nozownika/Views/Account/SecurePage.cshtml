@@ -1,16 +1,24 @@
-﻿@model Symulator_Nozownika.Models.UserAccount
+@model Symulator_Nozownika.Models.UserAccount
 
 @{
     ViewData["Title"] = "Symulator Nożownika - Walka";
-    // Pobieramy statystyki broni lub ustawiamy domyślne, jeśli coś pójdzie nie tak
     var weaponName = Model.SelectedWeapon?.Name ?? "Pięści";
     var weaponDmg = Model.SelectedWeapon?.Damage ?? 10;
     var weaponCd = Model.SelectedWeapon?.Cooldown.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) ?? "1.0";
     var weaponImg = Model.SelectedWeapon?.ImageUrl ?? "/images/default.png";
     var coinBalance = Model.CoinWallet?.Balance ?? 0;
+    var isDemoUser = Model.IsDemo;
 }
 
 <div class="container mt-4">
+    @if (isDemoUser)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <strong>🎮 Demo Mode</strong> - Limited features. Change weapons and access to clans/rankings disabled. Max 3 games per day.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
     <div class="row mb-4 shadow-sm p-3 mb-5 bg-dark rounded text-white border-gold">
         <div class="col-md-4 text-center border-end">
             <h5 class="text-muted">Gracz</h5>
@@ -18,7 +26,11 @@
                 var avatarSrc = string.IsNullOrEmpty(Model.AvatarPath) ? "/images/default-avatar.svg" : Model.AvatarPath;
             }
             <img src="@avatarSrc" alt="Awatar" class="rounded-circle mb-2" style="width:80px;height:80px;object-fit:cover;border:2px solid #ffc107;" />
-            <h2 class="text-warning">@Model.UserName</h2>
+            <h2 class="text-warning">@Model.UserName @(isDemoUser ? "👾" : "")</h2>
+            @if (isDemoUser)
+            {
+                <span class="badge bg-info">DEMO</span>
+            }
         </div>
         <div class="col-md-4 text-center">
             <h5 class="text-muted">Wyposażona Broń</h5>
@@ -37,6 +49,10 @@
                 <span class="text-clock">Czas: <span id="timer-value">15</span>s</span>
                 <div class="mt-2 text-warning" style="font-size: 20px;">Monety: <span id="coin-balance">@coinBalance</span></div>
             </div>
+            @if (isDemoUser)
+            {
+                <small class="text-warning d-block mt-2">Gry: <span id="demo-games">@Model.DemoGamesPlayed</span>/3</small>
+            }
         </div>
     </div>
 
@@ -53,13 +69,21 @@
     <div class="text-center mt-4">
         <button id="btn-start" class="btn btn-warning btn-xl shadow">ROZPOCZNIJ SYMULACJĘ</button>
         <div class="mt-3">
-            <a asp-action="SelectWeapon" class="btn btn-outline-secondary btn-sm">Zmień broń</a>
-            <a asp-action="RemoveAccount" class="btn btn-outline-danger btn-sm ml-2">Usuń konto</a>
+            @if (!isDemoUser)
+            {
+                <a asp-action="SelectWeapon" class="btn btn-outline-secondary btn-sm">Zmień broń</a>
+                <a asp-action="RemoveAccount" class="btn btn-outline-danger btn-sm ml-2">Usuń konto</a>
+            }
+            else
+            {
+                <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Disabled in demo mode">Zmień broń</button>
+                <button type="button" class="btn btn-outline-danger btn-sm ml-2" disabled title="Disabled in demo mode">Usuń konto</button>
+                <a href="javascript:history.back()" class="btn btn-outline-info btn-sm ml-2">Wróć</a>
+            }
         </div>
     </div>
 
     @Html.AntiForgeryToken()
-    @* partial view for achievement toasts *@
     <partial name="_AchievementToast" />
 </div>
 
@@ -85,6 +109,8 @@
 </div>
 
 <script>
+    const isDemoUser = @(isDemoUser.ToString().ToLower());
+
     // Dane z C# przelane do JS
     const weaponDamageBase = @weaponDmg;
     const cooldownTime = @weaponCd * 1000; // zamiana na milisekundy
@@ -100,6 +126,19 @@
     const timerDisplay = document.getElementById('timer-value');
     const startBtn = document.getElementById('btn-start');
     const cooldownOverlay = document.getElementById('cooldown-overlay');
+
+    // Initialize demo games display if demo user
+    if (isDemoUser) {
+        fetch('/Demo/GetStatus')
+            .then(r => r.json())
+            .then(data => {
+                const demoGamesEl = document.getElementById('demo-games');
+                if (demoGamesEl) {
+                    demoGamesEl.textContent = data.gamesPlayed;
+                }
+            })
+            .catch(err => console.error('Error loading demo status:', err));
+    }
 
     const multipliers = {
         "pecherz": 1.2, "miednica": 1.1, "jelito_grube": 1.5, "jelito_cienkie": 1.4,
@@ -124,27 +163,120 @@
         }, 1000);
     }
 
-    async function submitGameScore(finalScore, currentClicks) {
+    async function testingsubmitGameScore(finalScore, currentClicks) {
         const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-        const response = await fetch('/GameScore/SaveScore', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...(token ? { 'RequestVerificationToken': token } : {})
-            },
-            body: JSON.stringify({
-                score: finalScore,
-                clicks: currentClicks,
-                playTimeSeconds: 15,
-                won: hp <= 0
-            })
-        });
+        const isDemoUser = @(isDemoUser.ToString().ToLower());
 
-        const result = await response.json();
-        if (result.success) {
-            location.reload();
-        } else if (result.needsLogin) {
-            alert(result.message || 'Zaloguj się, aby zapisać wynik.');
+        if (isDemoUser) {
+            // Submit demo score
+            const response = await fetch('/Demo/SaveDemoScore', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'RequestVerificationToken': token } : {})
+                },
+                body: JSON.stringify({
+                    score: finalScore,
+                    clicks: currentClicks,
+                    playTimeSeconds: 15
+                })
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                console.log(`📊 Gra ${result.gamesPlayed} zapisana. Pozostało gier: ${result.gamesRemaining}`);
+                updateDemoGamesDisplay(result.gamesPlayed);
+
+                // Jeśli to była ostatnia gra (3. gra)
+                if (result.isLastGame) {
+                    console.log('🎮 Osiągnięto limit 3 gier! Wylogowuję gracza...');
+                    showDemoLimitAlert(result.message);
+                    redirectToDemoEnd();
+                } else {
+                    // Pokazuj licznik pozostałych gier
+                    console.log(`ℹ️ Pozostało gier: ${result.gamesRemaining}`);
+                }
+            } else {
+                alert(result.error || 'Błąd podczas zapisywania wyniku');
+            }
+        } else {
+            // Normal user score submission
+            const response = await fetch('/GameScore/SaveScore', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'RequestVerificationToken': token } : {})
+                },
+                body: JSON.stringify({
+                    score: finalScore,
+                    clicks: currentClicks,
+                    playTimeSeconds: 15,
+                    won: hp <= 0
+                })
+            });
+
+            const result = await response.json();
+            console.log('✓ SaveScore response:', result);
+            
+            if (result.success) {
+                // Show achievements if unlocked
+                if (result.achievements && result.achievements.length > 0) {
+                    result.achievements.forEach(ach => {
+                        let name = ach.name || ach.Name;
+                        let imagePath = ach.imagePath || ach.ImagePath;
+                        if (typeof showAchievementToast === "function") {
+                            showAchievementToast(name, imagePath);
+                        }
+                    });
+                }
+                
+                // Show completed quests if any
+                if (result.completedQuests && result.completedQuests.length > 0) {
+                    result.completedQuests.forEach(q => {
+                        if (typeof showQuestCompletedToast === "function") {
+                            showQuestCompletedToast(q.name || q.Name, q.rewardCoins || q.RewardCoins, q.rewardXp || q.RewardXp);
+                        }
+                    });
+                } 
+            } else if (result.needsLogin) {
+                alert(result.message || 'Zaloguj się, aby zapisać wynik.');
+            } else {
+                // Ogólny błąd - zawsze załaduj stronę
+                console.error('Błąd przy zapisywaniu wyniku:', result);
+                location.reload();
+            }
+        }
+    }
+
+    function showDemoLimitAlert(message) {
+        // Blokuj możliwość klikania i gry
+        gameActive = false;
+        startBtn.disabled = true;
+        
+        // Pokaż alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+        alertDiv.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 400px; text-align: center;';
+        alertDiv.innerHTML = `
+            <strong>🎮 Limit Gier Demo Osiągnięty!</strong>
+            <hr>
+            <p>${message}</p>
+            <p><strong>Konto demo zostało usunięte.</strong></p>
+            <p>Spróbuj ponownie za 6 godzin!</p>
+            <button type="button" class="btn btn-danger btn-sm mt-3" onclick="redirectToDemoEnd()">OK - Przejdź do strony głównej</button>
+        `;
+        document.body.appendChild(alertDiv);
+    }
+
+    function redirectToDemoEnd() {
+        console.log('Przekierowuję do strony głównej...');
+        window.location.href = '@Url.Action("StartView", "Home")';
+    }
+
+    function updateDemoGamesDisplay(gamesPlayed) {
+        const demoGamesEl = document.getElementById('demo-games');
+        if (demoGamesEl) {
+            demoGamesEl.textContent = gamesPlayed;
         }
     }
 
@@ -156,14 +288,15 @@
 
         const finalScore = 10000 - hp;
         console.log(`🎮 Koniec gry! HP: ${hp}, Wynik: ${finalScore}`);
-        // alert(message + "\nPozostałe HP: " + hp + "\nWynik: " + finalScore);
 
-        // Opóźnienie aby alert nie blokował
         setTimeout(() => {
             console.log(`📤 Wysyłam wynik: ${finalScore},${currentClicks}`);
-            //submit clicks and finalScore
-            submitGameScore(finalScore,currentClicks);
-            showPinModal(finalScore);
+            testingsubmitGameScore(finalScore, currentClicks);
+            
+            // Only show pin modal if not demo user
+            if (!isDemoUser) {
+                showPinModal(finalScore);
+            }
         }, 100);
     }
 
