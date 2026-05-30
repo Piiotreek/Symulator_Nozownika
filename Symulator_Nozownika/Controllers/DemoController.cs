@@ -14,11 +14,13 @@ namespace Symulator_Nozownika.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IDemoService _demoService;
+        private readonly ILevelService _levelService;
 
-        public DemoController(AppDbContext context, IDemoService demoService)
+        public DemoController(AppDbContext context, IDemoService demoService, ILevelService levelService)
         {
             _context = context;
             _demoService = demoService;
+            _levelService = levelService;
         }
 
         [HttpPost]
@@ -32,7 +34,7 @@ namespace Symulator_Nozownika.Controllers
         public async Task<IActionResult> StartDemo()
         {
             var (canPlay, message) = await _demoService.CheckDemoStatusAsync();
-            
+
             if (!canPlay)
                 return Json(new { success = false, error = message });
 
@@ -51,7 +53,7 @@ namespace Symulator_Nozownika.Controllers
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, 
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity));
 
             return Json(new { success = true, userId = demoUser.Id });
@@ -102,12 +104,27 @@ namespace Symulator_Nozownika.Controllers
 
 
 
+            // Load wallet (created during demo user setup)
+            var wallet = await _context.CoinWallets.FirstOrDefaultAsync(w => w.UserId == demoUser.Id);
+            if (wallet == null)
+            {
+                wallet = new CoinWallet { UserId = demoUser.Id, Balance = 0, UpdatedAt = DateTime.UtcNow };
+                _context.CoinWallets.Add(wallet);
+            }
+
+            // Calculate coin reward the same way as regular users
+            var selectedWeapon = await _context.Weapons.FirstOrDefaultAsync(w => w.Id == demoUser.SelectedWeaponId);
+            var weaponDamage = selectedWeapon?.Damage ?? 2;
+            var coinReward = _levelService.GetCoinReward(Math.Max(0, request.Score), weaponDamage);
+
             demoUser.Statistics.TotalGamesPlayed++;
             demoUser.Statistics.TotalScore += request.Score;
             demoUser.Statistics.TotalClicks += request.Clicks;
             demoUser.Statistics.TotalPlayTime += TimeSpan.FromSeconds(request.PlayTimeSeconds);
             demoUser.Statistics.HighestScore = Math.Max(demoUser.Statistics.HighestScore, request.Score);
             demoUser.Statistics.LastPlayedAt = DateTime.UtcNow;
+            wallet.Balance += coinReward;
+            wallet.UpdatedAt = DateTime.UtcNow;
 
             // Persist statistics update
             await _context.SaveChangesAsync();
@@ -143,7 +160,8 @@ namespace Symulator_Nozownika.Controllers
             int gamesRemaining = Math.Max(0, 3 - gamesPlayed);
             bool isLastGame = gamesPlayed >= 3;
 
-            return Json(new {
+            return Json(new
+            {
                 success = true,
                 isLastGame = isLastGame,
                 gamesPlayed = gamesPlayed,
@@ -177,7 +195,7 @@ namespace Symulator_Nozownika.Controllers
 
             // Wyloguj gracza demo
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            
+
             return RedirectToAction("Index", "Home");
         }
 

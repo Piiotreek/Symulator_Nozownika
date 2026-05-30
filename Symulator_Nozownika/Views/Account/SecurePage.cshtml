@@ -191,7 +191,7 @@
                 if (result.isLastGame) {
                     console.log('🎮 Osiągnięto limit 3 gier! Wylogowuję gracza...');
                     showDemoLimitAlert(result.message);
-                    redirectToDemoEnd();
+
                 } else {
                     // Pokazuj licznik pozostałych gier
                     console.log(`ℹ️ Pozostało gier: ${result.gamesRemaining}`);
@@ -217,7 +217,7 @@
 
             const result = await response.json();
             console.log('✓ SaveScore response:', result);
-            
+
             if (result.success) {
                 // Show achievements if unlocked
                 if (result.achievements && result.achievements.length > 0) {
@@ -229,7 +229,7 @@
                         }
                     });
                 }
-                
+
                 // Show completed quests if any
                 if (result.completedQuests && result.completedQuests.length > 0) {
                     result.completedQuests.forEach(q => {
@@ -237,7 +237,7 @@
                             showQuestCompletedToast(q.name || q.Name, q.rewardCoins || q.RewardCoins, q.rewardXp || q.RewardXp);
                         }
                     });
-                } 
+                }
             } else if (result.needsLogin) {
                 alert(result.message || 'Zaloguj się, aby zapisać wynik.');
             } else {
@@ -249,23 +249,69 @@
     }
 
     function showDemoLimitAlert(message) {
-        // Blokuj możliwość klikania i gry
         gameActive = false;
         startBtn.disabled = true;
-        
-        // Pokaż alert
-        const alertDiv = document.createElement('div');
-        alertDiv.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-        alertDiv.style.cssText = 'top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; min-width: 400px; text-align: center;';
-        alertDiv.innerHTML = `
-            <strong>🎮 Limit Gier Demo Osiągnięty!</strong>
-            <hr>
-            <p>${message}</p>
-            <p><strong>Konto demo zostało usunięte.</strong></p>
-            <p>Spróbuj ponownie za 6 godzin!</p>
-            <button type="button" class="btn btn-danger btn-sm mt-3" onclick="redirectToDemoEnd()">OK - Przejdź do strony głównej</button>
+        showDemoCountdownOverlay();
+    }
+
+    function showDemoCountdownOverlay() {
+        const existing = document.getElementById('demo-countdown-overlay');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'demo-countdown-overlay';
+        overlay.style.cssText = `
+            position: fixed; inset: 0; z-index: 99999;
+            background: rgba(0,0,0,0.92);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center; padding: 2rem;
+            animation: fadeInOverlay 0.4s ease;
         `;
-        document.body.appendChild(alertDiv);
+
+        overlay.innerHTML = `
+            <style>
+                @@keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+                @@keyframes pulseNumber { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+                #demo-countdown-number { animation: pulseNumber 1s infinite; }
+            </style>
+            <div style="font-size: 4rem; margin-bottom: 0.5rem;">🎮</div>
+            <h2 style="color: #ff4d4d; font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">
+                Limit gier demo osiągnięty!
+            </h2>
+            <p style="color: #ccc; font-size: 1.1rem; max-width: 420px; margin-bottom: 0.25rem;">
+                Rozegrałeś 3 gry w trybie demo.
+            </p>
+            <p style="color: #aaa; font-size: 0.95rem; margin-bottom: 2rem;">
+                Spróbuj ponownie za 6 godzin lub <strong style="color:#fff;">zarejestruj się</strong> by grać bez limitu!
+            </p>
+            <div style="color: #aaa; font-size: 1rem; margin-bottom: 0.5rem;">
+                Zostaniesz wylogowany za:
+            </div>
+            <div id="demo-countdown-number" style="
+                font-size: 5rem; font-weight: 900;
+                color: #ff4d4d; line-height: 1;
+                margin-bottom: 2rem;
+            ">5</div>
+            <button onclick="redirectToDemoEnd()" style="
+                background: #ff4d4d; color: #fff; border: none;
+                padding: 0.6rem 1.8rem; border-radius: 6px;
+                font-size: 1rem; cursor: pointer; font-weight: 600;
+            ">Przejdź teraz →</button>
+        `;
+
+        document.body.appendChild(overlay);
+
+        let seconds = 5;
+        const numberEl = document.getElementById('demo-countdown-number');
+        const interval = setInterval(() => {
+            seconds--;
+            if (numberEl) numberEl.textContent = seconds;
+            if (seconds <= 0) {
+                clearInterval(interval);
+                redirectToDemoEnd();
+            }
+        }, 1000);
     }
 
     function redirectToDemoEnd() {
@@ -292,7 +338,7 @@
         setTimeout(() => {
             console.log(`📤 Wysyłam wynik: ${finalScore},${currentClicks}`);
             testingsubmitGameScore(finalScore, currentClicks);
-            
+
             // Only show pin modal if not demo user
             if (!isDemoUser) {
                 showPinModal(finalScore);
