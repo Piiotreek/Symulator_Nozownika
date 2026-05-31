@@ -172,9 +172,13 @@ namespace Symulator_Nozownika.Controllers
             // Sprawdzenie czy klub o tej nazwie już istnieje
             var existingClub = await _context.Clubs
                 .FirstOrDefaultAsync(c => c.Name == model.Name);
-            if (existingClub != null)
+            bool nameTaken = await _context.Clubs
+                .AnyAsync(c => EF.Functions.Like(c.Name, model.Name));
+
+            if (nameTaken)
             {
-                ModelState.AddModelError("", "A club with this name already exists.");
+                ModelState.AddModelError(nameof(model.Name),
+                    "A club with this name already exists.");
                 return View(model);
             }
 

@@ -12,5 +12,7 @@ namespace Symulator_Nozownika.Models
         [DataType(DataType.Password)]
         [StringLength(20, ErrorMessage = "The Password must be at least 6 characters long.", MinimumLength = 6)]
         public string Password { get; set; }
+
+        public bool RememberMe { get; set; }
     }
 }

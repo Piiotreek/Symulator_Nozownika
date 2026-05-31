@@ -127,28 +127,23 @@ namespace Symulator_Nozownika.Controllers
             }
             return View(model);
         }
-
+        [HttpGet]
         public IActionResult Login()
         {
+            // Jeśli użytkownik ma już ciasteczko (jest zalogowany), omiń formularz!
+            if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("SelectWeapon", "Account");
+            }
 
+            // W przeciwnym razie pokaż mu formularz
             return View();
+            
         }
 
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            // If the visible input used in the form wasn't bound correctly to UserNameOrEmail,
-            // accept fallback from Request.Form["username"] (loginIdentifier field in the view)
-            if (string.IsNullOrWhiteSpace(model?.UserNameOrEmail))
-            {
-                var fallback = Request.Form["username"].FirstOrDefault();
-                if (!string.IsNullOrWhiteSpace(fallback))
-                {
-                    model ??= new LoginViewModel();
-                    model.UserNameOrEmail = fallback?.Trim();
-                }
-            }
-
             if (model == null)
             {
                 return View();
@@ -165,16 +160,22 @@ namespace Symulator_Nozownika.Controllers
 
                 if (user != null)
                 {
-                    //Successful login logic 
+                    // Successful login logic 
                     var clamis = new List<Claim>
-                    {
-                       new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                       new Claim(ClaimTypes.Name, user.Email),
-                       new Claim("Name",user.UserName),
-                       new Claim(ClaimTypes.Role, "User")
-                    };
+            {
+               new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+               new Claim(ClaimTypes.Name, user.Email),
+               new Claim("Name",user.UserName),
+               new Claim(ClaimTypes.Role, "User")
+            };
                     var claimsidentity = new ClaimsIdentity(clamis, CookieAuthenticationDefaults.AuthenticationScheme);
-                    HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsidentity));
+                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsidentity), new AuthenticationProperties
+                    {
+                        IsPersistent = model.RememberMe,
+                        ExpiresUtc = model.RememberMe
+                        ? DateTimeOffset.UtcNow.AddDays(30)    // 30 dni
+                        : DateTimeOffset.UtcNow.AddHours(8)    // sesja robocza
+                    });
 
                     return RedirectToAction("SelectWeapon", "Account");
                 }
@@ -186,6 +187,7 @@ namespace Symulator_Nozownika.Controllers
             // Return view with model to preserve entered username/email
             return View(model);
         }
+        
         //changed login
         [HttpPost]
         public async Task<IActionResult> Logout()

@@ -41,6 +41,18 @@ namespace Symulator_Nozownika.Data
             .HasForeignKey(u => u.ClubId)
             .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<UserAccount>()
+            .HasIndex(u => u.UserName)
+            .IsUnique();
+
+            modelBuilder.Entity<UserAccount>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<Club>()
+            .HasIndex(c => c.Name)
+            .IsUnique();
+
             modelBuilder.Entity<Club>()
                 .HasOne(c => c.Owner)
                 .WithMany()
