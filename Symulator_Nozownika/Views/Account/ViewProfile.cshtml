@@ -1,0 +1,210 @@
+@model Symulator_Nozownika.Models.PublicProfileViewModel
+
+@{
+    ViewData["Title"] = $"Profil gracza – {Model.UserName}";
+    var avatarSrc = string.IsNullOrEmpty(Model.AvatarPath) ? "/images/default-avatar.svg" : Model.AvatarPath;
+}
+
+<div class="container mt-4">
+
+    <!-- Nagłówek profilu -->
+    <div class="row mb-4 shadow-sm p-3 bg-dark rounded text-white border-gold">
+        <div class="col-md-3 text-center border-end py-2">
+            <img src="@avatarSrc" alt="Awatar" class="rounded-circle mb-2"
+                 style="width:100px;height:100px;object-fit:cover;border:3px solid #ffc107;" />
+            <h2 class="text-warning mt-2 mb-0">@Model.UserName</h2>
+            <small class="text-muted">@Model.Country</small>
+            <div class="mt-2">
+                <span class="badge bg-warning text-dark fs-6">Poziom @Model.CurrentLevel</span>
+            </div>
+            <small class="text-secondary d-block mt-2">
+                Gracz od: @Model.MemberSince.ToString("dd.MM.yyyy")
+            </small>
+        </div>
+
+        <div class="col-md-3 text-center py-2 border-end">
+            <h5 class="text-muted">Wyposażona broń</h5>
+            @if (!string.IsNullOrEmpty(Model.WeaponImageUrl))
+            {
+                <img src="@Model.WeaponImageUrl" alt="Broń" style="height:60px;" class="mb-2" />
+            }
+            else
+            {
+                <div style="font-size:40px;">👊</div>
+            }
+            <h5 class="mb-0">@Model.WeaponName</h5>
+            <small class="text-info">DMG: @Model.WeaponDamage</small>
+        </div>
+
+        <div class="col-md-3 text-center py-2 border-end">
+            <h5 class="text-muted">Klan</h5>
+            @if (Model.ClubId.HasValue && !string.IsNullOrEmpty(Model.ClubName))
+            {
+                <a asp-controller="Club" asp-action="Details" asp-route-id="@Model.ClubId"
+                   class="text-warning text-decoration-none">
+                    <span style="font-size:36px;">🛡️</span>
+                    <div class="mt-1">@Model.ClubName</div>
+                </a>
+            }
+            else
+            {
+                <span style="font-size:36px;">🚫</span>
+                <div class="text-muted mt-1">Brak klanu</div>
+            }
+        </div>
+
+        <div class="col-md-3 text-center py-2">
+            <h5 class="text-muted">Osiągnięcia</h5>
+            <span style="font-size:36px;">🏅</span>
+            <div class="mt-1">
+                <span class="badge bg-secondary fs-6">@Model.Achievements.Count</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Statystyki -->
+        <div class="col-md-6 mb-4">
+            <div class="card bg-dark text-white shadow">
+                <div class="card-header bg-secondary">
+                    <h5 class="mb-0">📊 Statystyki</h5>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-dark table-sm table-striped mb-0">
+                        <tbody>
+                            <tr>
+                                <td>🎮 Rozegrane gry</td>
+                                <td class="text-warning fw-bold text-end">@Model.TotalGamesPlayed</td>
+                            </tr>
+                            <tr>
+                                <td>🏆 Najlepszy wynik</td>
+                                <td class="text-warning fw-bold text-end">@Model.HighestScore pkt</td>
+                            </tr>
+                            <tr>
+                                <td>📈 Łączny wynik</td>
+                                <td class="text-warning fw-bold text-end">@Model.TotalScore pkt</td>
+                            </tr>
+                            <tr>
+                                <td>👆 Łączne kliknięcia</td>
+                                <td class="text-warning fw-bold text-end">@Model.TotalClicks</td>
+                            </tr>
+                            <tr>
+                                <td>🔥 Aktualny streak</td>
+                                <td class="text-warning fw-bold text-end">@Model.CurrentStreak dni</td>
+                            </tr>
+                            <tr>
+                                <td>⚡ Najdłuższy streak</td>
+                                <td class="text-warning fw-bold text-end">@Model.LongestStreak dni</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ulubione wyniki -->
+        <div class="col-md-6 mb-4">
+            <div class="card bg-dark text-white shadow">
+                <div class="card-header bg-secondary">
+                    <h5 class="mb-0">📌 Ulubione wyniki</h5>
+                </div>
+                <div class="card-body p-0" style="max-height:340px;overflow-y:auto;">
+                    @if (Model.SavedScores != null && Model.SavedScores.Any())
+                    {
+                        <table class="table table-dark table-sm table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Wynik</th>
+                                    <th>Data</th>
+                                    <th>Notatka</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int idx = 1;
+                                }
+                                @foreach (var item in Model.SavedScores)
+                                {
+                                    <tr>
+                                        <td class="text-muted">@idx</td>
+                                        <td><span class="badge bg-info">@item.Score pkt</span></td>
+                                        <td><small>@item.AchievedAt.ToString("dd.MM.yyyy HH:mm")</small></td>
+                                        <td>
+                                            <small class="text-muted">@(string.IsNullOrEmpty(item.Note) ? "-" : item.Note)</small>
+                                        </td>
+                                    </tr>
+                                    idx++;
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="p-3 text-muted text-center">Brak ulubionych wyników</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+    <!-- Osiągnięcia -->
+    @if (Model.Achievements.Any())
+    {
+        <div class="card bg-dark text-white shadow mb-4">
+            <div class="card-header bg-secondary">
+                <h5 class="mb-0">🏆 Osiągnięcia (@Model.Achievements.Count)</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    @foreach (var ach in Model.Achievements)
+                    {
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <div class="text-center p-2 bg-secondary rounded h-100"
+                                 title="@ach.Description&#10;Odblokowano: @ach.UnlockedAt.ToString("dd.MM.yyyy")">
+                                @if (!string.IsNullOrEmpty(ach.ImagePath))
+                                {
+                                    <img src="@ach.ImagePath" alt="@ach.Name"
+                                         style="width:48px;height:48px;object-fit:contain;" class="mb-1" />
+                                }
+                                else
+                                {
+                                    <div style="font-size:36px;">🏅</div>
+                                }
+                                <div class="small fw-bold">@ach.Name</div>
+                                <div class="text-muted" style="font-size:0.7rem;">
+                                    @ach.UnlockedAt.ToString("dd.MM.yyyy")
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="card bg-dark text-white shadow mb-4">
+            <div class="card-header bg-secondary">
+                <h5 class="mb-0">🏆 Osiągnięcia</h5>
+            </div>
+            <div class="card-body text-muted text-center py-4">
+                Ten gracz nie ma jeszcze żadnych osiągnięć.
+            </div>
+        </div>
+    }
+
+    <!-- Przyciski nawigacji -->
+    <div class="d-flex gap-2 mb-4">
+        <a asp-controller="GameScore" asp-action="Highscores" class="btn btn-outline-warning">
+            ← Ranking
+        </a>
+        @if (Model.ClubId.HasValue)
+        {
+            <a asp-controller="Club" asp-action="Details" asp-route-id="@Model.ClubId"
+               class="btn btn-outline-info">
+                🛡️ Klan: @Model.ClubName
+            </a>
+        }
+    </div>
+
+</div>

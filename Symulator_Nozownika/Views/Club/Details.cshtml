@@ -79,7 +79,12 @@
                                 {
                                     <tr>
                                         <td>@member.FullName</td>
-                                        <td>@member.UserName</td>
+                                        <td>
+                                            <a href="@Url.Action("ViewProfile", "Account", new { id = member.UserId })"
+                                               class="text-decoration-none text-primary">
+                                                @member.UserName
+                                            </a>
+                                        </td>
                                         <td>@member.Country</td>
                                         <td>
                                             @if (member.Id == Model.OwnerId)

@@ -138,7 +138,7 @@ namespace Symulator_Nozownika.Controllers
 
             // W przeciwnym razie pokaż mu formularz
             return View();
-            
+
         }
 
         [HttpPost]
@@ -187,7 +187,7 @@ namespace Symulator_Nozownika.Controllers
             // Return view with model to preserve entered username/email
             return View(model);
         }
-        
+
         //changed login
         [HttpPost]
         public async Task<IActionResult> Logout()
@@ -382,7 +382,7 @@ namespace Symulator_Nozownika.Controllers
             var userId = 0;
             var userLevel = 1;
             var userTotalScore = 0;
-            
+
             if (!string.IsNullOrEmpty(userName))
             {
                 var user = await _context.UserAccounts
@@ -405,7 +405,7 @@ namespace Symulator_Nozownika.Controllers
 
             // Pobierz wszystkie bronie
             var allWeapons = await _context.Weapons.ToListAsync();
-            
+
             // Pobierz ulubione bronie użytkownika
             var favoriteWeaponIds = await _context.FavoriteWeapons
                 .Where(f => f.UserId == userId)
@@ -421,7 +421,7 @@ namespace Symulator_Nozownika.Controllers
             ViewBag.CoinBalance ??= 0;
             ViewBag.PurchasedWeaponIds ??= new List<int> { LevelService.StarterWeaponId };
             ViewBag.SelectedWeaponId ??= null;
-            
+
             return View(allWeapons);
         }
         [HttpPost]
@@ -467,7 +467,7 @@ namespace Symulator_Nozownika.Controllers
         public async Task<IActionResult> ToggleFavorite([FromBody] FavoriteRequest request)
         {
             var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
-            
+
             if (string.IsNullOrEmpty(userName))
             {
                 return Json(new { success = false, message = "Musisz być zalogowany" });
@@ -680,5 +680,78 @@ namespace Symulator_Nozownika.Controllers
                 ? RedirectToAction("Index", "Home")
                 : RedirectToAction("SecurePage");
         }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> ViewProfile(int id)
+        {
+            var currentUserIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(currentUserIdStr, out int currentUserId) && currentUserId == id)
+            {
+                // Jeśli gracz próbuje zobaczyć swój własny profil, przekieruj do SecurePage
+                return RedirectToAction("SecurePage");
+            }
+
+            var user = await _context.UserAccounts
+                .Include(u => u.SelectedWeapon)
+                .Include(u => u.Statistics)
+                .Include(u => u.Level)
+                .Include(u => u.Club)
+                .Include(u => u.UserAchievements)
+                    .ThenInclude(ua => ua.Achievement)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null || user.IsDemo)
+            {
+                TempData["Error"] = "Nie znaleziono gracza.";
+                return RedirectToAction("Highscores", "GameScore");
+            }
+
+       
+            var savedScores = await _context.SavedScores
+                .Where(s => s.UserId == id)
+                .OrderByDescending(s => s.AchievedAt)
+                .ToListAsync();
+
+            var level = user.Level?.CurrentLevel
+                ?? _levelService.GetLevelFromTotalScore(user.Statistics?.TotalScore ?? 0);
+
+            var vm = new PublicProfileViewModel
+            {
+                UserId = user.Id,
+                UserName = user.UserName,
+                Country = user.Country ?? string.Empty,
+                AvatarPath = user.AvatarPath,
+                MemberSince = user.CreatedAt,
+                WeaponName = user.SelectedWeapon?.Name ?? "Pięści",
+                WeaponImageUrl = user.SelectedWeapon?.ImageUrl,
+                WeaponDamage = user.SelectedWeapon?.Damage ?? 10,
+                CurrentLevel = level,
+                TotalGamesPlayed = user.Statistics?.TotalGamesPlayed ?? 0,
+                TotalScore = user.Statistics?.TotalScore ?? 0,
+                HighestScore = user.Statistics?.HighestScore ?? 0,
+                TotalClicks = user.Statistics?.TotalClicks ?? 0,
+                CurrentStreak = user.Statistics?.CurrentStreak ?? 0,
+                LongestStreak = user.Statistics?.LongestStreak ?? 0,
+
+                ClubName = user.Club?.Name,
+                ClubId = user.ClubId,
+                Achievements = user.UserAchievements
+                    .Where(ua => ua.Achievement != null)
+                    .Select(ua => new AchievementInfo
+                    {
+                        Name = ua.Achievement.Name,
+                        Description = ua.Achievement.Description,
+                        ImagePath = ua.Achievement.ImagePath,
+                        UnlockedAt = ua.UnlockedAt
+                    })
+                    .OrderByDescending(a => a.UnlockedAt)
+                    .ToList(),
+
+                SavedScores = savedScores
+            };
+
+            return View(vm);
+        }
     }
-}
+} 

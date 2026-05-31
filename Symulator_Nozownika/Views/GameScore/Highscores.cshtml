@@ -123,7 +123,17 @@
                                                 var hsAvatarSrc = string.IsNullOrEmpty(hsAvatar) ? "/images/default-avatar.svg" : hsAvatar;
                                             }
                                             <img src="@hsAvatarSrc" alt="avatar" class="rounded-circle me-2" style="width:32px;height:32px;object-fit:cover;border:1px solid #ffc107;" />
-                                            <strong>@score.PlayerName</strong>
+                                            @if (score.UserId != null)
+                                            {
+                                                <a href="@Url.Action("ViewProfile", "Account", new { id = score.UserId })"
+                                                   class="text-warning text-decoration-none">
+                                                    <strong>@score.PlayerName</strong>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <strong>@score.PlayerName</strong>
+                                            }
                                         </td>
                                         <td data-value="@country">
                                             @if (!string.IsNullOrWhiteSpace(country))
@@ -204,7 +214,17 @@
                                             <div class="d-flex align-items-center gap-2">
                                                 <img src="@mAvatarSrc" alt="avatar" class="rounded-circle" style="width:28px;height:28px;object-fit:cover;border:1px solid #ffc107;" />
                                                 <div>
-                                                    <div><strong>@score.PlayerName</strong></div>
+                                                    @if (score.UserId != null)
+                                                    {
+                                                        <a href="@Url.Action("ViewProfile", "Account", new { id = score.UserId })"
+                                                           class="text-warning text-decoration-none">
+                                                            <strong>@score.PlayerName</strong>
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div><strong>@score.PlayerName</strong></div>
+                                                    }
                                                     <div class="small text-muted">
                                                         @if (!string.IsNullOrWhiteSpace(country))
                                                         {
