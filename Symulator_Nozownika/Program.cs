@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Symulator_Nozownika.Data;
 using Symulator_Nozownika.Services;
@@ -30,6 +31,19 @@ namespace Symulator_Nozownika
             builder.Services.AddScoped<IReportService, ReportService>();
             // Register demo service
             builder.Services.AddScoped<IDemoService, DemoService>();
+
+            // Add Authorization with custom policies
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<IAuthorizationHandler, CsvExportAuthorizationHandler>();
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("CanExportCsv", policy =>
+                    policy.AddRequirements(new CsvExportRequirement()));
+
+                options.AddPolicy("CanExportClubCsv", policy =>
+                    policy.AddRequirements(new CsvExportRequirement()));
+            });
+
             var app = builder.Build();
 
             using (var scope = app.Services.CreateScope())
@@ -142,6 +156,101 @@ namespace Symulator_Nozownika
                     {
                         levelService.SyncLevel(level, stats.TotalScore);
                         dbContext.Levels.Update(level);
+                    }
+
+                    // Ensure admin account exists (create or update)
+                    var adminUser = dbContext.UserAccounts
+                        .Include(u => u.CoinWallet)
+                        .Include(u => u.Level)
+                        .Include(u => u.Statistics)
+                        .FirstOrDefault(u => u.UserName == "admin");
+
+                    if (adminUser == null)
+                    {
+                        adminUser = new UserAccount
+                        {
+                            FirstName = "Administrator",
+                            LastName = "Account",
+                            Email = "admin@example.local",
+                            Country = "Poland",
+                            UserName = "admin",
+                            Password = "admin123456",
+                            Role = UserRole.Admin,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        dbContext.UserAccounts.Add(adminUser);
+                        dbContext.SaveChanges();
+                    }
+                    else
+                    {
+                        // Ensure admin role and password are set correctly
+                        adminUser.Role = UserRole.Admin;
+                        adminUser.Password = "admin123456";
+                        adminUser.Email = adminUser.Email ?? "admin@example.local";
+                        dbContext.UserAccounts.Update(adminUser);
+                        dbContext.SaveChanges();
+                    }
+
+                    // Ensure admin CoinWallet
+                    var adminWallet = dbContext.CoinWallets.FirstOrDefault(c => c.UserId == adminUser.Id);
+                    if (adminWallet == null)
+                    {
+                        adminWallet = new CoinWallet
+                        {
+                            UserId = adminUser.Id,
+                            Balance = 9999,
+                            UpdatedAt = DateTime.UtcNow
+                        };
+                        dbContext.CoinWallets.Add(adminWallet);
+                    }
+                    else
+                    {
+                        adminWallet.Balance = 9999;
+                        adminWallet.UpdatedAt = DateTime.UtcNow;
+                        dbContext.CoinWallets.Update(adminWallet);
+                    }
+
+                    // Ensure admin Statistics
+                    var adminStats = dbContext.UserStatistics.FirstOrDefault(s => s.UserId == adminUser.Id);
+                    if (adminStats == null)
+                    {
+                        adminStats = new UserStatistics
+                        {
+                            UserId = adminUser.Id,
+                            TotalGamesPlayed = 0,
+                            TotalScore = 5500,
+                            TotalClicks = 0,
+                            HighestScore = 0,
+                            TotalPlayTime = TimeSpan.Zero,
+                            CurrentStreak = 0,
+                            LongestStreak = 0,
+                            LastPlayedAt = DateTime.UtcNow
+                        };
+                        dbContext.UserStatistics.Add(adminStats);
+                    }
+                    else
+                    {
+                        adminStats.TotalScore = 5500;
+                        dbContext.UserStatistics.Update(adminStats);
+                    }
+
+                    // Ensure admin Level
+                    var adminLevel = dbContext.Levels.FirstOrDefault(l => l.UserId == adminUser.Id);
+
+                    if (adminLevel == null)
+                    {
+                        adminLevel = new Level
+                        {
+                            UserId = adminUser.Id,
+                        };
+                        levelService.SyncLevel(adminLevel, adminStats.TotalScore);
+                        dbContext.Levels.Add(adminLevel);
+                    }
+                    else
+                    {
+                        levelService.SyncLevel(adminLevel, adminStats.TotalScore);
+                        dbContext.Levels.Update(adminLevel);
                     }
 
                     dbContext.SaveChanges();
