@@ -28,6 +28,8 @@ namespace Symulator_Nozownika.Models
 
         public int DemoGamesPlayed { get; set; } = 0;
 
+        public UserRole Role { get; set; } = UserRole.User;
+
         // Klucz obcy
         public int? SelectedWeaponId { get; set; }
 
@@ -54,4 +56,11 @@ namespace Symulator_Nozownika.Models
 
         public virtual ICollection<UserAchievement> UserAchievements { get; set; } = new List<UserAchievement>();
     }
+
+    public enum UserRole
+    {
+        User = 0,
+        Admin = 1
+    }
 }
+

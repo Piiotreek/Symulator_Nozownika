@@ -609,6 +609,9 @@ namespace Symulator_Nozownika.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
                     b.Property<int?>("SelectedWeaponId")
                         .HasColumnType("int");
 

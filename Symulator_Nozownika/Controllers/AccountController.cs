@@ -166,7 +166,7 @@ namespace Symulator_Nozownika.Controllers
                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                new Claim(ClaimTypes.Name, user.Email),
                new Claim("Name",user.UserName),
-               new Claim(ClaimTypes.Role, "User")
+               new Claim(ClaimTypes.Role, user.Role.ToString())
             };
                     var claimsidentity = new ClaimsIdentity(clamis, CookieAuthenticationDefaults.AuthenticationScheme);
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsidentity), new AuthenticationProperties
