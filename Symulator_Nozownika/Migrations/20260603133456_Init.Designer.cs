@@ -12,8 +12,8 @@ using Symulator_Nozownika.Data;
 namespace Symulator_Nozownika.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260527193309_init")]
-    partial class init
+    [Migration("20260603133456_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -173,6 +173,9 @@ namespace Symulator_Nozownika.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.HasIndex("OwnerId");
 
@@ -592,7 +595,7 @@ namespace Symulator_Nozownika.Migrations
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -609,18 +612,27 @@ namespace Symulator_Nozownika.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Role")
+                        .HasColumnType("int");
+
                     b.Property<int?>("SelectedWeaponId")
                         .HasColumnType("int");
 
                     b.Property<string>("UserName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ClubId");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.HasIndex("SelectedWeaponId");
+
+                    b.HasIndex("UserName")
+                        .IsUnique();
 
                     b.ToTable("UserAccounts");
 
@@ -636,6 +648,7 @@ namespace Symulator_Nozownika.Migrations
                             IsDemo = false,
                             LastName = "Account",
                             Password = "debugdebug1",
+                            Role = 0,
                             UserName = "debug"
                         });
                 });

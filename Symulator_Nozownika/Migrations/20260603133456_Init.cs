@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Symulator_Nozownika.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -138,13 +138,14 @@ namespace Symulator_Nozownika.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Country = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserName = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     IsDemo = table.Column<bool>(type: "bit", nullable: false),
                     DemoGamesPlayed = table.Column<int>(type: "int", nullable: false),
+                    Role = table.Column<int>(type: "int", nullable: false),
                     SelectedWeaponId = table.Column<int>(type: "int", nullable: true),
                     ClubId = table.Column<int>(type: "int", nullable: true),
                     AvatarPath = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -428,8 +429,8 @@ namespace Symulator_Nozownika.Migrations
 
             migrationBuilder.InsertData(
                 table: "UserAccounts",
-                columns: new[] { "Id", "AvatarPath", "ClubId", "Country", "CreatedAt", "DemoGamesPlayed", "Email", "FirstName", "IsDemo", "LastName", "Password", "SelectedWeaponId", "UserName" },
-                values: new object[] { 9999, null, null, "Poland", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "debug@example.local", "Debug", false, "Account", "debugdebug1", null, "debug" });
+                columns: new[] { "Id", "AvatarPath", "ClubId", "Country", "CreatedAt", "DemoGamesPlayed", "Email", "FirstName", "IsDemo", "LastName", "Password", "Role", "SelectedWeaponId", "UserName" },
+                values: new object[] { 9999, null, null, "Poland", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, "debug@example.local", "Debug", false, "Account", "debugdebug1", 0, null, "debug" });
 
             migrationBuilder.InsertData(
                 table: "Weapons",
@@ -482,6 +483,12 @@ namespace Symulator_Nozownika.Migrations
                 name: "IX_ClubMessages_UserId",
                 table: "ClubMessages",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Clubs_Name",
+                table: "Clubs",
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Clubs_OwnerId",
@@ -537,9 +544,21 @@ namespace Symulator_Nozownika.Migrations
                 column: "ClubId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserAccounts_Email",
+                table: "UserAccounts",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserAccounts_SelectedWeaponId",
                 table: "UserAccounts",
                 column: "SelectedWeaponId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserAccounts_UserName",
+                table: "UserAccounts",
+                column: "UserName",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserAchievements_AchievementId",

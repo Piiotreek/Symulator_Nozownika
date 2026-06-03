@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Migrations\" />
     <Folder Include="tools\" />
     <Folder Include="Views\Demo\" />
     <Folder Include="wwwroot\avatars\" />

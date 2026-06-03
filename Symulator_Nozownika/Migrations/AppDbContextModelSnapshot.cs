@@ -399,6 +399,107 @@ namespace Symulator_Nozownika.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.Potion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<int>("DurationInSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EffectStrength")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Price")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Potions");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Description = "Krótki zastrzyk energii do szybszej rozgrywki.",
+                            DurationInSeconds = 30,
+                            EffectStrength = 10,
+                            ImageUrl = "/images/scissors.png",
+                            Name = "Mała potka energii",
+                            Price = 120
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Description = "Mocniejsze uderzenia przez chwilę.",
+                            DurationInSeconds = 45,
+                            EffectStrength = 20,
+                            ImageUrl = "/images/dagger.png",
+                            Name = "Potka furii",
+                            Price = 260
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Description = "Pomaga utrzymać rytm i serię kliknięć.",
+                            DurationInSeconds = 60,
+                            EffectStrength = 30,
+                            ImageUrl = "/images/katana.png",
+                            Name = "Eliksir skupienia",
+                            Price = 400
+                        });
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.PurchasedPotion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PotionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PricePaid")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PurchasedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PotionId");
+
+                    b.HasIndex("UserId", "PotionId")
+                        .IsUnique();
+
+                    b.ToTable("PurchasedPotions");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.PurchasedWeapon", b =>
                 {
                     b.Property<int>("Id")
@@ -427,6 +528,36 @@ namespace Symulator_Nozownika.Migrations
                         .IsUnique();
 
                     b.ToTable("PurchasedWeapons");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.PurchasedWeaponUpgrade", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PricePaid")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PurchasedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WeaponUpgradeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WeaponUpgradeId");
+
+                    b.HasIndex("UserId", "WeaponUpgradeId")
+                        .IsUnique();
+
+                    b.ToTable("PurchasedWeaponUpgrades");
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.Quest", b =>
@@ -645,6 +776,7 @@ namespace Symulator_Nozownika.Migrations
                             IsDemo = false,
                             LastName = "Account",
                             Password = "debugdebug1",
+                            Role = 0,
                             UserName = "debug"
                         });
                 });
@@ -882,6 +1014,82 @@ namespace Symulator_Nozownika.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.WeaponUpgrade", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("CooldownReduction")
+                        .HasColumnType("float");
+
+                    b.Property<int>("DamageBonus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Price")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WeaponId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WeaponId");
+
+                    b.ToTable("WeaponUpgrades");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CooldownReduction = 0.02,
+                            DamageBonus = 4,
+                            Description = "Lepsza krawędź zwiększa obrażenia kuchennego noża.",
+                            ImageUrl = "/images/knife.png",
+                            Name = "Ostrzenie Kitchen Knife",
+                            Price = 300,
+                            WeaponId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CooldownReduction = 0.050000000000000003,
+                            DamageBonus = 6,
+                            Description = "Lepszy balans skraca czas odnowienia sztyletu.",
+                            ImageUrl = "/images/dagger.png",
+                            Name = "Wyważenie Dagger",
+                            Price = 650,
+                            WeaponId = 2
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CooldownReduction = 0.080000000000000002,
+                            DamageBonus = 12,
+                            Description = "Wzmocnione ostrze zapewnia dodatkową moc katanie.",
+                            ImageUrl = "/images/katana.png",
+                            Name = "Hartowana Katana",
+                            Price = 1800,
+                            WeaponId = 9
+                        });
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.Club", b =>
                 {
                     b.HasOne("Symulator_Nozownika.Models.UserAccount", "Owner")
@@ -982,6 +1190,25 @@ namespace Symulator_Nozownika.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.PurchasedPotion", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.Potion", "Potion")
+                        .WithMany()
+                        .HasForeignKey("PotionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
+                        .WithMany("PurchasedPotions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Potion");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.PurchasedWeapon", b =>
                 {
                     b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
@@ -999,6 +1226,25 @@ namespace Symulator_Nozownika.Migrations
                     b.Navigation("User");
 
                     b.Navigation("Weapon");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.PurchasedWeaponUpgrade", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
+                        .WithMany("PurchasedWeaponUpgrades")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.WeaponUpgrade", "WeaponUpgrade")
+                        .WithMany()
+                        .HasForeignKey("WeaponUpgradeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("WeaponUpgrade");
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.SavedScore", b =>
@@ -1077,6 +1323,17 @@ namespace Symulator_Nozownika.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.WeaponUpgrade", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.Weapon", "Weapon")
+                        .WithMany()
+                        .HasForeignKey("WeaponId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Weapon");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.Club", b =>
                 {
                     b.Navigation("Members");
@@ -1089,6 +1346,10 @@ namespace Symulator_Nozownika.Migrations
                     b.Navigation("CoinWallet");
 
                     b.Navigation("Level");
+
+                    b.Navigation("PurchasedPotions");
+
+                    b.Navigation("PurchasedWeaponUpgrades");
 
                     b.Navigation("PurchasedWeapons");
 

@@ -51,6 +51,10 @@ namespace Symulator_Nozownika.Models
 
         public virtual ICollection<PurchasedWeapon> PurchasedWeapons { get; set; } = new List<PurchasedWeapon>();
 
+        public virtual ICollection<PurchasedPotion> PurchasedPotions { get; set; } = new List<PurchasedPotion>();
+
+        public virtual ICollection<PurchasedWeaponUpgrade> PurchasedWeaponUpgrades { get; set; } = new List<PurchasedWeaponUpgrade>();
+
         // Ścieżka do awatara
         public string? AvatarPath { get; set; }
 

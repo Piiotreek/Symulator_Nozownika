@@ -1,0 +1,316 @@
+@model Symulator_Nozownika.Models.ShopViewModel
+@inject Symulator_Nozownika.Services.ILevelService LevelService
+
+@{
+    ViewData["Title"] = "Sklep";
+    var favoriteWeapons = Model.FavoriteWeapons.ToList();
+    var ownedWeapons = Model.OwnedWeapons.ToList();
+    var availableToBuyWeapons = Model.NonOwnedWeapons
+        .Where(w => Model.UserLevel >= LevelService.GetRequiredLevelForWeapon(w.Id))
+        .ToList();
+    var lockedWeapons = Model.NonOwnedWeapons
+        .Where(w => Model.UserLevel < LevelService.GetRequiredLevelForWeapon(w.Id))
+        .ToList();
+}
+
+<div class="container mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="mb-1">Sklep</h2>
+            <p class="text-muted mb-0">Kup bronie, potki i ulepszenia za monety zdobyte podczas gry.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="SelectWeapon" class="btn btn-outline-light">Wybór broni</a>
+            <a asp-action="SecurePage" class="btn btn-outline-warning">Powrót do gry</a>
+        </div>
+    </div>
+
+    @if (TempData["WeaponSelectError"] is string weaponError && !string.IsNullOrWhiteSpace(weaponError))
+    {
+        <div class="alert alert-warning text-center" role="alert">@weaponError</div>
+    }
+
+    @if (TempData["WeaponPurchaseSuccess"] is string purchaseSuccess && !string.IsNullOrWhiteSpace(purchaseSuccess))
+    {
+        <div class="alert alert-success text-center" role="alert">@purchaseSuccess</div>
+    }
+
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <strong>Level:</strong> @Model.UserLevel
+                    <span class="text-muted">|</span>
+                    <strong>Punkty łącznie:</strong> @Model.UserTotalScore
+                    <span class="text-muted">|</span>
+                    <strong>Monety:</strong> @Model.CoinBalance
+                </div>
+
+                @if (Model.NextLevelThreshold.HasValue)
+                {
+                    var span = Math.Max(1, Model.NextLevelThreshold.Value - Model.CurrentLevelThreshold);
+                    var progress = (int)Math.Clamp(((Model.UserTotalScore - Model.CurrentLevelThreshold) * 100.0) / span, 0, 100);
+                    <div class="d-flex align-items-center gap-2" style="min-width: 280px;">
+                        <small class="text-muted">Do lvl @(Model.UserLevel + 1): @(Math.Max(0, Model.NextLevelThreshold.Value - Model.UserTotalScore))</small>
+                        <div class="progress flex-grow-1" style="height: 10px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: @progress%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    @if (favoriteWeapons.Any())
+    {
+        <section class="mb-5">
+            <h3 class="mb-3">Ulubione bronie</h3>
+            <div class="row">
+                @foreach (var weapon in favoriteWeapons)
+                {
+                    var requiredLvl = LevelService.GetRequiredLevelForWeapon(weapon.Id);
+                    var isUnlocked = Model.UserLevel >= requiredLvl;
+                    var isPurchased = Model.PurchasedWeaponIds.Contains(weapon.Id);
+                    var price = LevelService.GetWeaponPrice(weapon.Id, weapon.Damage);
+                    <div class="col-md-4 col-xl-3 mb-4">
+                        <div class="card weapon-card shadow-sm h-100 @(isUnlocked ? "" : "weapon-locked")">
+                            <button type="button" class="btn btn-link favorite-btn position-absolute top-0 end-0 m-2" onclick="toggleFavorite(@weapon.Id)">
+                                <i class="bi bi-heart-fill text-danger" style="font-size: 1.5rem;"></i>
+                            </button>
+                            <img src="@weapon.ImageUrl" class="card-img-top p-3" alt="@weapon.Name" style="height: 150px; object-fit: contain;" />
+                            <div class="card-body text-center">
+                                <h5 class="card-title">@weapon.Name</h5>
+                                <p class="card-text">
+                                    <span class="badge bg-danger">DMG @weapon.Damage</span><br />
+                                    <span class="badge bg-info mt-1">CD @weapon.Cooldown.ToString("F1")s</span><br />
+                                    <span class="badge bg-warning text-dark mt-1">Cena @price</span>
+                                </p>
+                                @if (isPurchased)
+                                {
+                                    <a asp-action="SelectWeapon" class="btn btn-primary btn-sm">Wybierz ekwipunek</a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    <section class="mb-5">
+        <h3 class="mb-3">Bronie do kupienia</h3>
+        <div class="row">
+            @foreach (var weapon in availableToBuyWeapons)
+            {
+                var price = LevelService.GetWeaponPrice(weapon.Id, weapon.Damage);
+                var canAfford = Model.CoinBalance >= price;
+                var reward = LevelService.GetCoinReward(0, weapon.Damage);
+                <div class="col-md-4 col-xl-3 mb-4">
+                    <div class="card weapon-card shadow-sm h-100">
+                        <img src="@weapon.ImageUrl" class="card-img-top p-3" alt="@weapon.Name" style="height: 150px; object-fit: contain;" />
+                        <div class="card-body text-center">
+                            <h5 class="card-title">@weapon.Name</h5>
+                            <p class="card-text">
+                                <span class="badge bg-danger">DMG @weapon.Damage</span><br />
+                                <span class="badge bg-info mt-1">CD @weapon.Cooldown.ToString("F1")s</span><br />
+                                <span class="badge bg-warning text-dark mt-1">Cena: @price</span><br />
+                                <span class="badge bg-success mt-1">+@reward monet bazowo / gra</span>
+                            </p>
+                            <form asp-action="BuyWeapon" method="post">
+                                <input type="hidden" name="weaponId" value="@weapon.Id" />
+                                <button type="submit" class="btn btn-warning btn-sm" disabled="@(!canAfford)">Kup broń</button>
+                            </form>
+                            @if (!canAfford)
+                            {
+                                <small class="text-danger d-block mt-2">Brakuje @(price - Model.CoinBalance) monet</small>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="mb-5">
+        <h3 class="mb-3">Ulepszenia broni</h3>
+        <div class="row">
+            @foreach (var upgrade in Model.WeaponUpgrades)
+            {
+                var ownsBaseWeapon = Model.PurchasedWeaponIds.Contains(upgrade.WeaponId);
+                var alreadyBought = Model.PurchasedUpgradeIds.Contains(upgrade.Id);
+                var canAfford = Model.CoinBalance >= upgrade.Price;
+                <div class="col-md-4 col-xl-3 mb-4">
+                    <div class="card weapon-card shadow-sm h-100 @(!ownsBaseWeapon && !alreadyBought ? "weapon-locked" : "")">
+                        <img src="@upgrade.ImageUrl" class="card-img-top p-3" alt="@upgrade.Name" style="height: 150px; object-fit: contain;" />
+                        <div class="card-body text-center">
+                            <h5 class="card-title">@upgrade.Name</h5>
+                            <p class="small text-muted mb-2">Dla: @upgrade.Weapon.Name</p>
+                            <p class="card-text">
+                                <span class="badge bg-danger">+@upgrade.DamageBonus DMG</span><br />
+                                <span class="badge bg-info mt-1">-@upgrade.CooldownReduction.ToString("F2")s CD</span><br />
+                                <span class="badge bg-warning text-dark mt-1">Cena: @upgrade.Price</span>
+                            </p>
+                            @if (alreadyBought)
+                            {
+                                <span class="badge bg-success">Kupione</span>
+                            }
+                            else
+                            {
+                                <form asp-action="BuyWeaponUpgrade" method="post">
+                                    <input type="hidden" name="weaponUpgradeId" value="@upgrade.Id" />
+                                    <button type="submit" class="btn btn-warning btn-sm" disabled="@(!ownsBaseWeapon || !canAfford)">Kup ulepszenie</button>
+                                </form>
+                                @if (!ownsBaseWeapon)
+                                {
+                                    <small class="text-muted d-block mt-2">Najpierw kup broń bazową</small>
+                                }
+                                else if (!canAfford)
+                                {
+                                    <small class="text-danger d-block mt-2">Brakuje @(upgrade.Price - Model.CoinBalance) monet</small>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="mb-5">
+        <h3 class="mb-3">Potki</h3>
+        <div class="row">
+            @foreach (var potion in Model.Potions)
+            {
+                var quantity = Model.OwnedPotionQuantities.TryGetValue(potion.Id, out var ownedQuantity) ? ownedQuantity : 0;
+                var canAfford = Model.CoinBalance >= potion.Price;
+                <div class="col-md-4 col-xl-3 mb-4">
+                    <div class="card weapon-card shadow-sm h-100">
+                        <img src="@potion.ImageUrl" class="card-img-top p-3" alt="@potion.Name" style="height: 150px; object-fit: contain;" />
+                        <div class="card-body text-center">
+                            <h5 class="card-title">@potion.Name</h5>
+                            <p class="small text-muted">@potion.Description</p>
+                            <p class="card-text">
+                                <span class="badge bg-primary">Moc @potion.EffectStrength</span><br />
+                                <span class="badge bg-info mt-1">@potion.DurationInSeconds s</span><br />
+                                <span class="badge bg-warning text-dark mt-1">Cena: @potion.Price</span><br />
+                                <span class="badge bg-secondary mt-1">Masz: @quantity</span>
+                            </p>
+                            <form asp-action="BuyPotion" method="post">
+                                <input type="hidden" name="potionId" value="@potion.Id" />
+                                <button type="submit" class="btn btn-warning btn-sm" disabled="@(!canAfford)">Kup potkę</button>
+                            </form>
+                            @if (!canAfford)
+                            {
+                                <small class="text-danger d-block mt-2">Brakuje @(potion.Price - Model.CoinBalance) monet</small>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section>
+        <h3 class="mb-3">Kupione bronie</h3>
+        <div class="row">
+            @foreach (var weapon in ownedWeapons)
+            {
+                <div class="col-md-4 col-xl-3 mb-4">
+                    <div class="card weapon-card shadow-sm h-100">
+                        <button type="button" class="btn btn-link favorite-btn position-absolute top-0 end-0 m-2" onclick="toggleFavorite(@weapon.Id)">
+                            <i class="bi bi-heart text-secondary" style="font-size: 1.5rem;"></i>
+                        </button>
+                        <img src="@weapon.ImageUrl" class="card-img-top p-3" alt="@weapon.Name" style="height: 150px; object-fit: contain;" />
+                        <div class="card-body text-center">
+                            <h5 class="card-title">@weapon.Name</h5>
+                            <p class="card-text">
+                                <span class="badge bg-danger">DMG @weapon.Damage</span><br />
+                                <span class="badge bg-info mt-1">CD @weapon.Cooldown.ToString("F1")s</span>
+                            </p>
+                            <a asp-action="SelectWeapon" class="btn btn-primary btn-sm">Wybierz</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <section class="mt-5">
+        <h3 class="mb-3">Zablokowane bronie</h3>
+        <div class="row">
+            @foreach (var weapon in lockedWeapons)
+            {
+                var requiredLvl = LevelService.GetRequiredLevelForWeapon(weapon.Id);
+                var price = LevelService.GetWeaponPrice(weapon.Id, weapon.Damage);
+                <div class="col-md-4 col-xl-3 mb-4">
+                    <div class="card weapon-card shadow-sm h-100 weapon-locked">
+                        <img src="@weapon.ImageUrl" class="card-img-top p-3" alt="@weapon.Name" style="height: 150px; object-fit: contain;" />
+                        <div class="card-body text-center">
+                            <h5 class="card-title">@weapon.Name</h5>
+                            <p class="card-text">
+                                <span class="badge bg-danger">DMG @weapon.Damage</span><br />
+                                <span class="badge bg-info mt-1">CD @weapon.Cooldown.ToString("F1")s</span><br />
+                                <span class="badge bg-warning text-dark mt-1">Cena: @price</span><br />
+                                <span class="badge bg-secondary mt-1">Wymaga lvl @requiredLvl</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<script>
+    function toggleFavorite(weaponId) {
+        fetch('@Url.Action("ToggleFavorite", "Account")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+            },
+            body: JSON.stringify({ weaponId: weaponId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert(data.message || 'Wystąpił błąd');
+            }
+        })
+        .catch(() => alert('Wystąpił błąd podczas dodawania do ulubionych'));
+    }
+</script>
+
+<style>
+    .weapon-card {
+        transition: transform 0.2s;
+        position: relative;
+    }
+
+    .weapon-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+    }
+
+    .favorite-btn {
+        text-decoration: none !important;
+        padding: 0;
+        background: none;
+        border: none;
+    }
+
+    .favorite-btn:hover i {
+        transform: scale(1.2);
+        transition: transform 0.2s;
+    }
+
+    .weapon-locked {
+        opacity: 0.55;
+    }
+</style>
+
+@Html.AntiForgeryToken()

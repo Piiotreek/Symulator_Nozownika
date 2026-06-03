@@ -59,6 +59,74 @@ namespace Symulator_Nozownika.Controllers
             return _levelService.GetLevelFromTotalScore(totalScore);
         }
 
+        private async Task<UserAccount?> GetCurrentUserForShopAsync(string userName)
+        {
+            return await _context.UserAccounts
+                .Include(u => u.Statistics)
+                .Include(u => u.Level)
+                .Include(u => u.CoinWallet)
+                .Include(u => u.PurchasedWeapons)
+                .Include(u => u.PurchasedPotions)
+                .Include(u => u.PurchasedWeaponUpgrades)
+                .FirstOrDefaultAsync(u => u.UserName == userName);
+        }
+
+        private CoinWallet EnsureWallet(UserAccount user)
+        {
+            if (user.CoinWallet != null)
+            {
+                return user.CoinWallet;
+            }
+
+            var wallet = new CoinWallet
+            {
+                UserId = user.Id,
+                Balance = 0,
+                UpdatedAt = DateTime.Now
+            };
+
+            user.CoinWallet = wallet;
+            _context.CoinWallets.Add(wallet);
+            return wallet;
+        }
+
+        private async Task<ShopViewModel> BuildShopViewModelAsync(UserAccount? user)
+        {
+            var userId = user?.Id ?? 0;
+            var userLevel = user is null ? 1 : await GetUserLevelAsync(user);
+            var userTotalScore = user?.Statistics?.TotalScore ?? 0;
+
+            var favoriteWeaponIds = user is null
+                ? new List<int>()
+                : await _context.FavoriteWeapons
+                    .Where(f => f.UserId == userId)
+                    .Select(f => f.WeaponId)
+                    .ToListAsync();
+
+            return new ShopViewModel
+            {
+                UserLevel = userLevel,
+                UserTotalScore = userTotalScore,
+                CurrentLevelThreshold = _levelService.GetTotalScoreThresholdForLevel(userLevel),
+                NextLevelThreshold = _levelService.GetNextLevelTotalScoreThreshold(userLevel),
+                CoinBalance = user?.CoinWallet?.Balance ?? 0,
+                SelectedWeaponId = user?.SelectedWeaponId,
+                FavoriteWeaponIds = favoriteWeaponIds,
+                PurchasedWeaponIds = user?.PurchasedWeapons.Select(pw => pw.WeaponId).Append(LevelService.StarterWeaponId).Distinct().ToList()
+                    ?? new List<int> { LevelService.StarterWeaponId },
+                PurchasedUpgradeIds = user?.PurchasedWeaponUpgrades.Select(pwu => pwu.WeaponUpgradeId).ToList()
+                    ?? new List<int>(),
+                OwnedPotionQuantities = user?.PurchasedPotions.ToDictionary(pp => pp.PotionId, pp => pp.Quantity)
+                    ?? new Dictionary<int, int>(),
+                Weapons = await _context.Weapons.OrderBy(w => w.Id).ToListAsync(),
+                Potions = await _context.Potions.OrderBy(p => p.Price).ToListAsync(),
+                WeaponUpgrades = await _context.WeaponUpgrades
+                    .Include(wu => wu.Weapon)
+                    .OrderBy(wu => wu.Price)
+                    .ToListAsync()
+            };
+        }
+
         private async Task<List<SelectListItem>> LoadCountriesAsync()
         {
             try
@@ -127,6 +195,26 @@ namespace Symulator_Nozownika.Controllers
             }
             return View(model);
         }
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> Shop()
+        {
+            var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
+            if (string.IsNullOrEmpty(userName))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var user = await GetCurrentUserForShopAsync(userName);
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            var model = await BuildShopViewModelAsync(user);
+            return View(model);
+        }
+
         [HttpGet]
         public IActionResult Login()
         {
@@ -534,7 +622,7 @@ namespace Symulator_Nozownika.Controllers
             if (User.FindFirst("IsDemo")?.Value == "true")
             {
                 TempData["WeaponSelectError"] = "Buying weapons is not available in demo mode.";
-                return RedirectToAction("SelectWeapon");
+                return RedirectToAction("Shop");
             }
 
             var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
@@ -560,40 +648,29 @@ namespace Symulator_Nozownika.Controllers
             if (weapon == null)
             {
                 TempData["WeaponSelectError"] = "Nie znaleziono wybranej broni.";
-                return RedirectToAction("SelectWeapon");
+                return RedirectToAction("Shop");
             }
 
             var level = await GetUserLevelAsync(user);
             if (!_levelService.IsWeaponUnlocked(weaponId, level))
             {
                 TempData["WeaponSelectError"] = "Najpierw osiągnij wymagany level, aby kupić tę broń.";
-                return RedirectToAction("SelectWeapon");
+                return RedirectToAction("Shop");
             }
 
             if (await HasPurchasedWeaponAsync(user.Id, weaponId))
             {
                 TempData["WeaponSelectError"] = "Ta broń została już kupiona.";
-                return RedirectToAction("SelectWeapon");
+                return RedirectToAction("Shop");
             }
 
-            var wallet = user.CoinWallet;
-            if (wallet == null)
-            {
-                wallet = new CoinWallet
-                {
-                    UserId = user.Id,
-                    Balance = 0,
-                    UpdatedAt = DateTime.Now
-                };
-
-                _context.CoinWallets.Add(wallet);
-            }
+            var wallet = EnsureWallet(user);
 
             var price = _levelService.GetWeaponPrice(weapon.Id, weapon.Damage);
             if (wallet.Balance < price)
             {
                 TempData["WeaponSelectError"] = $"Masz za mało monet. Potrzebujesz {price}, a masz {wallet.Balance}.";
-                return RedirectToAction("SelectWeapon");
+                return RedirectToAction("Shop");
             }
 
             wallet.Balance -= price;
@@ -609,7 +686,137 @@ namespace Symulator_Nozownika.Controllers
 
             await _context.SaveChangesAsync();
             TempData["WeaponPurchaseSuccess"] = $"Kupiono broń {weapon.Name} za {price} monet.";
-            return RedirectToAction("SelectWeapon");
+            return RedirectToAction("Shop");
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> BuyPotion(int potionId)
+        {
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                TempData["WeaponSelectError"] = "Zakup potek jest niedostępny w trybie demo.";
+                return RedirectToAction("Shop");
+            }
+
+            var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
+            if (string.IsNullOrEmpty(userName))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var user = await GetCurrentUserForShopAsync(userName);
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            var potion = await _context.Potions.FirstOrDefaultAsync(p => p.Id == potionId);
+            if (potion == null)
+            {
+                TempData["WeaponSelectError"] = "Nie znaleziono wybranej potki.";
+                return RedirectToAction("Shop");
+            }
+
+            var wallet = EnsureWallet(user);
+            if (wallet.Balance < potion.Price)
+            {
+                TempData["WeaponSelectError"] = $"Masz za mało monet na potkę {potion.Name}.";
+                return RedirectToAction("Shop");
+            }
+
+            wallet.Balance -= potion.Price;
+            wallet.UpdatedAt = DateTime.Now;
+
+            var purchasedPotion = user.PurchasedPotions.FirstOrDefault(pp => pp.PotionId == potion.Id);
+            if (purchasedPotion == null)
+            {
+                _context.PurchasedPotions.Add(new PurchasedPotion
+                {
+                    UserId = user.Id,
+                    PotionId = potion.Id,
+                    Quantity = 1,
+                    PricePaid = potion.Price,
+                    PurchasedAt = DateTime.Now
+                });
+            }
+            else
+            {
+                purchasedPotion.Quantity += 1;
+                purchasedPotion.PricePaid += potion.Price;
+                purchasedPotion.PurchasedAt = DateTime.Now;
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["WeaponPurchaseSuccess"] = $"Kupiono potkę {potion.Name} za {potion.Price} monet.";
+            return RedirectToAction("Shop");
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> BuyWeaponUpgrade(int weaponUpgradeId)
+        {
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                TempData["WeaponSelectError"] = "Zakup ulepszeń jest niedostępny w trybie demo.";
+                return RedirectToAction("Shop");
+            }
+
+            var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
+            if (string.IsNullOrEmpty(userName))
+            {
+                return RedirectToAction("Login");
+            }
+
+            var user = await GetCurrentUserForShopAsync(userName);
+            if (user == null)
+            {
+                return RedirectToAction("Login");
+            }
+
+            var upgrade = await _context.WeaponUpgrades
+                .Include(wu => wu.Weapon)
+                .FirstOrDefaultAsync(wu => wu.Id == weaponUpgradeId);
+
+            if (upgrade == null)
+            {
+                TempData["WeaponSelectError"] = "Nie znaleziono wybranego ulepszenia.";
+                return RedirectToAction("Shop");
+            }
+
+            if (!await HasPurchasedWeaponAsync(user.Id, upgrade.WeaponId))
+            {
+                TempData["WeaponSelectError"] = $"Najpierw kup broń {upgrade.Weapon.Name}, aby odblokować jej ulepszenia.";
+                return RedirectToAction("Shop");
+            }
+
+            if (user.PurchasedWeaponUpgrades.Any(pwu => pwu.WeaponUpgradeId == upgrade.Id))
+            {
+                TempData["WeaponSelectError"] = "To ulepszenie zostało już kupione.";
+                return RedirectToAction("Shop");
+            }
+
+            var wallet = EnsureWallet(user);
+            if (wallet.Balance < upgrade.Price)
+            {
+                TempData["WeaponSelectError"] = $"Masz za mało monet na ulepszenie {upgrade.Name}.";
+                return RedirectToAction("Shop");
+            }
+
+            wallet.Balance -= upgrade.Price;
+            wallet.UpdatedAt = DateTime.Now;
+
+            _context.PurchasedWeaponUpgrades.Add(new PurchasedWeaponUpgrade
+            {
+                UserId = user.Id,
+                WeaponUpgradeId = upgrade.Id,
+                PricePaid = upgrade.Price,
+                PurchasedAt = DateTime.Now
+            });
+
+            await _context.SaveChangesAsync();
+            TempData["WeaponPurchaseSuccess"] = $"Kupiono ulepszenie {upgrade.Name} za {upgrade.Price} monet.";
+            return RedirectToAction("Shop");
         }
 
         // Dodaj tę klasę na końcu AccountController (przed zamykającym })

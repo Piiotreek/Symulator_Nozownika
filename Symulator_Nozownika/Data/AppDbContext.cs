@@ -19,6 +19,10 @@ namespace Symulator_Nozownika.Data
         public DbSet<Level> Levels { get; set; }
         public DbSet<CoinWallet> CoinWallets { get; set; }
         public DbSet<PurchasedWeapon> PurchasedWeapons { get; set; }
+        public DbSet<Potion> Potions { get; set; }
+        public DbSet<PurchasedPotion> PurchasedPotions { get; set; }
+        public DbSet<WeaponUpgrade> WeaponUpgrades { get; set; }
+        public DbSet<PurchasedWeaponUpgrade> PurchasedWeaponUpgrades { get; set; }
         public DbSet<Club> Clubs { get; set; }
         public DbSet<ClubMember> ClubMembers { get; set; }
         public DbSet<ClubMessage> ClubMessages { get; set; }
@@ -135,6 +139,44 @@ namespace Symulator_Nozownika.Data
                 .HasIndex(pw => new { pw.UserId, pw.WeaponId })
                 .IsUnique();
 
+            modelBuilder.Entity<PurchasedPotion>()
+                .HasOne(pp => pp.User)
+                .WithMany(u => u.PurchasedPotions)
+                .HasForeignKey(pp => pp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PurchasedPotion>()
+                .HasOne(pp => pp.Potion)
+                .WithMany()
+                .HasForeignKey(pp => pp.PotionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PurchasedPotion>()
+                .HasIndex(pp => new { pp.UserId, pp.PotionId })
+                .IsUnique();
+
+            modelBuilder.Entity<WeaponUpgrade>()
+                .HasOne(wu => wu.Weapon)
+                .WithMany()
+                .HasForeignKey(wu => wu.WeaponId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PurchasedWeaponUpgrade>()
+                .HasOne(pwu => pwu.User)
+                .WithMany(u => u.PurchasedWeaponUpgrades)
+                .HasForeignKey(pwu => pwu.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PurchasedWeaponUpgrade>()
+                .HasOne(pwu => pwu.WeaponUpgrade)
+                .WithMany()
+                .HasForeignKey(pwu => pwu.WeaponUpgradeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<PurchasedWeaponUpgrade>()
+                .HasIndex(pwu => new { pwu.UserId, pwu.WeaponUpgradeId })
+                .IsUnique();
+
             modelBuilder.Entity<SavedScore>()
                 .HasOne(ss => ss.User)
                 .WithMany()
@@ -236,6 +278,75 @@ namespace Symulator_Nozownika.Data
                 new Weapon { Id = 8, Name = "Mace", Damage = 90, Cooldown = 2.0, ImageUrl = "/images/mace.png" },
                 new Weapon { Id = 9, Name = "Katana", Damage = 50, Cooldown = 0.5, ImageUrl = "/images/katana.png" },
                 new Weapon { Id = 10, Name = "Scissors", Damage = 2, Cooldown = 0.1, ImageUrl = "/images/scissors.png" }
+            );
+
+            modelBuilder.Entity<Potion>().HasData(
+                new Potion
+                {
+                    Id = 1,
+                    Name = "Mała potka energii",
+                    Description = "Krótki zastrzyk energii do szybszej rozgrywki.",
+                    Price = 120,
+                    EffectStrength = 10,
+                    DurationInSeconds = 30,
+                    ImageUrl = "/images/scissors.png"
+                },
+                new Potion
+                {
+                    Id = 2,
+                    Name = "Potka furii",
+                    Description = "Mocniejsze uderzenia przez chwilę.",
+                    Price = 260,
+                    EffectStrength = 20,
+                    DurationInSeconds = 45,
+                    ImageUrl = "/images/dagger.png"
+                },
+                new Potion
+                {
+                    Id = 3,
+                    Name = "Eliksir skupienia",
+                    Description = "Pomaga utrzymać rytm i serię kliknięć.",
+                    Price = 400,
+                    EffectStrength = 30,
+                    DurationInSeconds = 60,
+                    ImageUrl = "/images/katana.png"
+                }
+            );
+
+            modelBuilder.Entity<WeaponUpgrade>().HasData(
+                new WeaponUpgrade
+                {
+                    Id = 1,
+                    Name = "Ostrzenie Kitchen Knife",
+                    Description = "Lepsza krawędź zwiększa obrażenia kuchennego noża.",
+                    WeaponId = 1,
+                    Price = 300,
+                    DamageBonus = 4,
+                    CooldownReduction = 0.02,
+                    ImageUrl = "/images/knife.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 2,
+                    Name = "Wyważenie Dagger",
+                    Description = "Lepszy balans skraca czas odnowienia sztyletu.",
+                    WeaponId = 2,
+                    Price = 650,
+                    DamageBonus = 6,
+                    CooldownReduction = 0.05,
+                    ImageUrl = "/images/dagger.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 3,
+                    Name = "Hartowana Katana",
+                    Description = "Wzmocnione ostrze zapewnia dodatkową moc katanie.",
+                    WeaponId = 9,
+                    Price = 1800,
+                    DamageBonus = 12,
+                    CooldownReduction = 0.08,
+                    ImageUrl = "/images/katana.png"
+                }
             );
 
             //Seed for Achievements and UserAchievements

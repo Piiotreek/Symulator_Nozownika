@@ -14,22 +14,19 @@
     var favoriteWeapons = Model.Where(w => favoriteWeaponIds.Contains(w.Id)).ToList();
     var regularWeapons = Model.Where(w => !favoriteWeaponIds.Contains(w.Id)).ToList();
 
-    var availableToBuyWeapons = regularWeapons.Where(w => userLevel >= LevelService.GetRequiredLevelForWeapon(w.Id) && !purchasedWeaponIds.Contains(w.Id)).ToList();
     var ownedWeapons = regularWeapons.Where(w => purchasedWeaponIds.Contains(w.Id)).ToList();
-    var lockedWeapons = regularWeapons.Where(w => userLevel < LevelService.GetRequiredLevelForWeapon(w.Id)).ToList();
+    var lockedWeapons = regularWeapons.Where(w => userLevel < LevelService.GetRequiredLevelForWeapon(w.Id) || !purchasedWeaponIds.Contains(w.Id)).ToList();
 }
 
 <div class="container mt-4">
-    <h2 class="text-center mb-4">Wybierz swoją broń</h2>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <h2 class="text-center mb-0">Wybierz swoją broń</h2>
+        <a asp-action="Shop" class="btn btn-warning">Przejdź do sklepu</a>
+    </div>
 
     @if (TempData["WeaponSelectError"] is string weaponError && !string.IsNullOrWhiteSpace(weaponError))
     {
         <div class="alert alert-warning text-center" role="alert">@weaponError</div>
-    }
-
-    @if (TempData["WeaponPurchaseSuccess"] is string purchaseSuccess && !string.IsNullOrWhiteSpace(purchaseSuccess))
-    {
-        <div class="alert alert-success text-center" role="alert">@purchaseSuccess</div>
     }
 
     <div class="card mb-4 shadow-sm">
@@ -162,46 +159,14 @@
         }
     </div>
 
-    <h3 class="mb-3 mt-4">Bronie gotowe do kupienia</h3>
-    <hr class="mb-4" />
-    <div class="row">
-        @foreach (var weapon in availableToBuyWeapons)
-        {
-            var price = LevelService.GetWeaponPrice(weapon.Id, weapon.Damage);
-            var canAfford = coinBalance >= price;
-            var reward = LevelService.GetCoinReward(0, weapon.Damage);
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="card weapon-card shadow-sm h-100">
-                    <img src="@weapon.ImageUrl" class="card-img-top p-3" alt="@weapon.Name" style="height: 150px; object-fit: contain;" />
-                    <div class="card-body text-center">
-                        <h5 class="card-title">@weapon.Name</h5>
-                        <p class="card-text">
-                            <span class="badge bg-danger">💥 @weapon.Damage DMG</span><br />
-                            <span class="badge bg-info mt-1">⏱️ @weapon.Cooldown.ToString("F1")s CD</span><br />
-                            <span class="badge bg-warning text-dark mt-1">Cena: @price</span><br />
-                            <span class="badge bg-success mt-1">+@reward monet bazowo / gra</span>
-                        </p>
-                        <form asp-action="BuyWeapon" method="post" class="mt-2">
-                            <input type="hidden" name="weaponId" value="@weapon.Id" />
-                            <button type="submit" class="btn btn-warning btn-sm" disabled="@(!canAfford)">Kup</button>
-                        </form>
-                        @if (!canAfford)
-                        {
-                            <small class="text-danger d-block mt-2">Brakuje @(price - coinBalance) monet</small>
-                        }
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
-
-    <h3 class="mb-3 mt-4">Zablokowane bronie</h3>
+    <h3 class="mb-3 mt-4">Niedostępne bronie</h3>
     <hr class="mb-4" />
     <div class="row">
         @foreach (var weapon in lockedWeapons)
         {
             var requiredLvl = LevelService.GetRequiredLevelForWeapon(weapon.Id);
             var price = LevelService.GetWeaponPrice(weapon.Id, weapon.Damage);
+            var isPurchased = purchasedWeaponIds.Contains(weapon.Id);
             <div class="col-md-3 col-sm-6 mb-4">
                 <div class="card weapon-card shadow-sm h-100 weapon-locked">
                     <img src="@weapon.ImageUrl" class="card-img-top p-3" alt="@weapon.Name" style="height: 150px; object-fit: contain;" />
@@ -213,12 +178,16 @@
                             <br />
                             <span class="badge bg-warning text-dark mt-1">Cena: @price</span>
                             <br />
-                            <span class="badge bg-secondary mt-1">Zablokowana (lvl @requiredLvl)</span>
+                            @if (!isPurchased)
+                            {
+                                <span class="badge bg-secondary mt-1">Kup ją w sklepie</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary mt-1">Zablokowana (lvl @requiredLvl)</span>
+                            }
                         </p>
-                        <form asp-action="BuyWeapon" method="post" class="mt-2">
-                            <input type="hidden" name="weaponId" value="@weapon.Id" />
-                            <button type="submit" class="btn btn-warning btn-sm" disabled>Kup</button>
-                        </form>
+                        <a asp-action="Shop" class="btn btn-outline-warning btn-sm">Otwórz sklep</a>
                     </div>
                 </div>
             </div>
