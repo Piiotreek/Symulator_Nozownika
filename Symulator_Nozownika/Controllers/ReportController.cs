@@ -23,7 +23,7 @@ namespace Symulator_Nozownika.Controllers
 
         [HttpGet]
         [Authorize(Policy = "CanExportClubCsv")]
-        public async Task<IActionResult> ClubCsv(int id)
+        public async Task<IActionResult> ClubPdf(int id)
         {
             // Additional check: verify if user is club owner for this specific club
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -35,38 +35,38 @@ namespace Symulator_Nozownika.Controllers
             if (!authResult.Succeeded)
                 return Forbid();
 
-            var csv = await _reportService.GenerateClubCsvAsync(id);
-            if (csv.Length == 0) return NotFound();
-            return File(csv, "text/csv", $"club-{id}-members.csv");
+            var pdf = await _reportService.GenerateClubPdfAsync(id);
+            if (pdf.Length == 0) return NotFound();
+            return File(pdf, "application/pdf", $"club-{id}-members.pdf");
         }
 
         [HttpGet]
         [Authorize(Policy = "CanExportCsv")]
-        public async Task<IActionResult> MyStatisticsCsv()
+        public async Task<IActionResult> MyStatisticsPdf()
         {
-            var csv = await _reportService.GenerateUserStatisticsCsvAsync(
+            var pdf = await _reportService.GenerateUserStatisticsPdfAsync(
                 int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "0"));
 
-            if (csv.Length == 0) return NotFound();
-            return File(csv, "text/csv", $"user-{User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value}-statistics.csv");
+            if (pdf.Length == 0) return NotFound();
+            return File(pdf, "application/pdf", $"user-{User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value}-statistics.pdf");
         }
 
         [HttpGet]
         [Authorize(Policy = "CanExportCsv")]
-        public async Task<IActionResult> AllStatisticsCsv()
+        public async Task<IActionResult> AllStatisticsPdf()
         {
-            var csv = await _reportService.GenerateAllStatisticsCsvAsync();
-            if (csv.Length == 0) return NotFound();
-            return File(csv, "text/csv", "all-user-statistics.csv");
+            var pdf = await _reportService.GenerateAllStatisticsPdfAsync();
+            if (pdf.Length == 0) return NotFound();
+            return File(pdf, "application/pdf", "all-user-statistics.pdf");
         }
 
         [HttpGet]
         [Authorize(Policy = "CanExportCsv")]
-        public async Task<IActionResult> HighscoresCsv()
+        public async Task<IActionResult> HighscoresPdf()
         {
-            var csv = await _reportService.GenerateHighscoresCsvAsync();
-            if (csv.Length == 0) return NotFound();
-            return File(csv, "text/csv", "highscores.csv");
+            var pdf = await _reportService.GenerateHighscoresPdfAsync();
+            if (pdf.Length == 0) return NotFound();
+            return File(pdf, "application/pdf", "highscores.pdf");
         }
     }
 }

@@ -4,9 +4,9 @@ namespace Symulator_Nozownika.Services
 {
     public interface IReportService
     {
-        Task<byte[]> GenerateClubCsvAsync(int clubId);
-        Task<byte[]> GenerateUserStatisticsCsvAsync(int userId);
-        Task<byte[]> GenerateAllStatisticsCsvAsync();
-        Task<byte[]> GenerateHighscoresCsvAsync();
+        Task<byte[]> GenerateClubPdfAsync(int clubId);
+        Task<byte[]> GenerateUserStatisticsPdfAsync(int userId);
+        Task<byte[]> GenerateAllStatisticsPdfAsync();
+        Task<byte[]> GenerateHighscoresPdfAsync();
     }
 }

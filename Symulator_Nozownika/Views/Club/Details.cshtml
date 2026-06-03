@@ -125,7 +125,7 @@
                     <h5 class="mb-0">Actions</h5>
                 </div>
                 <div class="card-body">
-                    <a asp-controller="Report" asp-action="ClubCsv" asp-route-id="@Model.Id" class="btn btn-outline-info w-100 mb-2">📥 Eksportuj listę członków (CSV)</a>
+                    <a asp-controller="Report" asp-action="ClubPdf" asp-route-id="@Model.Id" class="btn btn-outline-info w-100 mb-2">📥 Eksportuj listę członków (PDF)</a>
                     @if (Model.IsMember)
                     {
                         <div class="alert alert-success">

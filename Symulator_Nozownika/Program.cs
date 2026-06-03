@@ -27,6 +27,8 @@ namespace Symulator_Nozownika
             builder.Services.AddScoped<IQuestService, QuestService>();
             //building dependency injection for club services
             builder.Services.AddScoped<IClubService, ClubService>();
+            // Register browser service as singleton to prevent concurrent download/file-lock errors
+            builder.Services.AddSingleton<IBrowserService, BrowserService>();
             // Register report service
             builder.Services.AddScoped<IReportService, ReportService>();
             // Register demo service
