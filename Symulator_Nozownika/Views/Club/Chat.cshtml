@@ -40,14 +40,26 @@
                                                     int.TryParse(currentUserId, out int uid) && 
                                                     ViewContext.RouteData.Values.ContainsKey("clubId"));
                                 }
-                                @if (canDelete && message.UserId.ToString() == currentUserId)
-                                {
-                                    <form method="post" action="@Url.Action("DeleteMessage")" style="display: inline;">
-                                        <input type="hidden" name="messageId" value="@message.Id" />
-                                        <input type="hidden" name="clubId" value="@ViewBag.ClubId" />
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Na pewno chcesz usunąć tę wiadomość?');">×</button>
-                                    </form>
-                                }
+                                <div class="btn-group" role="group">
+                                    @if (canDelete && message.UserId.ToString() == currentUserId)
+                                    {
+                                        <form method="post" action="@Url.Action("DeleteMessage")" style="display: inline;">
+                                            <input type="hidden" name="messageId" value="@message.Id" />
+                                            <input type="hidden" name="clubId" value="@ViewBag.ClubId" />
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Na pewno chcesz usunąć tę wiadomość?');">×</button>
+                                        </form>
+                                    }
+                                    <button type="button" class="btn btn-sm btn-warning" 
+                                            onclick="reportMessage(@message.Id, '@message.User.UserName')"
+                                            title="Zgłoś tę wiadomość">
+                                        🚩
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-info" 
+                                            onclick="reportUser(@message.UserId, '@message.User.UserName')"
+                                            title="Zgłoś tego użytkownika">
+                                        👤
+                                    </button>
+                                </div>
                             </div>
                             <p class="mt-2 mb-0" style="word-wrap: break-word; color: #000;">@message.Content</p>
                         </div>
@@ -126,4 +138,77 @@
         const chatContainer = document.querySelector('.chat-container');
         chatContainer.scrollTop = chatContainer.scrollHeight;
     });
+
+    function reportMessage(messageId, userName) {
+        const reason = prompt('Podaj powód zgłoszenia wiadomości od ' + userName + ':');
+        if (!reason) return;
+
+        fetch('/api/reportsapi/message', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messageId: messageId, reason: reason })
+        })
+        .then(async response => {
+            const data = await response.json().catch(() => ({}));
+            if (response.ok) {
+                alert(data.message || 'Zgłoszono wiadomość.');
+            } else {
+                console.error('ReportMessage failed', response.status, data);
+                alert('Błąd: ' + (data.error || JSON.stringify(data) || response.statusText));
+            }
+        })
+        .catch(error => {
+            console.error('Błąd:', error);
+            alert('Wystąpił błąd podczas zgłaszania wiadomości. Sprawdź konsolę.');
+        });
+    }
+
+    function reportUser(userId, userName) {
+        const reason = prompt(
+            'Wybierz powód zgłoszenia ' + userName + ':\n' +
+            '1 - Obraźliwy nick\n' +
+            '2 - Nieodpowiedni awatar\n' +
+            '3 - Zawartość pornograficzna\n' +
+            '4 - Podszywanie\n' +
+            '5 - Nękanie\n' +
+            '6 - Spam\n' +
+            '7 - Inne'
+        );
+        
+        if (!reason) return;
+        
+        const reasonCode = parseInt(reason) - 1;
+        if (isNaN(reasonCode) || reasonCode < 0 || reasonCode > 6) {
+            alert('Nieprawidłowy wybór');
+            return;
+        }
+
+        const description = prompt('Opisz szczegóły:');
+        if (!description) return;
+
+        fetch('/api/reportsapi/user', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                reportedUserId: userId, 
+                reason: reasonCode,
+                description: description
+            })
+        })
+        .then(async response => {
+            const data = await response.json().catch(() => ({}));
+            if (response.ok) {
+                alert(data.message || 'Zgłoszono użytkownika.');
+            } else {
+                console.error('ReportUser failed', response.status, data);
+                alert('Błąd: ' + (data.error || JSON.stringify(data) || response.statusText));
+            }
+        })
+        .catch(error => {
+            console.error('Błąd:', error);
+            alert('Wystąpił błąd podczas zgłaszania użytkownika. Sprawdź konsolę.');
+        });
+    }
 </script>

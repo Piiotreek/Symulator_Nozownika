@@ -35,6 +35,10 @@ namespace Symulator_Nozownika.Data
 
         public DbSet<DemoLockout> DemoLockouts { get; set; }
 
+        public DbSet<MessageReport> MessageReports { get; set; }
+        public DbSet<UserReport> UserReports { get; set; }
+        public DbSet<UserPenalty> UserPenalties { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -492,6 +496,62 @@ namespace Symulator_Nozownika.Data
                 }
             );
 
+            // Configuration for MessageReport
+            modelBuilder.Entity<MessageReport>()
+                .HasOne(mr => mr.ReportedMessage)
+                .WithMany()
+                .HasForeignKey(mr => mr.ReportedMessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<MessageReport>()
+                .HasOne(mr => mr.ReportedByUser)
+                .WithMany()
+                .HasForeignKey(mr => mr.ReportedByUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<MessageReport>()
+                .HasOne(mr => mr.ReviewedByAdmin)
+                .WithMany()
+                .HasForeignKey(mr => mr.ReviewedByAdminId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Configuration for UserReport
+            modelBuilder.Entity<UserReport>()
+                .HasOne(ur => ur.ReportedUser)
+                .WithMany()
+                .HasForeignKey(ur => ur.ReportedUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserReport>()
+                .HasOne(ur => ur.ReportedByUser)
+                .WithMany()
+                .HasForeignKey(ur => ur.ReportedByUserId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<UserReport>()
+                .HasOne(ur => ur.ReviewedByAdmin)
+                .WithMany()
+                .HasForeignKey(ur => ur.ReviewedByAdminId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // Configuration for UserPenalty
+            modelBuilder.Entity<UserPenalty>()
+                .HasOne(up => up.User)
+                .WithMany()
+                .HasForeignKey(up => up.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserPenalty>()
+                .HasOne(up => up.Admin)
+                .WithMany()
+                .HasForeignKey(up => up.AdminId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<UserPenalty>()
+                .HasOne(up => up.RelatedReport)
+                .WithMany()
+                .HasForeignKey(up => up.RelatedReportId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

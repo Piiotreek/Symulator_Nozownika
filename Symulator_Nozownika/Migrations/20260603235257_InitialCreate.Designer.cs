@@ -12,8 +12,8 @@ using Symulator_Nozownika.Data;
 namespace Symulator_Nozownika.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260603135316_Shopmig")]
-    partial class Shopmig
+    [Migration("20260603235257_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -400,6 +400,53 @@ namespace Symulator_Nozownika.Migrations
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             UserId = 9999
                         });
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.MessageReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdminNotes")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("ReportedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReportedMessageId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ReviewedByAdminId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReportedByUserId");
+
+                    b.HasIndex("ReportedMessageId");
+
+                    b.HasIndex("ReviewedByAdminId");
+
+                    b.ToTable("MessageReports");
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.Potion", b =>
@@ -811,6 +858,56 @@ namespace Symulator_Nozownika.Migrations
                     b.ToTable("UserAchievements");
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.UserPenalty", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AdminId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("AppliedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("RelatedReportId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdminId");
+
+                    b.HasIndex("RelatedReportId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserPenalties");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.UserQuestProgress", b =>
                 {
                     b.Property<int>("Id")
@@ -848,6 +945,56 @@ namespace Symulator_Nozownika.Migrations
                         .IsUnique();
 
                     b.ToTable("UserQuestProgresses");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.UserReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdminNotes")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Reason")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReportedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReportedUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ReviewedByAdminId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReportedByUserId");
+
+                    b.HasIndex("ReportedUserId");
+
+                    b.HasIndex("ReviewedByAdminId");
+
+                    b.ToTable("UserReports");
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.UserStatistics", b =>
@@ -1193,6 +1340,32 @@ namespace Symulator_Nozownika.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.MessageReport", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "ReportedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReportedByUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.ClubMessage", "ReportedMessage")
+                        .WithMany()
+                        .HasForeignKey("ReportedMessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "ReviewedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByAdminId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ReportedByUser");
+
+                    b.Navigation("ReportedMessage");
+
+                    b.Navigation("ReviewedByAdmin");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.PurchasedPotion", b =>
                 {
                     b.HasOne("Symulator_Nozownika.Models.Potion", "Potion")
@@ -1296,6 +1469,32 @@ namespace Symulator_Nozownika.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Symulator_Nozownika.Models.UserPenalty", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "Admin")
+                        .WithMany()
+                        .HasForeignKey("AdminId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.UserReport", "RelatedReport")
+                        .WithMany()
+                        .HasForeignKey("RelatedReportId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Admin");
+
+                    b.Navigation("RelatedReport");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Symulator_Nozownika.Models.UserQuestProgress", b =>
                 {
                     b.HasOne("Symulator_Nozownika.Models.Quest", "Quest")
@@ -1313,6 +1512,32 @@ namespace Symulator_Nozownika.Migrations
                     b.Navigation("Quest");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Symulator_Nozownika.Models.UserReport", b =>
+                {
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "ReportedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReportedByUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "ReportedUser")
+                        .WithMany()
+                        .HasForeignKey("ReportedUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Symulator_Nozownika.Models.UserAccount", "ReviewedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByAdminId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("ReportedByUser");
+
+                    b.Navigation("ReportedUser");
+
+                    b.Navigation("ReviewedByAdmin");
                 });
 
             modelBuilder.Entity("Symulator_Nozownika.Models.UserStatistics", b =>

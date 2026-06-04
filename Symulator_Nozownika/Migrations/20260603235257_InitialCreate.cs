@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Symulator_Nozownika.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -45,6 +45,24 @@ namespace Symulator_Nozownika.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Potions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
+                    Price = table.Column<int>(type: "int", nullable: false),
+                    EffectStrength = table.Column<int>(type: "int", nullable: false),
+                    DurationInSeconds = table.Column<int>(type: "int", nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Potions", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Quests",
                 columns: table => new
                 {
@@ -77,6 +95,31 @@ namespace Symulator_Nozownika.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Weapons", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WeaponUpgrades",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
+                    WeaponId = table.Column<int>(type: "int", nullable: false),
+                    Price = table.Column<int>(type: "int", nullable: false),
+                    DamageBonus = table.Column<int>(type: "int", nullable: false),
+                    CooldownReduction = table.Column<double>(type: "float", nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WeaponUpgrades", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_WeaponUpgrades_Weapons_WeaponId",
+                        column: x => x.WeaponId,
+                        principalTable: "Weapons",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -263,6 +306,72 @@ namespace Symulator_Nozownika.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "MessageReports",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ReportedMessageId = table.Column<int>(type: "int", nullable: false),
+                    ReportedByUserId = table.Column<int>(type: "int", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    ReviewedByAdminId = table.Column<int>(type: "int", nullable: true),
+                    ReviewedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    AdminNotes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MessageReports", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MessageReports_ClubMessages_ReportedMessageId",
+                        column: x => x.ReportedMessageId,
+                        principalTable: "ClubMessages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MessageReports_UserAccounts_ReportedByUserId",
+                        column: x => x.ReportedByUserId,
+                        principalTable: "UserAccounts",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_MessageReports_UserAccounts_ReviewedByAdminId",
+                        column: x => x.ReviewedByAdminId,
+                        principalTable: "UserAccounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PurchasedPotions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    PotionId = table.Column<int>(type: "int", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    PricePaid = table.Column<int>(type: "int", nullable: false),
+                    PurchasedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PurchasedPotions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PurchasedPotions_Potions_PotionId",
+                        column: x => x.PotionId,
+                        principalTable: "Potions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PurchasedPotions_UserAccounts_UserId",
+                        column: x => x.UserId,
+                        principalTable: "UserAccounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PurchasedWeapons",
                 columns: table => new
                 {
@@ -286,6 +395,34 @@ namespace Symulator_Nozownika.Migrations
                         name: "FK_PurchasedWeapons_Weapons_WeaponId",
                         column: x => x.WeaponId,
                         principalTable: "Weapons",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PurchasedWeaponUpgrades",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    WeaponUpgradeId = table.Column<int>(type: "int", nullable: false),
+                    PricePaid = table.Column<int>(type: "int", nullable: false),
+                    PurchasedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PurchasedWeaponUpgrades", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PurchasedWeaponUpgrades_UserAccounts_UserId",
+                        column: x => x.UserId,
+                        principalTable: "UserAccounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PurchasedWeaponUpgrades_WeaponUpgrades_WeaponUpgradeId",
+                        column: x => x.WeaponUpgradeId,
+                        principalTable: "WeaponUpgrades",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -372,6 +509,43 @@ namespace Symulator_Nozownika.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "UserReports",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ReportedUserId = table.Column<int>(type: "int", nullable: false),
+                    ReportedByUserId = table.Column<int>(type: "int", nullable: false),
+                    Reason = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    ReviewedByAdminId = table.Column<int>(type: "int", nullable: true),
+                    ReviewedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    AdminNotes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserReports", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserReports_UserAccounts_ReportedByUserId",
+                        column: x => x.ReportedByUserId,
+                        principalTable: "UserAccounts",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_UserReports_UserAccounts_ReportedUserId",
+                        column: x => x.ReportedUserId,
+                        principalTable: "UserAccounts",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_UserReports_UserAccounts_ReviewedByAdminId",
+                        column: x => x.ReviewedByAdminId,
+                        principalTable: "UserAccounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "UserStatistics",
                 columns: table => new
                 {
@@ -398,6 +572,44 @@ namespace Symulator_Nozownika.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "UserPenalties",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    AdminId = table.Column<int>(type: "int", nullable: false),
+                    Type = table.Column<int>(type: "int", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    AppliedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    RelatedReportId = table.Column<int>(type: "int", nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserPenalties", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserPenalties_UserAccounts_AdminId",
+                        column: x => x.AdminId,
+                        principalTable: "UserAccounts",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_UserPenalties_UserAccounts_UserId",
+                        column: x => x.UserId,
+                        principalTable: "UserAccounts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserPenalties_UserReports_RelatedReportId",
+                        column: x => x.RelatedReportId,
+                        principalTable: "UserReports",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                });
+
             migrationBuilder.InsertData(
                 table: "Achievements",
                 columns: new[] { "Id", "Description", "ImagePath", "Name", "TargetValue", "Type" },
@@ -412,6 +624,16 @@ namespace Symulator_Nozownika.Migrations
                     { 7, "Zdobądź łącznie 500 kliknięć we wszystkich grach.", "/images/achiv/500-clicks.png", "Wprawiony Klikacz", 500, 1 },
                     { 8, "Zdobądź łącznie 1000 kliknięć we wszystkich grach.", "/images/achiv/1000-clicks.png", "Maniak", 1000, 1 },
                     { 9, "Zdobądź łącznie 3000 kliknięć we wszystkich grach.", "/images/achiv/3000-clicks.png", "3000 GWIAZD!", 3000, 1 }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Potions",
+                columns: new[] { "Id", "Description", "DurationInSeconds", "EffectStrength", "ImageUrl", "Name", "Price" },
+                values: new object[,]
+                {
+                    { 1, "Krótki zastrzyk energii do szybszej rozgrywki.", 30, 10, "/images/scissors.png", "Mała potka energii", 120 },
+                    { 2, "Mocniejsze uderzenia przez chwilę.", 45, 20, "/images/dagger.png", "Potka furii", 260 },
+                    { 3, "Pomaga utrzymać rytm i serię kliknięć.", 60, 30, "/images/katana.png", "Eliksir skupienia", 400 }
                 });
 
             migrationBuilder.InsertData(
@@ -463,6 +685,16 @@ namespace Symulator_Nozownika.Migrations
                 table: "UserStatistics",
                 columns: new[] { "Id", "CurrentStreak", "HighestScore", "LastPlayedAt", "LongestStreak", "TotalClicks", "TotalGamesPlayed", "TotalPlayTime", "TotalScore", "UserId" },
                 values: new object[] { 9999, 0, 0, new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), 0, 0, 0, new TimeSpan(0, 0, 0, 0, 0), 5500, 9999 });
+
+            migrationBuilder.InsertData(
+                table: "WeaponUpgrades",
+                columns: new[] { "Id", "CooldownReduction", "DamageBonus", "Description", "ImageUrl", "Name", "Price", "WeaponId" },
+                values: new object[,]
+                {
+                    { 1, 0.02, 4, "Lepsza krawędź zwiększa obrażenia kuchennego noża.", "/images/knife.png", "Ostrzenie Kitchen Knife", 300, 1 },
+                    { 2, 0.050000000000000003, 6, "Lepszy balans skraca czas odnowienia sztyletu.", "/images/dagger.png", "Wyważenie Dagger", 650, 2 },
+                    { 3, 0.080000000000000002, 12, "Wzmocnione ostrze zapewnia dodatkową moc katanie.", "/images/katana.png", "Hartowana Katana", 1800, 9 }
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_ClubMembers_ClubId",
@@ -523,6 +755,32 @@ namespace Symulator_Nozownika.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_MessageReports_ReportedByUserId",
+                table: "MessageReports",
+                column: "ReportedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MessageReports_ReportedMessageId",
+                table: "MessageReports",
+                column: "ReportedMessageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MessageReports_ReviewedByAdminId",
+                table: "MessageReports",
+                column: "ReviewedByAdminId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PurchasedPotions_PotionId",
+                table: "PurchasedPotions",
+                column: "PotionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PurchasedPotions_UserId_PotionId",
+                table: "PurchasedPotions",
+                columns: new[] { "UserId", "PotionId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PurchasedWeapons_UserId_WeaponId",
                 table: "PurchasedWeapons",
                 columns: new[] { "UserId", "WeaponId" },
@@ -532,6 +790,17 @@ namespace Symulator_Nozownika.Migrations
                 name: "IX_PurchasedWeapons_WeaponId",
                 table: "PurchasedWeapons",
                 column: "WeaponId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PurchasedWeaponUpgrades_UserId_WeaponUpgradeId",
+                table: "PurchasedWeaponUpgrades",
+                columns: new[] { "UserId", "WeaponUpgradeId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PurchasedWeaponUpgrades_WeaponUpgradeId",
+                table: "PurchasedWeaponUpgrades",
+                column: "WeaponUpgradeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SavedScores_UserId",
@@ -572,6 +841,21 @@ namespace Symulator_Nozownika.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserPenalties_AdminId",
+                table: "UserPenalties",
+                column: "AdminId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserPenalties_RelatedReportId",
+                table: "UserPenalties",
+                column: "RelatedReportId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserPenalties_UserId",
+                table: "UserPenalties",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserQuestProgresses_QuestId",
                 table: "UserQuestProgresses",
                 column: "QuestId");
@@ -583,10 +867,30 @@ namespace Symulator_Nozownika.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_UserReports_ReportedByUserId",
+                table: "UserReports",
+                column: "ReportedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserReports_ReportedUserId",
+                table: "UserReports",
+                column: "ReportedUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserReports_ReviewedByAdminId",
+                table: "UserReports",
+                column: "ReviewedByAdminId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UserStatistics_UserId",
                 table: "UserStatistics",
                 column: "UserId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WeaponUpgrades_WeaponId",
+                table: "WeaponUpgrades",
+                column: "WeaponId");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_ClubMembers_Clubs_ClubId",
@@ -637,9 +941,6 @@ namespace Symulator_Nozownika.Migrations
                 name: "ClubMembers");
 
             migrationBuilder.DropTable(
-                name: "ClubMessages");
-
-            migrationBuilder.DropTable(
                 name: "CoinWallets");
 
             migrationBuilder.DropTable(
@@ -655,7 +956,16 @@ namespace Symulator_Nozownika.Migrations
                 name: "Levels");
 
             migrationBuilder.DropTable(
+                name: "MessageReports");
+
+            migrationBuilder.DropTable(
+                name: "PurchasedPotions");
+
+            migrationBuilder.DropTable(
                 name: "PurchasedWeapons");
+
+            migrationBuilder.DropTable(
+                name: "PurchasedWeaponUpgrades");
 
             migrationBuilder.DropTable(
                 name: "SavedScores");
@@ -664,13 +974,28 @@ namespace Symulator_Nozownika.Migrations
                 name: "UserAchievements");
 
             migrationBuilder.DropTable(
+                name: "UserPenalties");
+
+            migrationBuilder.DropTable(
                 name: "UserQuestProgresses");
 
             migrationBuilder.DropTable(
                 name: "UserStatistics");
 
             migrationBuilder.DropTable(
+                name: "ClubMessages");
+
+            migrationBuilder.DropTable(
+                name: "Potions");
+
+            migrationBuilder.DropTable(
+                name: "WeaponUpgrades");
+
+            migrationBuilder.DropTable(
                 name: "Achievements");
+
+            migrationBuilder.DropTable(
+                name: "UserReports");
 
             migrationBuilder.DropTable(
                 name: "Quests");

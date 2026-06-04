@@ -17,6 +17,8 @@ namespace Symulator_Nozownika
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            // Register Razor Pages so pages using @page and asp-page work (Admin pages)
+            builder.Services.AddRazorPages();
             //building authentication services using cookie authentication scheme
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -33,6 +35,12 @@ namespace Symulator_Nozownika
             builder.Services.AddScoped<IReportService, ReportService>();
             // Register demo service
             builder.Services.AddScoped<IDemoService, DemoService>();
+            // Register report management service
+            builder.Services.AddScoped<IReportManagementService, ReportManagementService>();
+
+            // Register penalty expiration service
+            builder.Services.AddScoped<IPenaltyExpirationService, PenaltyExpirationService>();
+            builder.Services.AddHostedService<PenaltyExpirationBackgroundService>();
 
             // Add Authorization with custom policies
             builder.Services.AddHttpContextAccessor();
@@ -44,6 +52,9 @@ namespace Symulator_Nozownika
 
                 options.AddPolicy("CanExportClubCsv", policy =>
                     policy.AddRequirements(new CsvExportRequirement()));
+
+                options.AddPolicy("AdminOnly", policy =>
+                    policy.RequireRole("Admin"));
             });
 
             var app = builder.Build();
@@ -281,6 +292,8 @@ namespace Symulator_Nozownika
             app.UseAuthorization();
 
             app.MapStaticAssets();
+            // Map Razor Pages endpoints so links using asp-page work (e.g. Admin pages)
+            app.MapRazorPages();
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=StartView}/{id?}")

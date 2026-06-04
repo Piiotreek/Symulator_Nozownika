@@ -1,0 +1,547 @@
+@page 
+@model Symulator_Nozownika.Pages.Admin.ReportsModel
+@{
+    // Use the main shared layout so navbar, styles and scripts match the rest of the app
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Panel Administracyjny - Zgłoszenia";
+}
+
+@using Symulator_Nozownika.Models
+
+<div class="container-fluid mt-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1>Panel Administracyjny - Zgłoszenia</h1>
+            <p class="text-muted">Zarządzaj zgłoszeniami wiadomości i użytkowników</p>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="message-reports-tab" data-bs-toggle="tab" 
+                    data-bs-target="#message-reports" type="button" role="tab">
+                Zgłoszenia wiadomości
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="user-reports-tab" data-bs-toggle="tab" 
+                    data-bs-target="#user-reports" type="button" role="tab">
+                Zgłoszenia użytkowników
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="penalties-tab" data-bs-toggle="tab" 
+                    data-bs-target="#penalties" type="button" role="tab">
+                Kary
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- Message Reports Tab -->
+        <div class="tab-pane fade show active" id="message-reports" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Zgłoszenia wiadomości</h5>
+                </div>
+                <div class="card-body">
+                    <div id="message-reports-container">
+                        <p class="text-muted">Ładowanie...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Reports Tab -->
+        <div class="tab-pane fade" id="user-reports" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Zgłoszenia użytkowników</h5>
+                </div>
+                <div class="card-body">
+                    <div id="user-reports-container">
+                        <p class="text-muted">Ładowanie...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Penalties Tab -->
+        <div class="tab-pane fade" id="penalties" role="tabpanel">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Kary użytkowników</h5>
+                </div>
+                <div class="card-body">
+                    <div id="penalties-container">
+                        <p class="text-muted">Ładowanie...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<!-- Message Report Detail Modal -->
+<div class="modal fade" id="messageReportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Szczegóły zgłoszenia wiadomości</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="messageReportDetails">
+                <!-- Content loaded via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                <button type="button" class="btn btn-danger" id="approveMessageBtn">Zatwierdź</button>
+                <button type="button" class="btn btn-warning" id="rejectMessageBtn">Odrzuć</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Report Detail Modal -->
+<div class="modal fade" id="userReportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Szczegóły zgłoszenia użytkownika</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="userReportDetails">
+                <!-- Content loaded via JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
+                <button type="button" class="btn btn-danger" id="approveUserBtn">Zatwierdź</button>
+                <button type="button" class="btn btn-warning" id="rejectUserBtn">Odrzuć</button>
+                <button type="button" class="btn btn-dark" id="applyPenaltyBtn">Zastosuj karę</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Apply Penalty Modal -->
+<div class="modal fade" id="applyPenaltyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Zastosuj karę</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="penaltyType" class="form-label">Typ kary</label>
+                    <select class="form-select" id="penaltyType">
+                        <option value="">Wybierz typ kary</option>
+                        <option value="0">Zawieszenie 1 dzień</option>
+                        <option value="1">Zawieszenie 7 dni</option>
+                        <option value="2">Ban</option>
+                        <option value="3">Ban z usunięciem konta</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="penaltyReason" class="form-label">Powód kary</label>
+                    <textarea class="form-control" id="penaltyReason" rows="3" 
+                              placeholder="Opisz powód zastosowania kary..."></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="penaltyNotes" class="form-label">Notatki (opcjonalne)</label>
+                    <textarea class="form-control" id="penaltyNotes" rows="2" 
+                              placeholder="Dodatkowe notatki..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                <button type="button" class="btn btn-danger" id="confirmPenaltyBtn">Zastosuj karę</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const API_BASE_URL = '/api/reportsapi';
+        let currentReportId = null;
+        let currentUserId = null;
+        let currentReportType = null;
+
+        // Load message reports
+        async function loadMessageReports() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/messages/pending`);
+                const reports = await response.json();
+                renderMessageReports(reports);
+            } catch (error) {
+                console.error('Błąd ładowania zgłoszeń:', error);
+                const container = document.getElementById('message-reports-container');
+                if (container) container.innerHTML = '<p class="text-danger">Błąd ładowania zgłoszeń.</p>';
+            }
+        }
+
+        function renderMessageReports(reports) {
+            const container = document.getElementById('message-reports-container');
+
+            if (!container) return;
+
+            if (!reports || reports.length === 0) {
+                container.innerHTML = '<p class="text-success">Brak oczekujących zgłoszeń wiadomości</p>';
+                return;
+            }
+
+            let html = '<div class="table-responsive"><table class="table table-hover">';
+            html += '<thead><tr><th>ID</th><th>Autor</th><th>Zgłaszający</th><th>Powód</th><th>Data</th><th>Akcje</th></tr></thead><tbody>';
+
+            reports.forEach(report => {
+                html += `<tr>
+                    <td>#${report.id}</td>
+                    <td>${report.reportedMessage?.user?.userName ?? '—'}</td>
+                    <td>${report.reportedByUser?.userName ?? '—'}</td>
+                    <td><small>${(report.reason || '').substring(0, 30)}...</small></td>
+                    <td>${new Date(report.createdAt).toLocaleDateString('pl-PL')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="viewMessageReport(${report.id})">Szczegóły</button>
+                    </td>
+                </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        async function viewMessageReport(reportId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/messages/${reportId}`);
+                const report = await response.json();
+                currentReportId = reportId;
+                currentReportType = 'message';
+
+                const detailsDiv = document.getElementById('messageReportDetails');
+                detailsDiv.innerHTML = `
+                    <p><strong>Zgłaszający:</strong> ${report.reportedByUser?.userName ?? '—'}</p>
+                    <p><strong>Autor wiadomości:</strong> ${report.reportedMessage?.user?.userName ?? '—'}</p>
+                    <p><strong>Zawartość wiadomości:</strong></p>
+                    <div class="alert alert-light"><blockquote>${report.reportedMessage?.content ?? ''}</blockquote></div>
+                    <p><strong>Powód zgłoszenia:</strong></p>
+                    <p>${report.reason ?? ''}</p>
+                    <p><strong>Data zgłoszenia:</strong> ${new Date(report.createdAt).toLocaleString('pl-PL')}</p>
+                `;
+
+                new bootstrap.Modal(document.getElementById('messageReportModal')).show();
+            } catch (error) {
+                console.error('Błąd ładowania szczegółów:', error);
+                alert('Błąd ładowania szczegółów zgłoszenia.');
+            }
+        }
+
+        async function approveMessageReport() {
+            const notes = prompt('Wpisz notatki (opcjonalne):');
+            if (notes === null) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/messages/${currentReportId}/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notes: notes || '' })
+                });
+
+                if (response.ok) {
+                    alert('Zgłoszenie zatwierdzone');
+                    bootstrap.Modal.getInstance(document.getElementById('messageReportModal')).hide();
+                    loadMessageReports();
+                } else {
+                    alert('Błąd zatwierdzania');
+                }
+            } catch (error) {
+                console.error('Błąd:', error);
+                alert('Błąd zatwierdzania zgłoszenia.');
+            }
+        }
+
+        async function rejectMessageReport() {
+            const notes = prompt('Wpisz powód odrzucenia:');
+            if (notes === null) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/messages/${currentReportId}/reject`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notes: notes })
+                });
+
+                if (response.ok) {
+                    alert('Zgłoszenie odrzucone');
+                    bootstrap.Modal.getInstance(document.getElementById('messageReportModal')).hide();
+                    loadMessageReports();
+                } else {
+                    alert('Błąd odrzucania');
+                }
+            } catch (error) {
+                console.error('Błąd:', error);
+                alert('Błąd odrzucania zgłoszenia.');
+            }
+        }
+
+        // Load user reports
+        async function loadUserReports() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/pending`);
+                const reports = await response.json();
+                renderUserReports(reports);
+            } catch (error) {
+                console.error('Błąd ładowania zgłoszeń:', error);
+                const container = document.getElementById('user-reports-container');
+                if (container) container.innerHTML = '<p class="text-danger">Błąd ładowania zgłoszeń.</p>';
+            }
+        }
+
+        function renderUserReports(reports) {
+            const container = document.getElementById('user-reports-container');
+            if (!container) return;
+
+            if (!reports || reports.length === 0) {
+                container.innerHTML = '<p class="text-success">Brak oczekujących zgłoszeń użytkowników</p>';
+                return;
+            }
+
+            let html = '<div class="table-responsive"><table class="table table-hover">';
+            html += '<thead><tr><th>ID</th><th>Użytkownik</th><th>Zgłaszający</th><th>Powód</th><th>Data</th><th>Akcje</th></tr></thead><tbody>';
+
+            reports.forEach(report => {
+                const reasonText = ['Obraźliwy nick', 'Nieodpowiedni awatar', 'Zawartość pornograficzna', 'Podszywanie', 'Nękanie', 'Spam', 'Inne'][report.reason];
+                html += `<tr>
+                    <td>#${report.id}</td>
+                    <td>${report.reportedUser?.userName ?? '—'}</td>
+                    <td>${report.reportedByUser?.userName ?? '—'}</td>
+                    <td>${reasonText}</td>
+                    <td>${new Date(report.createdAt).toLocaleDateString('pl-PL')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="viewUserReport(${report.id})">Szczegóły</button>
+                    </td>
+                </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        async function viewUserReport(reportId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${reportId}`);
+                const report = await response.json();
+                currentReportId = reportId;
+                currentUserId = report.reportedUser?.id ?? null;
+                currentReportType = 'user';
+
+                const reasonText = ['Obraźliwy nick', 'Nieodpowiedni awatar', 'Zawartość pornograficzna', 'Podszywanie', 'Nękanie', 'Spam', 'Inne'][report.reason];
+                const detailsDiv = document.getElementById('userReportDetails');
+                detailsDiv.innerHTML = `
+                    <p><strong>Zgłaszający:</strong> ${report.reportedByUser?.userName ?? '—'}</p>
+                    <p><strong>Zgłaszany użytkownik:</strong> ${report.reportedUser?.userName ?? '—'}</p>
+                    <p><strong>Powód:</strong> ${reasonText}</p>
+                    <p><strong>Opis:</strong></p>
+                    <div class="alert alert-light"><p>${report.description ?? ''}</p></div>
+                    <p><strong>Data zgłoszenia:</strong> ${new Date(report.createdAt).toLocaleString('pl-PL')}</p>
+                `;
+
+                new bootstrap.Modal(document.getElementById('userReportModal')).show();
+            } catch (error) {
+                console.error('Błąd ładowania szczegółów:', error);
+                alert('Błąd ładowania szczegółów zgłoszenia.');
+            }
+        }
+
+        async function approveUserReport() {
+            const notes = prompt('Wpisz notatki (opcjonalne):');
+            if (notes === null) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${currentReportId}/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notes: notes || '' })
+                });
+
+                if (response.ok) {
+                    alert('Zgłoszenie zatwierdzone');
+                    bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
+                    loadUserReports();
+                } else {
+                    alert('Błąd zatwierdzania');
+                }
+            } catch (error) {
+                console.error('Błąd:', error);
+                alert('Błąd zatwierdzania zgłoszenia.');
+            }
+        }
+
+        async function rejectUserReport() {
+            const notes = prompt('Wpisz powód odrzucenia:');
+            if (notes === null) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${currentReportId}/reject`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notes: notes })
+                });
+
+                if (response.ok) {
+                    alert('Zgłoszenie odrzucone');
+                    bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
+                    loadUserReports();
+                } else {
+                    alert('Błąd odrzucania');
+                }
+            } catch (error) {
+                console.error('Błąd:', error);
+                alert('Błąd odrzucania zgłoszenia.');
+            }
+        }
+
+        function openApplyPenaltyModal() {
+            new bootstrap.Modal(document.getElementById('applyPenaltyModal')).show();
+        }
+
+        async function confirmApplyPenalty() {
+            const type = document.getElementById('penaltyType').value;
+            const reason = document.getElementById('penaltyReason').value;
+            const notes = document.getElementById('penaltyNotes').value;
+
+            if (!type || !reason) {
+                alert('Wypełnij wymagane pola');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/penalties`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: currentUserId,
+                        type: parseInt(type),
+                        reason: reason,
+                        relatedReportId: currentReportId
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Kara została zastosowana');
+                    bootstrap.Modal.getInstance(document.getElementById('applyPenaltyModal')).hide();
+                    bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
+                    loadUserReports();
+                    loadPenalties();
+                } else {
+                    alert('Błąd stosowania kary');
+                }
+            } catch (error) {
+                console.error('Błąd:', error);
+                alert('Błąd stosowania kary.');
+            }
+        }
+
+        // Load penalties
+        async function loadPenalties() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/penalties`);
+                const penalties = await response.json();
+                renderPenalties(penalties);
+            } catch (error) {
+                console.error('Błąd ładowania kar:', error);
+                const container = document.getElementById('penalties-container');
+                if (container) container.innerHTML = '<p class="text-danger">Błąd ładowania kar.</p>';
+            }
+        }
+
+        function renderPenalties(penalties) {
+            const container = document.getElementById('penalties-container');
+            if (!container) return;
+
+            if (!penalties || penalties.length === 0) {
+                container.innerHTML = '<p class="text-success">Brak kar</p>';
+                return;
+            }
+
+            let html = '<div class="table-responsive"><table class="table table-hover">';
+            html += '<thead><tr><th>ID</th><th>Użytkownik</th><th>Typ</th><th>Status</th><th>Data</th><th>Wygasa</th><th>Admin</th><th>Akcje</th></tr></thead><tbody>';
+
+            penalties.forEach(penalty => {
+                const typeText = ['Zawieszenie 1 dzień', 'Zawieszenie 7 dni', 'Ban', 'Ban z usunięciem'][penalty.type];
+                const status = penalty.isActive ? '<span class="badge bg-danger">Aktywna</span>' : '<span class="badge bg-secondary">Wygasła</span>';
+                const expiresText = penalty.expiresAt ? new Date(penalty.expiresAt).toLocaleDateString('pl-PL') : 'Nigdy';
+
+                html += `<tr>
+                    <td>#${penalty.id}</td>
+                    <td>${penalty.user?.userName ?? '—'}</td>
+                    <td>${typeText}</td>
+                    <td>${status}</td>
+                    <td>${new Date(penalty.appliedAt).toLocaleDateString('pl-PL')}</td>
+                    <td>${expiresText}</td>
+                    <td>${penalty.admin?.userName ?? '—'}</td>
+                    <td>
+                        ${penalty.isActive ? `<button class="btn btn-sm btn-warning" onclick="revokePenalty(${penalty.id})">Uchyl</button>` : ''}
+                    </td>
+                </tr>`;
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        async function revokePenalty(penaltyId) {
+            if (!confirm('Czy na pewno chcesz uchylić tę karę?')) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/penalties/${penaltyId}/revoke`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    alert('Kara została uchylona');
+                    loadPenalties();
+                } else {
+                    alert('Błąd uchylania kary');
+                }
+            } catch (error) {
+                console.error('Błąd:', error);
+                alert('Błąd uchylania kary.');
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const approveMessageBtn = document.getElementById('approveMessageBtn');
+            const rejectMessageBtn = document.getElementById('rejectMessageBtn');
+            const approveUserBtn = document.getElementById('approveUserBtn');
+            const rejectUserBtn = document.getElementById('rejectUserBtn');
+            const applyPenaltyBtn = document.getElementById('applyPenaltyBtn');
+            const confirmPenaltyBtn = document.getElementById('confirmPenaltyBtn');
+
+            approveMessageBtn?.addEventListener('click', approveMessageReport);
+            rejectMessageBtn?.addEventListener('click', rejectMessageReport);
+            approveUserBtn?.addEventListener('click', approveUserReport);
+            rejectUserBtn?.addEventListener('click', rejectUserReport);
+            applyPenaltyBtn?.addEventListener('click', openApplyPenaltyModal);
+            confirmPenaltyBtn?.addEventListener('click', confirmApplyPenalty);
+
+            // Load initial data
+            loadMessageReports();
+            loadUserReports();
+            loadPenalties();
+
+            // Refresh data every 30 seconds
+            setInterval(() => {
+                loadMessageReports();
+                loadUserReports();
+                loadPenalties();
+            }, 30000);
+        });
+
+    </script>
+}

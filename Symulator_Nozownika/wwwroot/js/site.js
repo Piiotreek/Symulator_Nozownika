@@ -36,6 +36,25 @@
         });
     });
 
+    // Intercept clicks on links inside account dropdown and navigate after animation
+    const accountDropdowns = document.querySelectorAll('.navbar-account-dropdown');
+    accountDropdowns.forEach(menu => {
+        menu.querySelectorAll('a[href]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                const href = link.getAttribute('href');
+                if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+                // For logout which is a form button, skip (it's not an <a>)
+                e.preventDefault();
+
+                // Give the dropdown animation time to play, then navigate
+                setTimeout(() => {
+                    window.location.href = href;
+                }, 250);
+            });
+        });
+    });
+
     demoButtons.forEach(button => {
         button.addEventListener('click', async () => {
             button.disabled = true;

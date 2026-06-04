@@ -12,6 +12,16 @@
     var currentUserName = Context.User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
     var currentUserEmail = Context.User.Identity?.Name;
     var avatarPath = Url.Content("~/images/default-avatar.svg");
+    var isAdmin = Context.User.IsInRole("Admin");
+
+    var adminReportingGuideHref = string.Empty;
+    var adminReportsHref = string.Empty;
+    if (Context.Request != null)
+    {
+        var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host.Value}";
+        adminReportingGuideHref = baseUrl + Url.Content("~/Admin/ReportingGuide");
+        adminReportsHref = baseUrl + Url.Content("~/Admin/Reports");
+    }
 
     if (isAuthenticated)
     {
@@ -26,6 +36,7 @@
             {
                 currentUserName = layoutUser.UserName;
                 currentUserEmail = layoutUser.Email;
+                isAdmin = layoutUser.Role == UserRole.Admin;
 
                 if (!string.IsNullOrWhiteSpace(layoutUser.AvatarPath))
                 {
@@ -123,6 +134,17 @@
                                         <li>
                                             <a class="dropdown-item navbar-dropdown-link" asp-controller="Statistics" asp-action="Index">Statystyki</a>
                                         </li>
+
+                                        @if (isAdmin)
+                                        {
+                                            <li><hr class="dropdown-divider" /></li>
+                                            <li>
+                                                <a class="dropdown-item navbar-dropdown-link" href="@adminReportingGuideHref" title="Instrukcja systemu zgłaszania">📋 Instrukcja</a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item navbar-dropdown-link" href="@adminReportsHref" title="Panel administracyjny">⚙️ Panel administracyjny</a>
+                                            </li>
+                                        }
 
                                         @if (!isDemoUser)
                                         {
