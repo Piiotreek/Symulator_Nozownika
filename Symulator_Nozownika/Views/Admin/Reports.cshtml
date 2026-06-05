@@ -94,7 +94,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                <button type="button" class="btn btn-danger" id="approveMessageBtn">Zatwierdź</button>
+                <button type="button" class="btn btn-dark" id="applyMessagePenaltyBtn">Zastosuj karę</button>
                 <button type="button" class="btn btn-warning" id="rejectMessageBtn">Odrzuć</button>
             </div>
         </div>
@@ -114,7 +114,6 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                <button type="button" class="btn btn-danger" id="approveUserBtn">Zatwierdź</button>
                 <button type="button" class="btn btn-warning" id="rejectUserBtn">Odrzuć</button>
                 <button type="button" class="btn btn-dark" id="applyPenaltyBtn">Zastosuj karę</button>
             </div>
@@ -170,7 +169,12 @@
         // Load message reports
         async function loadMessageReports() {
             try {
-                const response = await fetch(`${API_BASE_URL}/messages/pending`);
+                const response = await fetch(`${API_BASE_URL}/messages/pending`, { credentials: 'same-origin' });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    console.error('Failed to load message reports', response.status, err);
+                    return;
+                }
                 const reports = await response.json();
                 renderMessageReports(reports);
             } catch (error) {
@@ -187,7 +191,7 @@
             }
 
             let html = '<div class="table-responsive"><table class="table table-hover">';
-            html += '<thead><tr><th>ID</th><th>Autor</th><th>Zgłaszający</th><th>Powód</th><th>Data</th><th>Akcje</th></tr></thead><tbody>';
+            html += '<thead><tr><th>ID</th><th>Autor</th><th>ZGłASZAJĄCY</th><th>POWÓD</th><th>DATA</th><th>AKCJE</th></tr></thead><tbody>';
 
             reports.forEach(report => {
                 html += `<tr>
@@ -208,9 +212,14 @@
 
         async function viewMessageReport(reportId) {
             try {
-                const response = await fetch(`${API_BASE_URL}/messages/${reportId}`);
+                const response = await fetch(`${API_BASE_URL}/messages/${reportId}`, { credentials: 'same-origin' });
+                if (!response.ok) {
+                    console.error('Failed to fetch message report', response.status);
+                    return;
+                }
                 const report = await response.json();
                 currentReportId = reportId;
+                currentUserId = report.reportedMessage?.user?.id ?? null;
                 currentReportType = 'message';
 
                 const detailsDiv = document.getElementById('messageReportDetails');
@@ -237,6 +246,7 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/messages/${currentReportId}/approve`, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ notes: notes || '' })
                 });
@@ -246,7 +256,9 @@
                     bootstrap.Modal.getInstance(document.getElementById('messageReportModal')).hide();
                     loadMessageReports();
                 } else {
-                    alert('Błąd zatwierdzania');
+                    const err = await response.json().catch(() => ({}));
+                    console.error('Approve failed', response.status, err);
+                    alert('Błąd zatwierdzania: ' + (err.error || err.message || response.status));
                 }
             } catch (error) {
                 console.error('Błąd:', error);
@@ -260,6 +272,7 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/messages/${currentReportId}/reject`, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ notes: notes })
                 });
@@ -269,7 +282,9 @@
                     bootstrap.Modal.getInstance(document.getElementById('messageReportModal')).hide();
                     loadMessageReports();
                 } else {
-                    alert('Błąd odrzucania');
+                    const err = await response.json().catch(() => ({}));
+                    console.error('Reject failed', response.status, err);
+                    alert('Błąd odrzucania: ' + (err.error || err.message || response.status));
                 }
             } catch (error) {
                 console.error('Błąd:', error);
@@ -279,7 +294,12 @@
         // Load user reports
         async function loadUserReports() {
             try {
-                const response = await fetch(`${API_BASE_URL}/users/pending`);
+                const response = await fetch(`${API_BASE_URL}/users/pending`, { credentials: 'same-origin' });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    console.error('Failed to load user reports', response.status, err);
+                    return;
+                }
                 const reports = await response.json();
                 renderUserReports(reports);
             } catch (error) {
@@ -318,7 +338,11 @@
 
         async function viewUserReport(reportId) {
             try {
-                const response = await fetch(`${API_BASE_URL}/users/${reportId}`);
+                const response = await fetch(`${API_BASE_URL}/users/${reportId}`, { credentials: 'same-origin' });
+                if (!response.ok) {
+                    console.error('Failed to fetch user report', response.status);
+                    return;
+                }
                 const report = await response.json();
                 currentReportId = reportId;
                 currentUserId = report.reportedUser.id;
@@ -348,16 +372,24 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/users/${currentReportId}/approve`, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ notes: notes || '' })
                 });
 
                 if (response.ok) {
                     alert('Zgłoszenie zatwierdzone');
-                    bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
-                    loadUserReports();
+                    if (currentReportType === 'message') {
+                        bootstrap.Modal.getInstance(document.getElementById('messageReportModal')).hide();
+                        loadMessageReports();
+                    } else {
+                        bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
+                        loadUserReports();
+                    }
                 } else {
-                    alert('Błąd zatwierdzania');
+                    const err = await response.json().catch(() => ({}));
+                    console.error('Approve user report failed', response.status, err);
+                    alert('Błąd zatwierdzania: ' + (err.error || err.message || response.status));
                 }
             } catch (error) {
                 console.error('Błąd:', error);
@@ -371,6 +403,7 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/users/${currentReportId}/reject`, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ notes: notes })
                 });
@@ -380,7 +413,9 @@
                     bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
                     loadUserReports();
                 } else {
-                    alert('Błąd odrzucania');
+                    const err = await response.json().catch(() => ({}));
+                    console.error('Reject user report failed', response.status, err);
+                    alert('Błąd odrzucania: ' + (err.error || err.message || response.status));
                 }
             } catch (error) {
                 console.error('Błąd:', error);
@@ -397,40 +432,116 @@
             const notes = document.getElementById('penaltyNotes').value;
 
             if (!type || !reason) {
+                showPenaltyFeedback('Wypełnij typ i powód kary.');
+                return;
                 alert('Wypełnij wymagane pola');
                 return;
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/penalties`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: currentUserId,
-                        type: parseInt(type),
-                        reason: reason,
-                        relatedReportId: currentReportId
-                    })
-                });
+                const penaltyUrl = currentReportType === 'message'
+                    ? `${API_BASE_URL}/messages/${currentReportId}/penalty`
+                    : `${API_BASE_URL}/penalties`;
 
-                if (response.ok) {
-                    alert('Kara została zastosowana');
-                    bootstrap.Modal.getInstance(document.getElementById('applyPenaltyModal')).hide();
-                    bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
-                    loadUserReports();
-                    loadPenalties();
-                } else {
-                    alert('Błąd stosowania kary');
+                const payload = {
+                    type: parseInt(type),
+                    reason: reason,
+                    notes: notes
+                };
+
+                if (currentReportType !== 'message') {
+                    payload.userId = currentUserId;
+                    payload.relatedReportId = currentReportId;
+                }
+
+                const confirmBtn = document.getElementById('confirmPenaltyBtn');
+                confirmBtn.disabled = true;
+                try {
+                    const response = await fetch(penaltyUrl, {
+                        method: 'POST',
+                        credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        bootstrap.Modal.getInstance(document.getElementById('applyPenaltyModal')).hide();
+                        document.getElementById('penaltyType').value = '';
+                        document.getElementById('penaltyReason').value = '';
+                        document.getElementById('penaltyNotes').value = '';
+                        showPenaltyFeedback('');
+
+                        if (currentReportType === 'message') {
+                            bootstrap.Modal.getInstance(document.getElementById('messageReportModal')).hide();
+                            loadMessageReports();
+                        } else {
+                            bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
+                            loadUserReports();
+                        }
+
+                        loadPenalties();
+                        return;
+                        const data = await response.json().catch(() => ({}));
+                        let msg = data.message || 'Kara została zastosowana';
+                        if (data.penalty) {
+                            msg += `\nID kary: ${data.penalty.id}`;
+                            if (data.penalty.expiresAt) msg += `\nWygasa: ${new Date(data.penalty.expiresAt).toLocaleString('pl-PL')}`;
+                        }
+                        alert(msg);
+                        bootstrap.Modal.getInstance(document.getElementById('applyPenaltyModal')).hide();
+                        
+                        // Wyczyść pola formularza
+                        document.getElementById('penaltyType').value = '';
+                        document.getElementById('penaltyReason').value = '';
+                        document.getElementById('penaltyNotes').value = '';
+                        
+                        if (currentReportType === 'message') {
+                            bootstrap.Modal.getInstance(document.getElementById('messageReportModal')).hide();
+                            loadMessageReports();
+                        } else {
+                            bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
+                            loadUserReports();
+                        }
+                        
+                        loadPenalties();
+                    } else {
+                        const err = await response.json().catch(() => ({}));
+                        console.error('Apply penalty failed', response.status, err);
+                        alert('Błąd stosowania kary: ' + (err.error || err.message || response.status));
+                    }
+                } catch (error) {
+                    console.error('Błąd:', error);
+                    alert('Błąd podczas stosowania kary. Sprawdź konsolę.');
+                } finally {
+                    document.getElementById('confirmPenaltyBtn').disabled = false;
                 }
             } catch (error) {
                 console.error('Błąd:', error);
             }
         }
 
+        function showPenaltyFeedback(message) {
+            let feedback = document.getElementById('penaltyFeedback');
+            if (!feedback) {
+                feedback = document.createElement('div');
+                feedback.id = 'penaltyFeedback';
+                feedback.className = 'alert alert-danger mt-3';
+                document.querySelector('#applyPenaltyModal .modal-body')?.appendChild(feedback);
+            }
+
+            feedback.textContent = message || '';
+            feedback.classList.toggle('d-none', !message);
+        }
+
         // Load penalties
         async function loadPenalties() {
             try {
-                const response = await fetch(`${API_BASE_URL}/penalties`);
+                const response = await fetch(`${API_BASE_URL}/penalties`, { credentials: 'same-origin' });
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    console.error('Failed to load penalties', response.status, err);
+                    return;
+                }
                 const penalties = await response.json();
                 renderPenalties(penalties);
             } catch (error) {
@@ -478,6 +589,7 @@
             try {
                 const response = await fetch(`${API_BASE_URL}/penalties/${penaltyId}/revoke`, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' }
                 });
 
@@ -485,20 +597,21 @@
                     alert('Kara została uchylona');
                     loadPenalties();
                 } else {
-                    alert('Błąd uchylania kary');
+                    const err = await response.json().catch(() => ({}));
+                    console.error('Revoke failed', response.status, err);
+                    alert('Błąd uchylania kary: ' + (err.error || err.message || response.status));
                 }
             } catch (error) {
                 console.error('Błąd:', error);
             }
         }
 
-        // Event listeners
-        document.getElementById('approveMessageBtn').addEventListener('click', approveMessageReport);
-        document.getElementById('rejectMessageBtn').addEventListener('click', rejectMessageReport);
-        document.getElementById('approveUserBtn').addEventListener('click', approveUserReport);
-        document.getElementById('rejectUserBtn').addEventListener('click', rejectUserReport);
-        document.getElementById('applyPenaltyBtn').addEventListener('click', openApplyPenaltyModal);
-        document.getElementById('confirmPenaltyBtn').addEventListener('click', confirmApplyPenalty);
+        // Event listeners (guarded)
+        const elRejectMessage = document.getElementById('rejectMessageBtn'); if (elRejectMessage) elRejectMessage.addEventListener('click', rejectMessageReport);
+        const elApplyMessagePenalty = document.getElementById('applyMessagePenaltyBtn'); if (elApplyMessagePenalty) elApplyMessagePenalty.addEventListener('click', openApplyPenaltyModal);
+        const elRejectUser = document.getElementById('rejectUserBtn'); if (elRejectUser) elRejectUser.addEventListener('click', rejectUserReport);
+        const elApplyPenalty = document.getElementById('applyPenaltyBtn'); if (elApplyPenalty) elApplyPenalty.addEventListener('click', openApplyPenaltyModal);
+        const elConfirmPenalty = document.getElementById('confirmPenaltyBtn'); if (elConfirmPenalty) elConfirmPenalty.addEventListener('click', confirmApplyPenalty);
 
         // Load initial data
         loadMessageReports();

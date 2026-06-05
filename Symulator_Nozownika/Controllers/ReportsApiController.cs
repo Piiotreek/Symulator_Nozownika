@@ -49,7 +49,7 @@ namespace Symulator_Nozownika.Controllers
 
             var message = await _context.ClubMessages.FindAsync(request.MessageId);
             if (message == null)
-                return NotFound(new { error = "Wiadomość nie istnieje." });
+                return NotFound(new { error = $"Wiadomość ID={request.MessageId} nie istnieje." });
 
             // Prevent reporting your own message
             if (message.UserId == userId)
@@ -68,17 +68,22 @@ namespace Symulator_Nozownika.Controllers
 
             try
             {
+                _logger.LogInformation("ReportMessage: attempting to report messageId={MessageId} by userId={UserId} with reason={Reason}", request.MessageId, userId, normalizedReason);
+                
                 bool success = await _reportService.ReportMessageAsync(request.MessageId, userId, normalizedReason);
                 if (success)
+                {
+                    _logger.LogInformation("ReportMessage: success for messageId={MessageId} by userId={UserId}", request.MessageId, userId);
                     return Ok(new { message = "Wiadomość została zgłoszona." });
+                }
 
                 _logger.LogWarning("ReportMessageAsync returned false for messageId={MessageId} userId={UserId}", request.MessageId, userId);
-                return StatusCode(500, new { error = "Nie udało się zgłosić wiadomości." });
+                return StatusCode(500, new { error = "Nie udało się zgłosić wiadomości (service returned false)." });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while reporting message {MessageId} by user {UserId}", request.MessageId, userId);
-                return StatusCode(500, new { error = "Wystąpił błąd serwera przy zgłaszaniu wiadomości.", details = ex.Message });
+                return StatusCode(500, new { error = "Nie udało się zgłosić wiadomości.", details = ex.Message, stackTrace = ex.StackTrace });
             }
         }
 
@@ -165,6 +170,75 @@ namespace Symulator_Nozownika.Controllers
             return BadRequest(new { error = "Nie udało się odrzucić zgłoszenia." });
         }
 
+        [HttpPost("messages/{id}/penalty")]
+        [Authorize(Policy = "AdminOnly")]
+        public async Task<IActionResult> ApplyPenaltyToMessageReport(int id, [FromBody] ApplyPenaltyRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            int adminId = GetCurrentUserId();
+
+            // Pre-checks to provide meaningful errors
+            var report = await _context.MessageReports
+                .Include(r => r.ReportedMessage)
+                .FirstOrDefaultAsync(r => r.Id == id);
+
+            if (report == null)
+                return NotFound(new { error = "Zgłoszenie nie istnieje." });
+
+            if (report.ReportedMessage == null)
+                return BadRequest(new { error = "Zgłoszona wiadomość nie istnieje." });
+
+            // Validate reason
+            var normalizedReason = (request.Reason ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(normalizedReason))
+                return BadRequest(new { error = "Powód kary nie może być pusty." });
+
+            // Ensure user exists
+            var user = await _context.UserAccounts.FindAsync(report.ReportedMessage.UserId);
+            if (user == null)
+                return BadRequest(new { error = "Autor wiadomości nie istnieje (konto usunięte)." });
+
+            try
+            {
+                bool success = await _reportService.ApplyPenaltyToMessageReportAsync(id, adminId, request.Type, request.Reason, request.Notes);
+                if (success)
+                {
+                    // Try to fetch the penalty that was just created for visibility
+                    var createdPenalty = await _context.UserPenalties
+                        .Where(up => up.UserId == report.ReportedMessage.UserId && up.AdminId == adminId)
+                        .OrderByDescending(up => up.AppliedAt)
+                        .FirstOrDefaultAsync();
+
+                    if (createdPenalty != null)
+                    {
+                        return Ok(new
+                        {
+                            message = "Kara została zastosowana, a wiadomość usunięta.",
+                            penalty = new
+                            {
+                                id = createdPenalty.Id,
+                                type = createdPenalty.Type,
+                                isActive = createdPenalty.IsActive,
+                                expiresAt = createdPenalty.ExpiresAt
+                            }
+                        });
+                    }
+
+                    return Ok(new { message = "Kara została zastosowana, a wiadomość usunięta." });
+                }
+
+                // If service returned false without exception, return generic but include context
+                return BadRequest(new { error = "Nie udało się zastosować kary za wiadomość (serwis nie wykonał operacji)." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ApplyPenaltyToMessageReport error reportId={ReportId} adminId={AdminId}", id, adminId);
+                return StatusCode(500, new { error = "Błąd serwera podczas stosowania kary.", details = ex.Message });
+            }
+        }
+
         [HttpGet("users/pending")]
         [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> GetPendingUserReports()
@@ -226,12 +300,38 @@ namespace Symulator_Nozownika.Controllers
                 return BadRequest(ModelState);
 
             int adminId = GetCurrentUserId();
-            bool success = await _reportService.ApplyPenaltyAsync(request.UserId, adminId, request.Type, request.Reason, request.RelatedReportId);
 
-            if (success)
-                return Ok(new { message = "Kara została zastosowana." });
+            // Validate user exists
+            var user = await _context.UserAccounts.FindAsync(request.UserId);
+            if (user == null)
+                return NotFound(new { error = "Użytkownik do ukarania nie istnieje." });
 
-            return BadRequest(new { error = "Nie udało się zastosować kary." });
+            // Validate reason
+            var normalizedReason = (request.Reason ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(normalizedReason))
+                return BadRequest(new { error = "Powód kary nie może być pusty." });
+
+            // If related report provided, ensure it exists
+            if (request.RelatedReportId.HasValue)
+            {
+                var related = await _context.UserReports.FindAsync(request.RelatedReportId.Value);
+                if (related == null)
+                    return BadRequest(new { error = "Powiązane zgłoszenie nie istnieje." });
+            }
+
+            try
+            {
+                bool success = await _reportService.ApplyPenaltyAsync(request.UserId, adminId, request.Type, request.Reason, request.RelatedReportId, request.Notes);
+                if (success)
+                    return Ok(new { message = "Kara została zastosowana." });
+
+                return BadRequest(new { error = "Nie udało się zastosować kary (serwis nie wykonał operacji)." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ApplyPenalty error userId={UserId} adminId={AdminId}", request.UserId, adminId);
+                return StatusCode(500, new { error = "Błąd serwera podczas stosowania kary.", details = ex.Message });
+            }
         }
 
         [HttpGet("penalties")]
@@ -297,6 +397,7 @@ namespace Symulator_Nozownika.Controllers
             public PenaltyType Type { get; set; }
             public string Reason { get; set; }
             public int? RelatedReportId { get; set; }
+            public string Notes { get; set; } = string.Empty;
         }
     }
 }

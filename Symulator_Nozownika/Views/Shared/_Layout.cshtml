@@ -1,6 +1,7 @@
 ﻿@using System.Security.Claims
 @using Microsoft.EntityFrameworkCore
 @inject Symulator_Nozownika.Data.AppDbContext DbContext
+@inject Symulator_Nozownika.Services.IReportManagementService ReportManagementService
 
 @{
     var isAuthenticated = Context.User.Identity?.IsAuthenticated == true;
@@ -13,6 +14,7 @@
     var currentUserEmail = Context.User.Identity?.Name;
     var avatarPath = Url.Content("~/images/default-avatar.svg");
     var isAdmin = Context.User.IsInRole("Admin");
+    var shouldRedirectToSuspended = false;
 
     var adminReportingGuideHref = string.Empty;
     var adminReportsHref = string.Empty;
@@ -42,6 +44,15 @@
                 {
                     avatarPath = layoutUser.AvatarPath;
                 }
+
+                var activePenalty = (await ReportManagementService.GetActivePenaltiesForUserAsync(currentUserId)).FirstOrDefault();
+                if (activePenalty != null && activePenalty.Type != Symulator_Nozownika.Models.PenaltyType.BanWithDeletion)
+                {
+                    if (currentController != "Account" || currentAction != "Suspended")
+                    {
+                        shouldRedirectToSuspended = true;
+                    }
+                }
             }
         }
     }
@@ -58,6 +69,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/darkly/bootstrap.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Symulator_Nozownika.styles.css" asp-append-version="true" />
+    @if (shouldRedirectToSuspended)
+    {
+        <script>
+            window.location.href = '@Url.Action("Suspended", "Account")';
+        </script>
+    }
 </head>
 <body>
     @if (showTopBar)

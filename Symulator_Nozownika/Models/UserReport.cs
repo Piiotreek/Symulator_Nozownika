@@ -25,7 +25,7 @@ namespace Symulator_Nozownika.Models
 
         [Required]
         [StringLength(500)]
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -40,7 +40,7 @@ namespace Symulator_Nozownika.Models
         public DateTime? ReviewedAt { get; set; }
 
         [StringLength(500)]
-        public string AdminNotes { get; set; }
+        public string AdminNotes { get; set; } = string.Empty;
     }
 
     public enum ReportReason

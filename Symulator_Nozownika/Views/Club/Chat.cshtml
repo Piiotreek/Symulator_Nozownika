@@ -21,10 +21,14 @@
                 {
                     @foreach (var message in Model)
                     {
+                        var adminDeletedMessageContent = ViewBag.AdminDeletedMessageContent as string ?? "*wiadomość usunięta przez administratora*";
+                        var bannedWithDeletedAccountUserIds = ViewBag.BannedWithDeletedAccountUserIds as HashSet<int> ?? new HashSet<int>();
+                        var isAdminDeletedMessage = message.Content == adminDeletedMessageContent;
+                        var displayUserName = bannedWithDeletedAccountUserIds.Contains(message.UserId) ? "ZBANOWANY" : message.User.UserName;
                         <div class="message mb-3" style="padding: 10px; background: white; border-radius: 6px; border-left: 4px solid #007bff;">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
-                                    <strong style="color: #007bff;">@message.User.UserName</strong>
+                                    <strong style="color: #007bff;">@displayUserName</strong>
                                     <span style="color: #999; font-size: 0.85em;">
                                         @message.CreatedAt.ToString("g")
                                         @if (message.EditedAt.HasValue)
@@ -35,6 +39,7 @@
                                 </div>
                                 @{
                                     var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                                    var isOwnMessage = message.UserId.ToString() == currentUserId;
                                     var canDelete = message.UserId.ToString() == currentUserId || 
                                                    (User.IsInRole("Admin") || 
                                                     int.TryParse(currentUserId, out int uid) && 
@@ -46,22 +51,35 @@
                                         <form method="post" action="@Url.Action("DeleteMessage")" style="display: inline;">
                                             <input type="hidden" name="messageId" value="@message.Id" />
                                             <input type="hidden" name="clubId" value="@ViewBag.ClubId" />
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Na pewno chcesz usunąć tę wiadomość?');">×</button>
+                                            <button type="submit" class="btn btn-sm btn-danger">×</button>
                                         </form>
                                     }
+                                    @if (!isAdminDeletedMessage && !isOwnMessage)
+                                    {
                                     <button type="button" class="btn btn-sm btn-warning" 
                                             onclick="reportMessage(@message.Id, '@message.User.UserName')"
                                             title="Zgłoś tę wiadomość">
                                         🚩
                                     </button>
+                                    }
+                                    @if (!isAdminDeletedMessage && !isOwnMessage)
+                                    {
                                     <button type="button" class="btn btn-sm btn-info" 
                                             onclick="reportUser(@message.UserId, '@message.User.UserName')"
                                             title="Zgłoś tego użytkownika">
                                         👤
                                     </button>
+                                    }
                                 </div>
                             </div>
-                            <p class="mt-2 mb-0" style="word-wrap: break-word; color: #000;">@message.Content</p>
+                            @if (isAdminDeletedMessage)
+                            {
+                                <p class="mt-2 mb-0 fst-italic" style="word-wrap: break-word; color: #8B0000; font-weight: bold; text-decoration: line-through;">@adminDeletedMessageContent</p>
+                            }
+                            else
+                            {
+                                <p class="mt-2 mb-0" style="word-wrap: break-word; color: #000;">@message.Content</p>
+                            }
                         </div>
                     }
                 }

@@ -40,7 +40,7 @@ namespace Symulator_Nozownika.Models
         public virtual UserReport? RelatedReport { get; set; }
 
         [StringLength(500)]
-        public string Notes { get; set; }
+        public string Notes { get; set; } = string.Empty;
     }
 
     public enum PenaltyType

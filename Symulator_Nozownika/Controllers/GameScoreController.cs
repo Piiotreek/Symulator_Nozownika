@@ -45,6 +45,19 @@ namespace Symulator_Nozownika.Controllers
             _levelService = levelService;
             _questService = questService;
         }
+
+        private async Task<UserPenalty?> GetActiveSuspensionAsync(int userId)
+        {
+            return await _context.UserPenalties
+                .Where(p => p.UserId == userId
+                    && p.IsActive
+                    && (p.Type == PenaltyType.Suspension1Day || p.Type == PenaltyType.Suspension7Days)
+                    && p.ExpiresAt.HasValue
+                    && p.ExpiresAt > DateTime.UtcNow)
+                .OrderByDescending(p => p.AppliedAt)
+                .FirstOrDefaultAsync();
+        }
+
         private static string NormalizeCountryName(string country)
         {
             return country.Trim();
@@ -247,6 +260,17 @@ namespace Symulator_Nozownika.Controllers
 
             if (!string.IsNullOrEmpty(userId) && int.TryParse(userId, out int parsedUserId))
             {
+                var suspension = await GetActiveSuspensionAsync(parsedUserId);
+                if (suspension != null)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Konto jest zawieszone. Nie możesz teraz grać ani zapisać wyniku.",
+                        expiresAt = suspension.ExpiresAt
+                    });
+                }
+
                 var userAccount = await _context.UserAccounts.FindAsync(parsedUserId);
                 if (userAccount != null)
                 {

@@ -14,6 +14,7 @@ namespace Symulator_Nozownika.Services
         Task<MessageReport> GetMessageReportByIdAsync(int reportId);
         Task<bool> ApproveMessageReportAsync(int reportId, int adminId, string notes);
         Task<bool> RejectMessageReportAsync(int reportId, int adminId, string notes);
+        Task<bool> ApplyPenaltyToMessageReportAsync(int reportId, int adminId, PenaltyType penaltyType, string reason, string notes);
 
         // User Reports
         Task<bool> ReportUserAsync(int reportedUserId, int reportedByUserId, ReportReason reason, string description);
@@ -24,7 +25,7 @@ namespace Symulator_Nozownika.Services
         Task<bool> RejectUserReportAsync(int reportId, int adminId, string notes);
 
         // Penalties
-        Task<bool> ApplyPenaltyAsync(int userId, int adminId, PenaltyType penaltyType, string reason, int? relatedReportId = null);
+        Task<bool> ApplyPenaltyAsync(int userId, int adminId, PenaltyType penaltyType, string reason, int? relatedReportId = null, string notes = "");
         Task<List<UserPenalty>> GetActivePenaltiesForUserAsync(int userId);
         Task<List<UserPenalty>> GetAllPenaltiesAsync();
         Task<UserPenalty> GetPenaltyByIdAsync(int penaltyId);
@@ -35,6 +36,8 @@ namespace Symulator_Nozownika.Services
 
     public class ReportManagementService : IReportManagementService
     {
+        public const string AdminDeletedMessageContent = "*wiadomość usunięta przez administratora*";
+
         private readonly AppDbContext _context;
         private readonly ILogger<ReportManagementService> _logger;
 
@@ -84,7 +87,8 @@ namespace Symulator_Nozownika.Services
                     ReportedByUserId = reportedByUserId,
                     Reason = normalizedReason,
                     CreatedAt = DateTime.UtcNow,
-                    Status = ReportStatus.Pending
+                    Status = ReportStatus.Pending,
+                    AdminNotes = string.Empty
                 };
 
                 _context.MessageReports.Add(report);
@@ -185,6 +189,88 @@ namespace Symulator_Nozownika.Services
             }
         }
 
+        public async Task<bool> ApplyPenaltyToMessageReportAsync(int reportId, int adminId, PenaltyType penaltyType, string reason, string notes)
+        {
+            // Use explicit transaction to ensure atomicity and better diagnostics
+            var report = await _context.MessageReports
+                .Include(mr => mr.ReportedMessage)
+                .FirstOrDefaultAsync(mr => mr.Id == reportId);
+
+            if (report?.ReportedMessage == null)
+            {
+                _logger.LogWarning("ApplyPenaltyToMessageReportAsync: report or message not found id={ReportId}", reportId);
+                return false;
+            }
+
+            var normalizedReason = (reason ?? string.Empty).Trim();
+            if (string.IsNullOrEmpty(normalizedReason))
+            {
+                _logger.LogWarning("ApplyPenaltyToMessageReportAsync: empty reason reportId={ReportId}", reportId);
+                return false;
+            }
+            if (normalizedReason.Length > 500)
+                normalizedReason = normalizedReason.Substring(0, 500);
+
+            var user = await _context.UserAccounts.FindAsync(report.ReportedMessage.UserId);
+            if (user == null)
+            {
+                _logger.LogWarning("ApplyPenaltyToMessageReportAsync: user not found id={UserId}", report.ReportedMessage.UserId);
+                return false;
+            }
+
+            var normalizedNotes = (notes ?? string.Empty).Trim();
+            if (normalizedNotes.Length > 500)
+                normalizedNotes = normalizedNotes.Substring(0, 500);
+
+            var penalty = new UserPenalty
+            {
+                UserId = report.ReportedMessage.UserId,
+                AdminId = adminId,
+                Type = penaltyType,
+                Reason = normalizedReason,
+                AppliedAt = DateTime.UtcNow,
+                RelatedReportId = null,
+                IsActive = true,
+                Notes = normalizedNotes
+            };
+
+            if (penaltyType == PenaltyType.Suspension1Day)
+                penalty.ExpiresAt = DateTime.UtcNow.AddDays(1);
+            else if (penaltyType == PenaltyType.Suspension7Days)
+                penalty.ExpiresAt = DateTime.UtcNow.AddDays(7);
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _context.UserPenalties.Add(penalty);
+
+                report.ReportedMessage.Content = AdminDeletedMessageContent;
+                report.ReportedMessage.EditedAt = DateTime.UtcNow;
+                _context.ClubMessages.Update(report.ReportedMessage);
+
+                report.Status = ReportStatus.Approved;
+                report.ReviewedByAdminId = adminId;
+                report.ReviewedAt = DateTime.UtcNow;
+                report.AdminNotes = normalizedNotes;
+                _context.MessageReports.Update(report);
+
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("ApplyPenaltyToMessageReportAsync: created penalty id={PenaltyId} userId={UserId} type={Type} expiresAt={ExpiresAt}",
+                    penalty.Id, penalty.UserId, penalty.Type, penalty.ExpiresAt);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ApplyPenaltyToMessageReportAsync exception id={ReportId}", reportId);
+                try { await transaction.RollbackAsync(); } catch { }
+                return false;
+            }
+        }
+
         // User Reports
         public async Task<bool> ReportUserAsync(int reportedUserId, int reportedByUserId, ReportReason reason, string description)
         {
@@ -198,8 +284,8 @@ namespace Symulator_Nozownika.Services
                 }
 
                 var normalizedDescription = (description ?? string.Empty).Trim();
-                if (normalizedDescription.Length > 1000)
-                    normalizedDescription = normalizedDescription.Substring(0, 1000);
+                if (normalizedDescription.Length > 500)
+                    normalizedDescription = normalizedDescription.Substring(0, 500);
 
                 var report = new UserReport
                 {
@@ -208,7 +294,8 @@ namespace Symulator_Nozownika.Services
                     Reason = reason,
                     Description = normalizedDescription,
                     CreatedAt = DateTime.UtcNow,
-                    Status = ReportStatus.Pending
+                    Status = ReportStatus.Pending,
+                    AdminNotes = string.Empty
                 };
 
                 _context.UserReports.Add(report);
@@ -307,7 +394,7 @@ namespace Symulator_Nozownika.Services
         }
 
         // Penalties
-        public async Task<bool> ApplyPenaltyAsync(int userId, int adminId, PenaltyType penaltyType, string reason, int? relatedReportId = null)
+        public async Task<bool> ApplyPenaltyAsync(int userId, int adminId, PenaltyType penaltyType, string reason, int? relatedReportId = null, string notes = "")
         {
             try
             {
@@ -318,15 +405,30 @@ namespace Symulator_Nozownika.Services
                     return false;
                 }
 
+                var normalizedReason = (reason ?? string.Empty).Trim();
+                if (string.IsNullOrEmpty(normalizedReason))
+                {
+                    _logger.LogWarning("ApplyPenaltyAsync: empty reason for user={UserId}", userId);
+                    return false;
+                }
+
+                if (normalizedReason.Length > 500)
+                    normalizedReason = normalizedReason.Substring(0, 500);
+
+                var normalizedNotes = (notes ?? string.Empty).Trim();
+                if (normalizedNotes.Length > 500)
+                    normalizedNotes = normalizedNotes.Substring(0, 500);
+
                 var penalty = new UserPenalty
                 {
                     UserId = userId,
                     AdminId = adminId,
                     Type = penaltyType,
-                    Reason = reason,
+                    Reason = normalizedReason,
                     AppliedAt = DateTime.UtcNow,
                     RelatedReportId = relatedReportId,
-                    IsActive = true
+                    IsActive = true,
+                    Notes = normalizedNotes
                 };
 
                 // Calculate expiration time based on penalty type
@@ -337,6 +439,20 @@ namespace Symulator_Nozownika.Services
                 // Ban and BanWithDeletion never expire (ExpiresAt stays null)
 
                 _context.UserPenalties.Add(penalty);
+
+                if (relatedReportId.HasValue)
+                {
+                    var report = await _context.UserReports.FindAsync(relatedReportId.Value);
+                    if (report != null)
+                    {
+                        report.Status = ReportStatus.Approved;
+                        report.ReviewedByAdminId = adminId;
+                        report.ReviewedAt = DateTime.UtcNow;
+                        report.AdminNotes = normalizedNotes;
+                        _context.UserReports.Update(report);
+                    }
+                }
+
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("ApplyPenaltyAsync: penalty id={PenaltyId} user={UserId} admin={AdminId}", penalty.Id, userId, adminId);
                 return true;

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Symulator_Nozownika.Data;
 using Symulator_Nozownika.Models;
+using Symulator_Nozownika.Services;
 using System.Security.Claims;
 
 namespace Symulator_Nozownika.Controllers
@@ -9,10 +10,12 @@ namespace Symulator_Nozownika.Controllers
     public class ClubController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IReportManagementService _reportManagementService;
 
-        public ClubController(AppDbContext context)
+        public ClubController(AppDbContext context, IReportManagementService reportManagementService)
         {
             _context = context;
+            _reportManagementService = reportManagementService;
         }
 
         private int? GetCurrentUserId()
@@ -468,11 +471,33 @@ namespace Symulator_Nozownika.Controllers
                 .OrderBy(m => m.CreatedAt)
                 .ToListAsync();
 
+            var bannedWithDeletedAccountUserIds = await _context.UserPenalties
+                .Where(p => p.IsActive && p.Type == PenaltyType.BanWithDeletion)
+                .Select(p => p.UserId)
+                .ToListAsync();
+
             ViewBag.ClubId = clubId;
             ViewBag.ClubName = club.Name;
+            ViewBag.AdminDeletedMessageContent = ReportManagementService.AdminDeletedMessageContent;
+            ViewBag.BannedWithDeletedAccountUserIds = bannedWithDeletedAccountUserIds.ToHashSet();
+
+            // Provide current user's active penalty info to the view
+            if (userId.HasValue)
+            {
+                try
+                {
+                    var activePenalties = await _reportManagementService.GetActivePenaltiesForUserAsync(userId.Value);
+                    ViewBag.HasActivePenalty = activePenalties != null && activePenalties.Count > 0;
+                    ViewBag.ActivePenalty = activePenalties?.FirstOrDefault();
+                }
+                catch
+                {
+                    ViewBag.HasActivePenalty = false;
+                    ViewBag.ActivePenalty = null;
+                }
+            }
             return View(messages);
         }
-
         [HttpPost]
         public async Task<IActionResult> SendMessage(int clubId, string content)
         {
@@ -501,6 +526,23 @@ namespace Symulator_Nozownika.Controllers
             if (string.IsNullOrWhiteSpace(content))
             {
                 TempData["Error"] = "Wiadomość nie może być pusta.";
+                return RedirectToAction("Chat", new { clubId });
+            }
+
+            // Check for active penalties (suspension/ban) preventing messaging
+            try
+            {
+                var hasPenalty = await _reportManagementService.HasActivePenaltyAsync(userId.Value);
+                if (hasPenalty)
+                {
+                    TempData["Error"] = "Masz aktywną karę i nie możesz wysyłać wiadomości.";
+                    return RedirectToAction("Chat", new { clubId });
+                }
+            }
+            catch
+            {
+                // if penalty check fails, be conservative and block sending
+                TempData["Error"] = "Błąd podczas sprawdzania kar — wysyłanie wiadomości zablokowane.";
                 return RedirectToAction("Chat", new { clubId });
             }
 
@@ -542,7 +584,6 @@ namespace Symulator_Nozownika.Controllers
             _context.ClubMessages.Remove(message);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Wiadomość usunięta.";
             return RedirectToAction("Chat", new { clubId });
         }
     }

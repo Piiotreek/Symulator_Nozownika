@@ -266,6 +266,101 @@ namespace Symulator_Nozownika
                         dbContext.Levels.Update(adminLevel);
                     }
 
+                    // Ensure debug2 account exists (create or update)
+                    var debug2User = dbContext.UserAccounts
+                        .Include(u => u.CoinWallet)
+                        .Include(u => u.Level)
+                        .Include(u => u.Statistics)
+                        .FirstOrDefault(u => u.UserName == "debug2");
+
+                    if (debug2User == null)
+                    {
+                        debug2User = new UserAccount
+                        {
+                            FirstName = "Debug2",
+                            LastName = "Account",
+                            Email = "debug2@example.local",
+                            Country = "Poland",
+                            UserName = "debug2",
+                            Password = "debugdebug2",
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        dbContext.UserAccounts.Add(debug2User);
+                        dbContext.SaveChanges();
+                    }
+                    else
+                    {
+                        // Ensure password is known value for debugging
+                        debug2User.Password = "debugdebug2";
+                        debug2User.Email = debug2User.Email ?? "debug2@example.local";
+                        dbContext.UserAccounts.Update(debug2User);
+                        dbContext.SaveChanges();
+                    }
+
+                    // Ensure debug2 CoinWallet (2000 coins)
+                    var debug2Wallet = dbContext.CoinWallets.FirstOrDefault(c => c.UserId == debug2User.Id);
+                    if (debug2Wallet == null)
+                    {
+                        debug2Wallet = new CoinWallet
+                        {
+                            UserId = debug2User.Id,
+                            Balance = 2000,
+                            UpdatedAt = DateTime.UtcNow
+                        };
+                        dbContext.CoinWallets.Add(debug2Wallet);
+                    }
+                    else
+                    {
+                        debug2Wallet.Balance = 2000;
+                        debug2Wallet.UpdatedAt = DateTime.UtcNow;
+                        dbContext.CoinWallets.Update(debug2Wallet);
+                    }
+
+                    // Ensure debug2 Statistics (level 11, score for level 11)
+                    var debug2Stats = dbContext.UserStatistics.FirstOrDefault(s => s.UserId == debug2User.Id);
+                    // Calculate score needed for level 11
+                    int scoreForLevel11 = levelService.GetTotalScoreThresholdForLevel(11);
+                    if (debug2Stats == null)
+                    {
+                        debug2Stats = new UserStatistics
+                        {
+                            UserId = debug2User.Id,
+                            TotalGamesPlayed = 0,
+                            TotalScore = scoreForLevel11,
+                            TotalClicks = 0,
+                            HighestScore = 0,
+                            TotalPlayTime = TimeSpan.Zero,
+                            CurrentStreak = 0,
+                            LongestStreak = 0,
+                            LastPlayedAt = DateTime.UtcNow
+                        };
+                        dbContext.UserStatistics.Add(debug2Stats);
+                    }
+                    else
+                    {
+                        debug2Stats.TotalScore = scoreForLevel11;
+                        dbContext.UserStatistics.Update(debug2Stats);
+                    }
+
+                    // Ensure debug2 Level (level 11)
+                    var debug2Level = dbContext.Levels.FirstOrDefault(l => l.UserId == debug2User.Id);
+
+                    if (debug2Level == null)
+                    {
+                        debug2Level = new Level
+                        {
+                            UserId = debug2User.Id,
+                        };
+                        levelService.SyncLevel(debug2Level, scoreForLevel11);
+                        dbContext.Levels.Add(debug2Level);
+                    }
+                    else
+                    {
+                        levelService.SyncLevel(debug2Level, scoreForLevel11);
+                        dbContext.Levels.Update(debug2Level);
+                    }
+
                     dbContext.SaveChanges();
                     tx.Commit();
                 }

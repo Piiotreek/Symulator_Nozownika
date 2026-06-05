@@ -383,10 +383,26 @@ namespace Symulator_Nozownika.Controllers
         {
 
             var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             if (string.IsNullOrEmpty(userName))
             {
                 return RedirectToAction("Login");
+            }
+
+            if (int.TryParse(userIdClaim, out var currentUserId))
+            {
+                var suspension = await _context.UserPenalties
+                    .Where(p => p.UserId == currentUserId
+                        && p.IsActive
+                        && (p.Type == PenaltyType.Suspension1Day || p.Type == PenaltyType.Suspension7Days)
+                        && p.ExpiresAt.HasValue
+                        && p.ExpiresAt > DateTime.UtcNow)
+                    .OrderByDescending(p => p.AppliedAt)
+                    .FirstOrDefaultAsync();
+
+                if (suspension != null)
+                    return RedirectToAction("Suspended");
             }
 
             // Pobieramy użytkownika z bazy RAZEM z jego bronią
@@ -405,6 +421,28 @@ namespace Symulator_Nozownika.Controllers
 
             // Przekazujemy obiekt broni (Weapon) jako model do widoku
             return View(user);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Suspended()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var userId))
+                return RedirectToAction("Login");
+
+            var suspension = await _context.UserPenalties
+                .Where(p => p.UserId == userId
+                    && p.IsActive
+                    && (p.Type == PenaltyType.Suspension1Day || p.Type == PenaltyType.Suspension7Days)
+                    && p.ExpiresAt.HasValue
+                    && p.ExpiresAt > DateTime.UtcNow)
+                .OrderByDescending(p => p.AppliedAt)
+                .FirstOrDefaultAsync();
+
+            if (suspension == null)
+                return RedirectToAction("SecurePage");
+
+            return View(suspension);
         }
 
         [Authorize]
@@ -961,4 +999,4 @@ namespace Symulator_Nozownika.Controllers
             return View(vm);
         }
     }
-} 
+}

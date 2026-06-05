@@ -98,7 +98,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                <button type="button" class="btn btn-danger" id="approveMessageBtn">Zatwierdź</button>
+                <button type="button" class="btn btn-dark" id="applyMessagePenaltyBtn">Zastosuj karę</button>
                 <button type="button" class="btn btn-warning" id="rejectMessageBtn">Odrzuć</button>
             </div>
         </div>
@@ -118,7 +118,6 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zamknij</button>
-                <button type="button" class="btn btn-danger" id="approveUserBtn">Zatwierdź</button>
                 <button type="button" class="btn btn-warning" id="rejectUserBtn">Odrzuć</button>
                 <button type="button" class="btn btn-dark" id="applyPenaltyBtn">Zastosuj karę</button>
             </div>
@@ -219,6 +218,7 @@
                 const response = await fetch(`${API_BASE_URL}/messages/${reportId}`);
                 const report = await response.json();
                 currentReportId = reportId;
+                currentUserId = report.reportedMessage?.user?.id ?? null;
                 currentReportType = 'message';
 
                 const detailsDiv = document.getElementById('messageReportDetails');
@@ -369,8 +369,13 @@
 
                 if (response.ok) {
                     alert('Zgłoszenie zatwierdzone');
-                    bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
-                    loadUserReports();
+                    if (currentReportType === 'message') {
+                        bootstrap.Modal.getInstance(document.getElementById('messageReportModal')).hide();
+                        loadMessageReports();
+                    } else {
+                        bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
+                        loadUserReports();
+                    }
                 } else {
                     alert('Błąd zatwierdzania');
                 }
@@ -393,8 +398,13 @@
 
                 if (response.ok) {
                     alert('Zgłoszenie odrzucone');
-                    bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
-                    loadUserReports();
+                    if (currentReportType === 'message') {
+                        bootstrap.Modal.getInstance(document.getElementById('messageReportModal')).hide();
+                        loadMessageReports();
+                    } else {
+                        bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
+                        loadUserReports();
+                    }
                 } else {
                     alert('Błąd odrzucania');
                 }
@@ -414,35 +424,69 @@
             const notes = document.getElementById('penaltyNotes').value;
 
             if (!type || !reason) {
-                alert('Wypełnij wymagane pola');
+                showPenaltyFeedback('Wypełnij typ i powód kary.');
                 return;
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/penalties`, {
+                const penaltyUrl = currentReportType === 'message'
+                    ? `${API_BASE_URL}/messages/${currentReportId}/penalty`
+                    : `${API_BASE_URL}/penalties`;
+
+                const payload = {
+                    type: parseInt(type),
+                    reason: reason,
+                    notes: notes
+                };
+
+                if (currentReportType !== 'message') {
+                    payload.userId = currentUserId;
+                    payload.relatedReportId = currentReportId;
+                }
+
+                const response = await fetch(penaltyUrl, {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: currentUserId,
-                        type: parseInt(type),
-                        reason: reason,
-                        relatedReportId: currentReportId
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 if (response.ok) {
-                    alert('Kara została zastosowana');
                     bootstrap.Modal.getInstance(document.getElementById('applyPenaltyModal')).hide();
-                    bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
-                    loadUserReports();
+                    document.getElementById('penaltyType').value = '';
+                    document.getElementById('penaltyReason').value = '';
+                    document.getElementById('penaltyNotes').value = '';
+                    showPenaltyFeedback('');
+                    if (currentReportType === 'message') {
+                        bootstrap.Modal.getInstance(document.getElementById('messageReportModal')).hide();
+                        loadMessageReports();
+                    } else {
+                        bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
+                        loadUserReports();
+                    }
                     loadPenalties();
                 } else {
-                    alert('Błąd stosowania kary');
+                    const err = await response.json().catch(() => ({}));
+                    console.error('Apply penalty failed', response.status, err);
+                    showPenaltyFeedback(err.error || err.message || `Błąd stosowania kary (${response.status}).`);
                 }
             } catch (error) {
                 console.error('Błąd:', error);
-                alert('Błąd stosowania kary.');
+                showPenaltyFeedback('Błąd stosowania kary. Sprawdź konsolę.');
             }
+        }
+
+        function showPenaltyFeedback(message) {
+            let feedback = document.getElementById('penaltyFeedback');
+            if (!feedback) {
+                feedback = document.createElement('div');
+                feedback.id = 'penaltyFeedback';
+                feedback.className = 'alert alert-danger mt-3';
+                document.querySelector('#applyPenaltyModal .modal-body')?.appendChild(feedback);
+            }
+
+            feedback.textContent = message || '';
+            feedback.classList.toggle('d-none', !message);
         }
 
         // Load penalties
@@ -516,17 +560,15 @@
 
         // Event listeners
         document.addEventListener('DOMContentLoaded', () => {
-            const approveMessageBtn = document.getElementById('approveMessageBtn');
             const rejectMessageBtn = document.getElementById('rejectMessageBtn');
-            const approveUserBtn = document.getElementById('approveUserBtn');
             const rejectUserBtn = document.getElementById('rejectUserBtn');
+            const applyMessagePenaltyBtn = document.getElementById('applyMessagePenaltyBtn');
             const applyPenaltyBtn = document.getElementById('applyPenaltyBtn');
             const confirmPenaltyBtn = document.getElementById('confirmPenaltyBtn');
 
-            approveMessageBtn?.addEventListener('click', approveMessageReport);
             rejectMessageBtn?.addEventListener('click', rejectMessageReport);
-            approveUserBtn?.addEventListener('click', approveUserReport);
             rejectUserBtn?.addEventListener('click', rejectUserReport);
+            applyMessagePenaltyBtn?.addEventListener('click', openApplyPenaltyModal);
             applyPenaltyBtn?.addEventListener('click', openApplyPenaltyModal);
             confirmPenaltyBtn?.addEventListener('click', confirmApplyPenalty);
 
