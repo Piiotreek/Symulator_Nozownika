@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Symulator_Nozownika.Data;
 
@@ -11,9 +12,11 @@ using Symulator_Nozownika.Data;
 namespace Symulator_Nozownika.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260607221100_FixUserPenaltyDeleteBehavior")]
+    partial class FixUserPenaltyDeleteBehavior
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -485,42 +488,32 @@ namespace Symulator_Nozownika.Migrations
                         new
                         {
                             Id = 1,
-                            Description = "Przyspiesza tempo ataku na kilka sekund przed lub w trakcie rundy.",
-                            DurationInSeconds = 6,
+                            Description = "Krótki zastrzyk energii do szybszej rozgrywki.",
+                            DurationInSeconds = 30,
                             EffectStrength = 10,
                             ImageUrl = "/images/scissors.png",
-                            Name = "Adrenalina",
+                            Name = "Mała potka energii",
                             Price = 120
                         },
                         new
                         {
                             Id = 2,
-                            Description = "Podkręca obrażenia i zwiększa szansę na potężny critical hit x3.",
-                            DurationInSeconds = 8,
-                            EffectStrength = 18,
+                            Description = "Mocniejsze uderzenia przez chwilę.",
+                            DurationInSeconds = 45,
+                            EffectStrength = 20,
                             ImageUrl = "/images/dagger.png",
-                            Name = "Furia",
+                            Name = "Potka furii",
                             Price = 260
                         },
                         new
                         {
                             Id = 3,
-                            Description = "Każde trafienie może wywołać niestackujący bleed, który dobija cel z czasem.",
-                            DurationInSeconds = 10,
-                            EffectStrength = 12,
+                            Description = "Pomaga utrzymać rytm i serię kliknięć.",
+                            DurationInSeconds = 60,
+                            EffectStrength = 30,
                             ImageUrl = "/images/katana.png",
-                            Name = "Krwawiące Ostrze",
+                            Name = "Eliksir skupienia",
                             Price = 400
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Description = "Zatrzymuje licznik rundy na 3 sekundy i daje moment na darmowe trafienia.",
-                            DurationInSeconds = 3,
-                            EffectStrength = 3,
-                            ImageUrl = "/images/sword.png",
-                            Name = "Stop-Czas",
-                            Price = 520
                         });
                 });
 
@@ -1095,7 +1088,7 @@ namespace Symulator_Nozownika.Migrations
                             Cooldown = 0.40000000000000002,
                             Damage = 10,
                             ImageUrl = "/images/knife.png",
-                            Name = "Nóż kuchenny"
+                            Name = "Kitchen Knife"
                         },
                         new
                         {
@@ -1103,7 +1096,7 @@ namespace Symulator_Nozownika.Migrations
                             Cooldown = 0.59999999999999998,
                             Damage = 25,
                             ImageUrl = "/images/dagger.png",
-                            Name = "Sztylet"
+                            Name = "Dagger"
                         },
                         new
                         {
@@ -1111,7 +1104,7 @@ namespace Symulator_Nozownika.Migrations
                             Cooldown = 0.90000000000000002,
                             Damage = 45,
                             ImageUrl = "/images/machete.png",
-                            Name = "Maczeta"
+                            Name = "Machete"
                         },
                         new
                         {
@@ -1119,7 +1112,7 @@ namespace Symulator_Nozownika.Migrations
                             Cooldown = 1.1000000000000001,
                             Damage = 55,
                             ImageUrl = "/images/sword.png",
-                            Name = "Miecz"
+                            Name = "Sword"
                         },
                         new
                         {
@@ -1127,7 +1120,7 @@ namespace Symulator_Nozownika.Migrations
                             Cooldown = 1.5,
                             Damage = 70,
                             ImageUrl = "/images/axe.png",
-                            Name = "Topór"
+                            Name = "Axe"
                         },
                         new
                         {
@@ -1135,7 +1128,7 @@ namespace Symulator_Nozownika.Migrations
                             Cooldown = 0.69999999999999996,
                             Damage = 40,
                             ImageUrl = "/images/spear.png",
-                            Name = "Włócznia"
+                            Name = "Spear"
                         },
                         new
                         {
@@ -1143,7 +1136,7 @@ namespace Symulator_Nozownika.Migrations
                             Cooldown = 1.3,
                             Damage = 60,
                             ImageUrl = "/images/cleaver.png",
-                            Name = "Tasak"
+                            Name = "Cleaver"
                         },
                         new
                         {
@@ -1151,7 +1144,7 @@ namespace Symulator_Nozownika.Migrations
                             Cooldown = 2.0,
                             Damage = 90,
                             ImageUrl = "/images/mace.png",
-                            Name = "Buława"
+                            Name = "Mace"
                         },
                         new
                         {
@@ -1167,7 +1160,7 @@ namespace Symulator_Nozownika.Migrations
                             Cooldown = 0.10000000000000001,
                             Damage = 2,
                             ImageUrl = "/images/scissors.png",
-                            Name = "Nożyczki"
+                            Name = "Scissors"
                         });
                 });
 
@@ -1219,7 +1212,7 @@ namespace Symulator_Nozownika.Migrations
                             DamageBonus = 4,
                             Description = "Lepsza krawędź zwiększa obrażenia kuchennego noża.",
                             ImageUrl = "/images/knife.png",
-                            Name = "Ostrzenie noża kuchennego",
+                            Name = "Ostrzenie Kitchen Knife",
                             Price = 300,
                             WeaponId = 1
                         },
@@ -1227,170 +1220,16 @@ namespace Symulator_Nozownika.Migrations
                         {
                             Id = 2,
                             CooldownReduction = 0.050000000000000003,
-                            DamageBonus = 2,
-                            Description = "Pewniejszy chwyt przyspiesza kolejne cięcia kuchennym nożem.",
-                            ImageUrl = "/images/knife.png",
-                            Name = "Lekki chwyt noża kuchennego",
-                            Price = 380,
-                            WeaponId = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            CooldownReduction = 0.050000000000000003,
                             DamageBonus = 6,
                             Description = "Lepszy balans skraca czas odnowienia sztyletu.",
                             ImageUrl = "/images/dagger.png",
-                            Name = "Wyważenie sztyletu",
+                            Name = "Wyważenie Dagger",
                             Price = 650,
                             WeaponId = 2
                         },
                         new
                         {
-                            Id = 4,
-                            CooldownReduction = 0.02,
-                            DamageBonus = 9,
-                            Description = "Dodatkowe nacięcia sprawiają, że sztylet rani znacznie mocniej.",
-                            ImageUrl = "/images/dagger.png",
-                            Name = "Ząbkowane ostrze sztyletu",
-                            Price = 780,
-                            WeaponId = 2
-                        },
-                        new
-                        {
-                            Id = 5,
-                            CooldownReduction = 0.040000000000000001,
-                            DamageBonus = 10,
-                            Description = "Dodatkowa masa zwiększa siłę każdego zamachu maczetą.",
-                            ImageUrl = "/images/machete.png",
-                            Name = "Cięższy grzbiet maczety",
-                            Price = 980,
-                            WeaponId = 3
-                        },
-                        new
-                        {
-                            Id = 6,
-                            CooldownReduction = 0.080000000000000002,
-                            DamageBonus = 6,
-                            Description = "Nowa rękojeść pozwala szybciej wrócić do pozycji po cięciu.",
-                            ImageUrl = "/images/machete.png",
-                            Name = "Rajdowa rękojeść maczety",
-                            Price = 1120,
-                            WeaponId = 3
-                        },
-                        new
-                        {
-                            Id = 7,
-                            CooldownReduction = 0.050000000000000003,
-                            DamageBonus = 11,
-                            Description = "Dłuższe ostrze tnie czyściej i głębiej.",
-                            ImageUrl = "/images/sword.png",
-                            Name = "Polerowana klinga miecza",
-                            Price = 1350,
-                            WeaponId = 4
-                        },
-                        new
-                        {
-                            Id = 8,
-                            CooldownReduction = 0.089999999999999997,
-                            DamageBonus = 7,
-                            Description = "Lepsza kontrola miecza poprawia tempo ataku.",
-                            ImageUrl = "/images/sword.png",
-                            Name = "Stalowy jelec miecza",
-                            Price = 1490,
-                            WeaponId = 4
-                        },
-                        new
-                        {
-                            Id = 9,
-                            CooldownReduction = 0.040000000000000001,
-                            DamageBonus = 15,
-                            Description = "Dodatkowe kolce wzmacniają brutalność uderzeń toporem.",
-                            ImageUrl = "/images/axe.png",
-                            Name = "Kolczaste ostrze topora",
-                            Price = 1750,
-                            WeaponId = 5
-                        },
-                        new
-                        {
-                            Id = 10,
-                            CooldownReduction = 0.10000000000000001,
-                            DamageBonus = 9,
-                            Description = "Lepsze wyważenie pomaga szybciej odzyskać kontrolę nad toporem.",
-                            ImageUrl = "/images/axe.png",
-                            Name = "Przeciwwaga topora",
-                            Price = 1880,
-                            WeaponId = 5
-                        },
-                        new
-                        {
-                            Id = 11,
-                            CooldownReduction = 0.040000000000000001,
-                            DamageBonus = 8,
-                            Description = "Hartowany grot włóczni lepiej przebija cel.",
-                            ImageUrl = "/images/spear.png",
-                            Name = "Wzmocniony grot włóczni",
-                            Price = 920,
-                            WeaponId = 6
-                        },
-                        new
-                        {
-                            Id = 12,
-                            CooldownReduction = 0.080000000000000002,
-                            DamageBonus = 5,
-                            Description = "Lżejszy drzewiec zwiększa szybkość kolejnego pchnięcia.",
-                            ImageUrl = "/images/spear.png",
-                            Name = "Elastyczny drzewiec włóczni",
-                            Price = 1080,
-                            WeaponId = 6
-                        },
-                        new
-                        {
-                            Id = 13,
-                            CooldownReduction = 0.050000000000000003,
-                            DamageBonus = 12,
-                            Description = "Masakrycznie ostra stal zwiększa obrażenia tasaka.",
-                            ImageUrl = "/images/cleaver.png",
-                            Name = "Rzeźnicka stal tasaka",
-                            Price = 1420,
-                            WeaponId = 7
-                        },
-                        new
-                        {
-                            Id = 14,
-                            CooldownReduction = 0.10000000000000001,
-                            DamageBonus = 7,
-                            Description = "Pewniejszy uchwyt skraca czas między kolejnymi zamachami.",
-                            ImageUrl = "/images/cleaver.png",
-                            Name = "Gumowany chwyt tasaka",
-                            Price = 1560,
-                            WeaponId = 7
-                        },
-                        new
-                        {
-                            Id = 15,
-                            CooldownReduction = 0.050000000000000003,
-                            DamageBonus = 18,
-                            Description = "Cięższy rdzeń buławy robi ogromną różnicę przy trafieniu.",
-                            ImageUrl = "/images/mace.png",
-                            Name = "Żelazny rdzeń buławy",
-                            Price = 2200,
-                            WeaponId = 8
-                        },
-                        new
-                        {
-                            Id = 16,
-                            CooldownReduction = 0.12,
-                            DamageBonus = 10,
-                            Description = "Nowa owijka poprawia rytm i skraca przerwy między ciosami.",
-                            ImageUrl = "/images/mace.png",
-                            Name = "Skórzana owijka buławy",
-                            Price = 2380,
-                            WeaponId = 8
-                        },
-                        new
-                        {
-                            Id = 17,
+                            Id = 3,
                             CooldownReduction = 0.080000000000000002,
                             DamageBonus = 12,
                             Description = "Wzmocnione ostrze zapewnia dodatkową moc katanie.",
@@ -1398,39 +1237,6 @@ namespace Symulator_Nozownika.Migrations
                             Name = "Hartowana Katana",
                             Price = 1800,
                             WeaponId = 9
-                        },
-                        new
-                        {
-                            Id = 18,
-                            CooldownReduction = 0.11,
-                            DamageBonus = 8,
-                            Description = "Precyzyjna pochwa pozwala wrócić do ataku niemal natychmiast.",
-                            ImageUrl = "/images/katana.png",
-                            Name = "Błyskawiczna pochwa Katana",
-                            Price = 1940,
-                            WeaponId = 9
-                        },
-                        new
-                        {
-                            Id = 19,
-                            CooldownReduction = 0.01,
-                            DamageBonus = 2,
-                            Description = "Usztywnienie nożyc poprawia siłę cięcia mimo ich lekkości.",
-                            ImageUrl = "/images/scissors.png",
-                            Name = "Tytanowy nit Scissors",
-                            Price = 240,
-                            WeaponId = 10
-                        },
-                        new
-                        {
-                            Id = 20,
-                            CooldownReduction = 0.029999999999999999,
-                            DamageBonus = 1,
-                            Description = "Nowa sprężyna przyspiesza każde następne kliknięcie nożycami.",
-                            ImageUrl = "/images/scissors.png",
-                            Name = "Sprężyna Scissors",
-                            Price = 320,
-                            WeaponId = 10
                         });
                 });
 

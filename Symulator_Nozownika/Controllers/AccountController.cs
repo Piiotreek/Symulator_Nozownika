@@ -90,6 +90,24 @@ namespace Symulator_Nozownika.Controllers
             return wallet;
         }
 
+        private static (int DamageBonus, double CooldownReduction) GetSelectedWeaponUpgradeBonuses(UserAccount user)
+        {
+            if (user.SelectedWeaponId == null)
+            {
+                return (0, 0);
+            }
+
+            var matchingUpgrades = user.PurchasedWeaponUpgrades
+                .Where(pwu => pwu.WeaponUpgrade?.WeaponId == user.SelectedWeaponId)
+                .Select(pwu => pwu.WeaponUpgrade)
+                .Where(upgrade => upgrade != null)
+                .ToList();
+
+            return (
+                matchingUpgrades.Sum(upgrade => upgrade!.DamageBonus),
+                matchingUpgrades.Sum(upgrade => upgrade!.CooldownReduction));
+        }
+
         private async Task<ShopViewModel> BuildShopViewModelAsync(UserAccount? user)
         {
             var userId = user?.Id ?? 0;
@@ -409,6 +427,10 @@ namespace Symulator_Nozownika.Controllers
             var user = await _context.UserAccounts
                 .Include(u => u.SelectedWeapon) // To załaduje statystyki broni
                 .Include(u => u.CoinWallet)
+                .Include(u => u.PurchasedPotions)
+                    .ThenInclude(pp => pp.Potion)
+                .Include(u => u.PurchasedWeaponUpgrades)
+                    .ThenInclude(pwu => pwu.WeaponUpgrade)
                 .FirstOrDefaultAsync(u => u.UserName == userName);
 
             if (user == null || user.SelectedWeapon == null)
@@ -416,6 +438,24 @@ namespace Symulator_Nozownika.Controllers
                 // Jeśli nie wybrał broni, wyślij go do wyboru
                 return RedirectToAction("SelectWeapon");
             }
+
+            var (damageBonus, cooldownReduction) = GetSelectedWeaponUpgradeBonuses(user);
+            var effectiveDamage = (user.SelectedWeapon?.Damage ?? 2) + damageBonus;
+            var effectiveCooldown = Math.Max(0.05, (user.SelectedWeapon?.Cooldown ?? 1.0) - cooldownReduction);
+
+            ViewBag.SelectedWeaponDamageBonus = damageBonus;
+            ViewBag.SelectedWeaponCooldownReduction = cooldownReduction;
+            ViewBag.EffectiveWeaponDamage = effectiveDamage;
+            ViewBag.EffectiveWeaponCooldown = effectiveCooldown;
+            ViewBag.SelectedWeaponUpgrades = user.PurchasedWeaponUpgrades
+                .Where(pwu => pwu.WeaponUpgrade?.WeaponId == user.SelectedWeaponId)
+                .Select(pwu => pwu.WeaponUpgrade!)
+                .OrderBy(upgrade => upgrade.Name)
+                .ToList();
+            ViewBag.AvailablePotions = user.PurchasedPotions
+                .Where(pp => pp.Quantity > 0)
+                .OrderBy(pp => pp.Potion.Price)
+                .ToList();
 
             ViewBag.Name = userName;
 
@@ -857,10 +897,65 @@ namespace Symulator_Nozownika.Controllers
             return RedirectToAction("Shop");
         }
 
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> UsePotion([FromBody] UsePotionRequest request)
+        {
+            if (User.FindFirst("IsDemo")?.Value == "true")
+            {
+                return Json(new { success = false, message = "Potki są niedostępne w trybie demo." });
+            }
+
+            var userName = User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
+            if (string.IsNullOrEmpty(userName))
+            {
+                return Json(new { success = false, message = "Musisz być zalogowany." });
+            }
+
+            var user = await _context.UserAccounts
+                .Include(u => u.PurchasedPotions)
+                    .ThenInclude(pp => pp.Potion)
+                .FirstOrDefaultAsync(u => u.UserName == userName);
+
+            if (user == null)
+            {
+                return Json(new { success = false, message = "Nie znaleziono użytkownika." });
+            }
+
+            var purchasedPotion = user.PurchasedPotions.FirstOrDefault(pp => pp.PotionId == request.PotionId && pp.Quantity > 0);
+            if (purchasedPotion?.Potion == null)
+            {
+                return Json(new { success = false, message = "Nie masz tej potki na stanie." });
+            }
+
+            purchasedPotion.Quantity -= 1;
+            if (purchasedPotion.Quantity <= 0)
+            {
+                _context.PurchasedPotions.Remove(purchasedPotion);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Json(new
+            {
+                success = true,
+                potionId = purchasedPotion.PotionId,
+                potionName = purchasedPotion.Potion.Name,
+                effectStrength = purchasedPotion.Potion.EffectStrength,
+                durationInSeconds = purchasedPotion.Potion.DurationInSeconds,
+                remainingQuantity = Math.Max(0, purchasedPotion.Quantity)
+            });
+        }
+
         // Dodaj tę klasę na końcu AccountController (przed zamykającym })
         public class FavoriteRequest
         {
             public int WeaponId { get; set; }
+        }
+
+        public class UsePotionRequest
+        {
+            public int PotionId { get; set; }
         }
 
         [Authorize]

@@ -101,23 +101,32 @@
                     </button>
 
                     <div class="navbar-collapse collapse app-navbar-collapse">
-                        <ul class="navbar-nav me-auto">
+                        <ul class="navbar-nav me-auto align-items-sm-center gap-sm-2">
+                            <li class="nav-item nav-item-play">
+                                @if (isAuthenticated)
+                                {
+                                    <a class="nav-link navbar-main-link play-cta-button play-cta-button-nav" asp-area="" asp-controller="Account" asp-action="SecurePage">⚔️ Zagraj teraz</a>
+                                }
+                                else
+                                {
+                                    <a class="nav-link navbar-main-link play-cta-button play-cta-button-nav" asp-area="" asp-controller="Account" asp-action="Login">⚔️ Zacznij grać</a>
+                                }
+                            </li>
                             <li class="nav-item">
                                 <a class="nav-link navbar-main-link" asp-area="" asp-controller="GameScore" asp-action="Highscores">Ranking</a>
                             </li>
-
+                            <li class="nav-item">
+                                <a class="nav-link navbar-main-link" asp-area="" asp-controller="Account" asp-action="Shop">Sklep</a>
+                            </li>
                             @if (!isDemoUser)
                             {
                                 <li class="nav-item">
                                     <a class="nav-link navbar-main-link" asp-area="" asp-controller="Quest" asp-action="Index">Questy</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link navbar-main-link" asp-area="" asp-controller="Account" asp-action="Shop">Sklep</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link navbar-main-link" asp-area="" asp-controller="Club" asp-action="Index">Kluby</a>
-                                </li>
                             }
+                            <li class="nav-item">
+                                <a class="nav-link navbar-main-link" asp-area="" asp-controller="Club" asp-action="Index">Kluby</a>
+                            </li>
                         </ul>
 
                         <div class="d-flex align-items-center ms-auto gap-3 navbar-account-wrapper">
@@ -192,15 +201,15 @@
                                     else
                                     {
                                         <li>
-                                            <a class="dropdown-item navbar-dropdown-link" asp-area="" asp-controller="Account" asp-action="Login">Login</a>
+                                            <a class="dropdown-item navbar-dropdown-link" asp-area="" asp-controller="Account" asp-action="Login">Logowanie</a>
                                         </li>
                                         <li>
-                                            <a class="dropdown-item navbar-dropdown-link" asp-area="" asp-controller="Account" asp-action="Registration">Register</a>
+                                            <a class="dropdown-item navbar-dropdown-link" asp-area="" asp-controller="Account" asp-action="Registration">Rejestracja</a>
                                         </li>
                                         <li><hr class="dropdown-divider" /></li>
                                         <li class="px-3 pb-3 pt-3">
                                             <button type="button" class="btn navbar-dropdown-action-btn" data-start-demo>
-                                                Login demo
+                                                Zagraj w demo
                                             </button>
                                         </li>
                                     }

@@ -1,17 +1,17 @@
 @model List<ClubListViewModel>
 
 @{
-    ViewData["Title"] = "Clubs";
+    ViewData["Title"] = "Kluby";
 }
 
 <div class="container mt-5">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h1>🏛️ Clubs</h1>
+            <h1>🏛️ Kluby</h1>
         </div>
         <div class="col-md-4 text-end">
             <a href="@Url.Action("Create", "Club")" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Create New Club
+                <i class="fas fa-plus"></i> Załóż nowy klub
             </a>
         </div>
     </div>
@@ -19,7 +19,7 @@
     @if (Model.Count == 0)
     {
         <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> No clubs found. Be the first to create one!
+            <i class="fas fa-info-circle"></i> Nie znaleziono żadnych klubów. Załóż pierwszy!
         </div>
     }
     else
@@ -34,7 +34,7 @@
                         </div>
                         <div class="card-body">
                             <p class="card-text text-muted">
-                                <small>Founded by <strong>@club.OwnerName</strong></small>
+                                <small>Założony przez <strong>@club.OwnerName</strong></small>
                             </p>
                             
                             @if (!string.IsNullOrEmpty(club.Description))
@@ -45,7 +45,7 @@
                             <div class="mb-3">
                                 <small class="text-muted">
                                     <i class="fas fa-users"></i> 
-                                    Members: <strong>@club.MemberCount/@club.MaxMembers</strong>
+                                    Członkowie: <strong>@club.MemberCount/@club.MaxMembers</strong>
                                 </small>
                             </div>
 
@@ -61,29 +61,29 @@
                             <p class="card-text">
                                 <small>
                                     <i class="fas fa-chair"></i>
-                                    Available spots: <strong>@club.AvailableSpots</strong>
+                                    Wolne miejsca: <strong>@club.AvailableSpots</strong>
                                     @if (club.IsFull)
                                     {
-                                        <span class="badge bg-danger">Full</span>
+                                        <span class="badge bg-danger">Pełny</span>
                                     }
                                 </small>
                             </p>
 
                             <small class="text-muted">
-                                Created: <strong>@club.CreatedAt.ToString("yyyy-MM-dd")</strong>
+                                Utworzono: <strong>@club.CreatedAt.ToString("yyyy-MM-dd")</strong>
                             </small>
                         </div>
                         <div class="card-footer bg-light">
                             <div class="btn-group w-100" role="group">
                                 <a href="@Url.Action("Details", "Club", new { id = club.Id })" 
                                    class="btn btn-sm btn-outline-primary">
-                                    <i class="fas fa-eye"></i> View
+                                    <i class="fas fa-eye"></i> Zobacz
                                 </a>
                                 
                                 @if (club.IsMember)
                                 {
                                     <span class="btn btn-sm btn-outline-success disabled">
-                                        <i class="fas fa-check"></i> Member
+                                        <i class="fas fa-check"></i> Członek
                                     </span>
                                 }
                                 else if (!club.IsFull)
@@ -92,7 +92,7 @@
                                           style="display: inline-block;" class="w-100">
                                         <input type="hidden" name="clubId" value="@club.Id" />
                                         <button type="submit" class="btn btn-sm btn-outline-success w-100">
-                                            <i class="fas fa-plus"></i> Join
+                                            <i class="fas fa-plus"></i> Dołącz
                                         </button>
                                     </form>
                                 }

@@ -69,23 +69,23 @@
                         <thead>
                             <tr>
                                 <th style="width: 10%;" class="sortable-header" data-column="place">
-                                    Place
+                                    Miejsce
                                     <span class="sort-indicator"></span>
                                 </th>
                                 <th style="width: 35%;" class="sortable-header" data-column="playerName">
-                                    Player
+                                    Gracz
                                     <span class="sort-indicator"></span>
                                 </th>
                                 <th style="width: 20%;" class="sortable-header" data-column="country">
-                                    Country
+                                    Kraj
                                     <span class="sort-indicator"></span>
                                 </th>
                                 <th style="width: 15%;" class="sortable-header" data-column="score">
-                                    Score
+                                    Wynik
                                     <span class="sort-indicator"></span>
                                 </th>
                                 <th style="width: 20%;" class="sortable-header" data-column="date">
-                                    Date
+                                    Data
                                     <span class="sort-indicator"></span>
                                 </th>
                             </tr>
@@ -166,15 +166,15 @@
                         <thead>
                             <tr>
                                 <th class="sortable-header" data-column="rank">
-                                    Rank
+                                    Miejsce
                                     <span class="sort-indicator"></span>
                                 </th>
                                 <th class="sortable-header" data-column="playerName">
-                                    Player
+                                    Gracz
                                     <span class="sort-indicator"></span>
                                 </th>
                                 <th class="sortable-header" data-column="score">
-                                    Score
+                                    Wynik
                                     <span class="sort-indicator"></span>
                                 </th>
                             </tr>
@@ -251,13 +251,14 @@
             else
             {
                 <div class="alert alert-info text-center">
-                    <p>No highscores to display.</p>
+                    <p>Brak wyników do wyświetlenia.</p>
                 </div>
             }
 
-            <div class="text-center mt-4">
-                <a asp-controller="Account" asp-action="SelectWeapon" class="btn btn-warning btn-lg">Zagraj</a>
-                <a asp-controller="Report" asp-action="HighscoresPdf" class="btn btn-outline-light btn-lg ms-2">📥 Eksportuj PDF</a>
+            <div class="text-center mt-4 d-flex flex-wrap justify-content-center align-items-center gap-3">
+                <a asp-controller="Account" asp-action="SecurePage" class="play-cta-button play-cta-button-lg">⚔️ Wskocz do gry</a>
+                <a asp-controller="Account" asp-action="SelectWeapon" class="btn btn-outline-warning btn-lg">Zmień broń</a>
+                <a asp-controller="Report" asp-action="HighscoresPdf" class="btn btn-outline-light btn-lg">📥 Eksportuj PDF</a>
             </div>
         </div>
     </div>

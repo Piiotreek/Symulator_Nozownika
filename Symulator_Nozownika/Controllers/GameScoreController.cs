@@ -147,6 +147,8 @@ namespace Symulator_Nozownika.Controllers
             var user = await _context.UserAccounts
                 .Include(u => u.SelectedWeapon)
                 .Include(u => u.CoinWallet)
+                .Include(u => u.PurchasedWeaponUpgrades)
+                    .ThenInclude(pwu => pwu.WeaponUpgrade)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user == null)
@@ -224,7 +226,10 @@ namespace Symulator_Nozownika.Controllers
             var rawScore = Math.Max(0, request.Score);
             var playTimeSeconds = Math.Max(0, request.PlayTimeSeconds);
             var clicks = Math.Max(0, request.Clicks);
-            var weaponDamage = user.SelectedWeapon?.Damage ?? 2;
+            var weaponDamageBonus = user.PurchasedWeaponUpgrades
+                .Where(pwu => pwu.WeaponUpgrade?.WeaponId == user.SelectedWeaponId)
+                .Sum(pwu => pwu.WeaponUpgrade?.DamageBonus ?? 0);
+            var weaponDamage = (user.SelectedWeapon?.Damage ?? 2) + weaponDamageBonus;
             var coinReward = _levelService.GetCoinReward(rawScore, weaponDamage);
 
             // Kenshi-style diminishing returns: XP (tu: przyrost TotalScore) maleje wraz z levelem.

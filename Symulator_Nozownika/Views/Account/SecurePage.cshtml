@@ -3,18 +3,23 @@
 @{
     ViewData["Title"] = "Symulator Nożownika - Walka";
     var weaponName = Model.SelectedWeapon?.Name ?? "Pięści";
-    var weaponDmg = Model.SelectedWeapon?.Damage ?? 10;
-    var weaponCd = Model.SelectedWeapon?.Cooldown.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) ?? "1.0";
+    var weaponDmg = (int?)ViewBag.EffectiveWeaponDamage ?? Model.SelectedWeapon?.Damage ?? 10;
+    var weaponCdValue = (double?)ViewBag.EffectiveWeaponCooldown ?? Model.SelectedWeapon?.Cooldown ?? 1.0;
+    var weaponCd = weaponCdValue.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
     var weaponImg = Model.SelectedWeapon?.ImageUrl ?? "/images/default.png";
     var coinBalance = Model.CoinWallet?.Balance ?? 0;
     var isDemoUser = Model.IsDemo;
+    var damageBonus = (int?)ViewBag.SelectedWeaponDamageBonus ?? 0;
+    var cooldownReduction = (double?)ViewBag.SelectedWeaponCooldownReduction ?? 0;
+    var selectedWeaponUpgrades = ViewBag.SelectedWeaponUpgrades as IEnumerable<Symulator_Nozownika.Models.WeaponUpgrade> ?? Enumerable.Empty<Symulator_Nozownika.Models.WeaponUpgrade>();
+    var availablePotions = ViewBag.AvailablePotions as IEnumerable<Symulator_Nozownika.Models.PurchasedPotion> ?? Enumerable.Empty<Symulator_Nozownika.Models.PurchasedPotion>();
 }
 
 <div class="container mt-4">
     @if (isDemoUser)
     {
         <div class="alert alert-info alert-dismissible fade show" role="alert">
-            <strong>🎮 Demo Mode</strong> - Limited features. Change weapons and access to clans/rankings disabled. Max 3 games per day.
+            <strong>🎮 Tryb demo</strong> - Ograniczone funkcje. Zmiana broni oraz dostęp do klubów i rankingów są wyłączone. Maksymalnie 3 gry dziennie.
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     }
@@ -39,6 +44,10 @@
                 <div>
                     <h4 class="mb-0">@weaponName</h4>
                     <small class="text-info">DMG: @weaponDmg | CD: @weaponCd s</small>
+                    @if (damageBonus > 0 || cooldownReduction > 0)
+                    {
+                        <div class="small text-warning mt-1">Bonusy: +@damageBonus DMG | -@cooldownReduction.ToString("F2") s CD</div>
+                    }
                 </div>
             </div>
         </div>
@@ -56,9 +65,87 @@
         </div>
     </div>
 
+    @if (!isDemoUser)
+    {
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="card bg-dark text-white border-gold h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="text-warning mb-3">Aktywne ulepszenia</h5>
+                        @if (selectedWeaponUpgrades.Any())
+                        {
+                            <div class="d-flex flex-column gap-2">
+                                @foreach (var upgrade in selectedWeaponUpgrades)
+                                {
+                                    <div class="upgrade-pill">
+                                        <strong>@upgrade.Name</strong>
+                                        <span class="text-muted d-block small">+@upgrade.DamageBonus DMG | -@upgrade.CooldownReduction.ToString("F2") s CD</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0">Brak aktywnych ulepszeń dla aktualnie wybranej broni.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card bg-dark text-white border-gold h-100 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+                            <h5 class="text-warning mb-0">Pas potek</h5>
+                            <span id="active-potion-status" class="badge bg-secondary">Brak aktywnej potki</span>
+                        </div>
+                        <div id="potion-effect-visual" class="potion-effect-visual mb-3 d-none"></div>
+                        <div id="potion-belt" class="d-flex flex-column gap-2">
+                            @if (availablePotions.Any())
+                            {
+                                @foreach (var potionEntry in availablePotions)
+                                {
+                                    var potion = potionEntry.Potion;
+                                    <button type="button"
+                                            class="btn potion-belt-item text-start"
+                                            data-potion-id="@potion.Id"
+                                            data-effect-strength="@potion.EffectStrength"
+                                            data-duration="@potion.DurationInSeconds">
+                                        <span class="d-flex justify-content-between align-items-center gap-3">
+                                            <span>
+                                                <strong>@potion.Name</strong>
+                                                <span class="d-block small text-muted">@potion.Description</span>
+                                            </span>
+                                            <span class="text-end small">
+                                                <span class="badge bg-danger-subtle text-warning d-block mb-1">+@potion.EffectStrength%</span>
+                                                <span class="badge bg-info-subtle text-info">@potion.DurationInSeconds s</span>
+                                            </span>
+                                        </span>
+                                        <span class="d-block mt-2 small text-light">Sztuk: <span class="potion-quantity">@potionEntry.Quantity</span></span>
+                                    </button>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-muted">Nie masz żadnych potek. Dokup je w sklepie przed kolejną walką.</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
     <div class="row justify-content-center">
         <div class="col-lg-8 shadow-lg p-4 bg-light rounded relative-container">
             <div id="cooldown-overlay"></div>
+            <div id="round-countdown-overlay" class="round-countdown-overlay d-none">
+                <div class="round-countdown-inner">
+                    <div class="round-countdown-label">Przygotuj się</div>
+                    <div id="round-countdown-value" class="round-countdown-value">3</div>
+                    <div class="round-countdown-hint">Użyj potki i ustaw celownik</div>
+                </div>
+            </div>
+            <div id="hit-feedback-layer" class="hit-feedback-layer"></div>
 
             <div id="graphic-container" class="text-center">
                 @await Html.PartialAsync("_HugeGraphic")
@@ -77,8 +164,8 @@
             }
             else
             {
-                <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Disabled in demo mode">Zmień broń</button>
-                <button type="button" class="btn btn-outline-danger btn-sm ml-2" disabled title="Disabled in demo mode">Usuń konto</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Niedostępne w trybie demo">Zmień broń</button>
+                <button type="button" class="btn btn-outline-danger btn-sm ml-2" disabled title="Niedostępne w trybie demo">Usuń konto</button>
                 <a href="javascript:history.back()" class="btn btn-outline-info btn-sm ml-2">Wróć</a>
             }
         </div>
@@ -114,7 +201,7 @@
 
     // Dane z C# przelane do JS
     const weaponDamageBase = @weaponDmg;
-    const cooldownTime = @weaponCd * 1000; // zamiana na milisekundy
+    const cooldownTimeBase = @weaponCd * 1000; // zamiana na milisekundy
 
     let hp = 10000;
     let timeLeft = 15;
@@ -122,11 +209,25 @@
     let gameActive = false;
     let canAttack = true;
     let timerInterval;
+    let countdownInterval;
+    let activePotionTimeout;
+    let activePotionCooldownMultiplier = 1;
+    let activePotionDamageMultiplier = 1;
+    let countdownActive = false;
+    let pendingRoundStart = false;
+    let criticalHitChance = 0;
+    let bleedTickDamage = 0;
+    let bleedInterval;
+    let freezeRoundsUntil = 0;
 
     const hpDisplay = document.getElementById('hp-value');
     const timerDisplay = document.getElementById('timer-value');
     const startBtn = document.getElementById('btn-start');
     const cooldownOverlay = document.getElementById('cooldown-overlay');
+    const activePotionStatus = document.getElementById('active-potion-status');
+    const roundCountdownOverlay = document.getElementById('round-countdown-overlay');
+    const roundCountdownValue = document.getElementById('round-countdown-value');
+    const potionEffectVisual = document.getElementById('potion-effect-visual');
 
     // Initialize demo games display if demo user
     if (isDemoUser) {
@@ -147,21 +248,277 @@
         "tchawica": 2.5, "kosci": 0.8, "pluca": 2.2, "default": 1.0
     };
 
-    function startGame() {
-        hp = 10000;
-        timeLeft = 15;
+    function getCurrentCooldownTime() {
+        return Math.max(50, Math.round(cooldownTimeBase * activePotionCooldownMultiplier));
+    }
+
+    function activatePotionEffects(potionName, effectStrength, durationInSeconds) {
+        clearTimeout(activePotionTimeout);
+
+        activePotionDamageMultiplier = 1;
+        activePotionCooldownMultiplier = 1;
+        criticalHitChance = 0;
+        bleedTickDamage = 0;
+
+        switch (potionName) {
+            case 'Adrenalina':
+                activePotionCooldownMultiplier = Math.max(0.45, 1 - (Math.max(0, effectStrength) / 100));
+                break;
+            case 'Furia':
+                activePotionDamageMultiplier = 1 + (Math.max(0, effectStrength) / 100);
+                criticalHitChance = 0.14;
+                break;
+            case 'Krwawiące Ostrze':
+                bleedTickDamage = Math.max(1, effectStrength);
+                break;
+            case 'Stop-Czas':
+                freezeRoundsUntil = Date.now() + (durationInSeconds * 1000);
+                break;
+            default:
+                activePotionDamageMultiplier = 1 + (Math.max(0, effectStrength) / 100);
+                activePotionCooldownMultiplier = Math.max(0.45, 1 - ((Math.max(0, effectStrength) / 100) * 0.65));
+                break;
+        }
+
+        if (activePotionStatus) {
+            activePotionStatus.className = 'badge bg-warning text-dark';
+            activePotionStatus.textContent = `${potionName}: ${getPotionStatusLabel(potionName, effectStrength, durationInSeconds)}`;
+        }
+
+        if (potionEffectVisual) {
+            potionEffectVisual.className = `potion-effect-visual mb-3 ${getPotionVisualClass(potionName)}`;
+            potionEffectVisual.textContent = getPotionVisualText(potionName, effectStrength, durationInSeconds);
+        }
+
+        activePotionTimeout = setTimeout(() => {
+            activePotionDamageMultiplier = 1;
+            activePotionCooldownMultiplier = 1;
+            criticalHitChance = 0;
+            bleedTickDamage = 0;
+            freezeRoundsUntil = 0;
+            if (activePotionStatus) {
+                activePotionStatus.className = 'badge bg-secondary';
+                activePotionStatus.textContent = 'Brak aktywnej potki';
+            }
+            if (potionEffectVisual) {
+                potionEffectVisual.className = 'potion-effect-visual mb-3 d-none';
+                potionEffectVisual.textContent = '';
+            }
+        }, durationInSeconds * 1000);
+    }
+
+    function getPotionStatusLabel(potionName, effectStrength, durationInSeconds) {
+        switch (potionName) {
+            case 'Adrenalina':
+                return `-${effectStrength}% cooldownu przez ${durationInSeconds}s`;
+            case 'Furia':
+                return `+${effectStrength}% mocy i szansa na crit x3 przez ${durationInSeconds}s`;
+            case 'Krwawiące Ostrze':
+                return `bleed ${effectStrength} dmg/tick przez ${durationInSeconds}s`;
+            case 'Stop-Czas':
+                return `zatrzymanie czasu na ${durationInSeconds}s`;
+            default:
+                return `aktywny efekt przez ${durationInSeconds}s`;
+        }
+    }
+
+    function getPotionVisualClass(potionName) {
+        switch (potionName) {
+            case 'Adrenalina':
+                return 'potion-effect-visual speed';
+            case 'Furia':
+                return 'potion-effect-visual fury';
+            case 'Krwawiące Ostrze':
+                return 'potion-effect-visual bleed';
+            case 'Stop-Czas':
+                return 'potion-effect-visual time-freeze';
+            default:
+                return 'potion-effect-visual';
+        }
+    }
+
+    function getPotionVisualText(potionName, effectStrength, durationInSeconds) {
+        switch (potionName) {
+            case 'Adrenalina':
+                return `⚡ Adrenalina aktywna: broń szybsza o ${effectStrength}% przez ${durationInSeconds}s`;
+            case 'Furia':
+                return `🔥 Furia aktywna: większy dmg i szansa na crit x3 przez ${durationInSeconds}s`;
+            case 'Krwawiące Ostrze':
+                return `🩸 Bleed aktywny: ${effectStrength} obrażeń na tick przez ${durationInSeconds}s`;
+            case 'Stop-Czas':
+                return `⏳ Czas zatrzymany na ${durationInSeconds}s - wykorzystaj darmowe trafienia`;
+            default:
+                return `✨ ${potionName} aktywna przez ${durationInSeconds}s`;
+        }
+    }
+
+    function triggerBleed() {
+        if (bleedTickDamage <= 0) {
+            return;
+        }
+
+        clearInterval(bleedInterval);
+        let remainingTicks = 3;
+
+        bleedInterval = setInterval(() => {
+            if (!gameActive || remainingTicks <= 0 || hp <= 0) {
+                clearInterval(bleedInterval);
+                return;
+            }
+
+            hp = Math.max(0, hp - bleedTickDamage);
+            hpDisplay.innerText = hp;
+            remainingTicks--;
+
+            if (hp <= 0) {
+                clearInterval(bleedInterval);
+                endGame('CEL WYKRWAWIŁ SIĘ!');
+            }
+        }, 1000);
+    }
+
+    function isTimeFrozen() {
+        return freezeRoundsUntil > Date.now();
+    }
+
+    async function usePotion(button) {
+        if (!button || (!gameActive && !countdownActive)) {
+            return;
+        }
+
+        const quantityEl = button.querySelector('.potion-quantity');
+        const quantity = parseInt(quantityEl?.textContent || '0', 10);
+        if (quantity <= 0) {
+            button.disabled = true;
+            return;
+        }
+
+        button.disabled = true;
+
+        try {
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            const response = await fetch('@Url.Action("UsePotion", "Account")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'RequestVerificationToken': token } : {})
+                },
+                body: JSON.stringify({ potionId: parseInt(button.dataset.potionId, 10) })
+            });
+
+            const result = await response.json();
+            if (!result.success) {
+                alert(result.message || 'Nie udało się użyć potki.');
+                button.disabled = false;
+                return;
+            }
+
+            if (quantityEl) {
+                quantityEl.textContent = result.remainingQuantity;
+            }
+
+            activatePotionEffects(result.potionName, result.effectStrength, result.durationInSeconds);
+
+            if (result.remainingQuantity <= 0) {
+                button.classList.add('disabled');
+            } else {
+                button.disabled = false;
+            }
+        } catch (error) {
+            console.error('Błąd podczas używania potki:', error);
+            alert('Nie udało się użyć potki.');
+            button.disabled = false;
+        }
+    }
+
+    function beginRound() {
         gameActive = true;
+        pendingRoundStart = false;
         canAttack = true;
-        currentClicks = 0;
-        hpDisplay.innerText = hp;
-        timerDisplay.innerText = timeLeft;
         startBtn.style.display = 'none';
 
         timerInterval = setInterval(() => {
+            if (isTimeFrozen()) {
+                return;
+            }
+
             timeLeft--;
             timerDisplay.innerText = timeLeft;
             if (timeLeft <= 0) endGame("KONIEC CZASU!");
         }, 1000);
+    }
+
+    function startCountdown() {
+        countdownActive = true;
+        pendingRoundStart = true;
+        canAttack = false;
+
+        if (roundCountdownOverlay) {
+            roundCountdownOverlay.classList.remove('d-none');
+        }
+
+        let countdown = 3;
+        if (roundCountdownValue) {
+            roundCountdownValue.textContent = countdown;
+        }
+
+        clearInterval(countdownInterval);
+        countdownInterval = setInterval(() => {
+            countdown--;
+
+            if (countdown > 0) {
+                if (roundCountdownValue) {
+                    roundCountdownValue.textContent = countdown;
+                }
+                return;
+            }
+
+            clearInterval(countdownInterval);
+            countdownActive = false;
+
+            if (roundCountdownValue) {
+                roundCountdownValue.textContent = 'START';
+            }
+
+            setTimeout(() => {
+                if (roundCountdownOverlay) {
+                    roundCountdownOverlay.classList.add('d-none');
+                }
+                beginRound();
+            }, 350);
+        }, 1000);
+    }
+
+    function startGame() {
+        hp = 10000;
+        timeLeft = 15;
+        gameActive = false;
+        canAttack = false;
+        currentClicks = 0;
+        activePotionDamageMultiplier = 1;
+        activePotionCooldownMultiplier = 1;
+        criticalHitChance = 0;
+        bleedTickDamage = 0;
+        freezeRoundsUntil = 0;
+        clearTimeout(activePotionTimeout);
+        clearInterval(bleedInterval);
+        clearInterval(timerInterval);
+        hpDisplay.innerText = hp;
+        timerDisplay.innerText = timeLeft;
+        startBtn.disabled = true;
+        startBtn.innerText = 'PRZYGOTUJ SIĘ';
+
+        if (activePotionStatus) {
+            activePotionStatus.className = 'badge bg-secondary';
+            activePotionStatus.textContent = 'Brak aktywnej potki';
+        }
+
+        if (potionEffectVisual) {
+            potionEffectVisual.className = 'potion-effect-visual mb-3 d-none';
+            potionEffectVisual.textContent = '';
+        }
+
+        startCountdown();
     }
 
     async function testingsubmitGameScore(finalScore, currentClicks) {
@@ -331,9 +688,23 @@
 
     function endGame(message) {
         gameActive = false;
+        countdownActive = false;
+        pendingRoundStart = false;
         clearInterval(timerInterval);
+        clearInterval(countdownInterval);
+        clearInterval(bleedInterval);
         startBtn.style.display = 'inline-block';
+        startBtn.disabled = false;
         startBtn.innerText = "ZAGRAJ PONOWNIE";
+
+        if (roundCountdownOverlay) {
+            roundCountdownOverlay.classList.add('d-none');
+        }
+
+        if (potionEffectVisual) {
+            potionEffectVisual.className = 'potion-effect-visual mb-3 d-none';
+            potionEffectVisual.textContent = '';
+        }
 
         const finalScore = 10000 - hp;
         console.log(`🎮 Koniec gry! HP: ${hp}, Wynik: ${finalScore}`);
@@ -386,7 +757,13 @@
                 const multiplier = multipliers[organName] || multipliers["default"];
 
                 // Odejmujemy: (DMG broni * mnożnik organu)
-                let totalDamage = Math.round(weaponDamageBase * multiplier);
+                let totalDamage = Math.round(weaponDamageBase * activePotionDamageMultiplier * multiplier);
+                const isCriticalHit = criticalHitChance > 0 && Math.random() < criticalHitChance;
+                if (isCriticalHit) {
+                    totalDamage *= 3;
+                    showCriticalHitFeedback(this, totalDamage);
+                }
+
                 hp -= totalDamage;
                 if (hp < 0) hp = 0;
                 hpDisplay.innerText = hp;
@@ -396,6 +773,10 @@
                 // Efekt uderzenia
                 this.classList.add('hit');
                 setTimeout(() => this.classList.remove('hit'), 150);
+
+                if (bleedTickDamage > 0) {
+                    triggerBleed();
+                }
 
                 // Logika Cooldownu
                 activateCooldown();
@@ -412,16 +793,39 @@
 
         // Płynne opadanie nakładki cooldownu
         setTimeout(() => {
-            cooldownOverlay.style.transition = `height ${cooldownTime}ms linear`;
+            cooldownOverlay.style.transition = `height ${getCurrentCooldownTime()}ms linear`;
             cooldownOverlay.style.height = "0%";
         }, 10);
 
         setTimeout(() => {
             canAttack = true;
-        }, cooldownTime);
+        }, getCurrentCooldownTime());
+    }
+
+    function showCriticalHitFeedback(target, damage) {
+        const layer = document.getElementById('hit-feedback-layer');
+        const rect = target.getBoundingClientRect();
+        const containerRect = layer?.getBoundingClientRect();
+        if (!layer || !containerRect) {
+            return;
+        }
+
+        const label = document.createElement('div');
+        label.className = 'critical-hit-label';
+        label.textContent = `Critical Hit! x3 (${damage})`;
+        label.style.left = `${rect.left - containerRect.left + (rect.width / 2)}px`;
+        label.style.top = `${rect.top - containerRect.top + (rect.height / 2)}px`;
+        layer.appendChild(label);
+
+        document.body.classList.add('critical-hit-shake');
+        setTimeout(() => document.body.classList.remove('critical-hit-shake'), 220);
+        setTimeout(() => label.remove(), 700);
     }
 
     startBtn.addEventListener('click', startGame);
+    document.querySelectorAll('.potion-belt-item').forEach(button => {
+        button.addEventListener('click', () => usePotion(button));
+    });
 
     // Upewnij się, że SVG jest załadowany przed dodaniem event listenerów
     function initializeOrganListeners() {
@@ -464,6 +868,89 @@
         overflow: hidden;
     }
 
+    .round-countdown-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.68));
+        backdrop-filter: blur(2px);
+    }
+
+    .round-countdown-inner {
+        text-align: center;
+        color: white;
+        text-shadow: 0 0 20px rgba(255, 193, 7, 0.35);
+    }
+
+    .round-countdown-label {
+        font-size: 1rem;
+        letter-spacing: 0.18rem;
+        text-transform: uppercase;
+        color: #ffc107;
+        margin-bottom: 0.5rem;
+    }
+
+    .round-countdown-value {
+        font-size: clamp(4rem, 12vw, 7rem);
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .round-countdown-hint {
+        margin-top: 0.65rem;
+        font-size: 0.95rem;
+        color: rgba(255,255,255,0.8);
+    }
+
+    .hit-feedback-layer {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        z-index: 6;
+    }
+
+    .critical-hit-label {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        color: #ffd166;
+        font-weight: 900;
+        font-size: 1.1rem;
+        text-shadow: 0 0 12px rgba(255, 0, 0, 0.8);
+        animation: criticalHitPop 0.7s ease forwards;
+        white-space: nowrap;
+    }
+
+    .critical-hit-shake {
+        animation: criticalHitShake 0.22s linear;
+    }
+
+    @@keyframes criticalHitPop {
+        0% {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.4);
+        }
+
+        20% {
+            opacity: 1;
+            transform: translate(-50%, -60%) scale(1.12);
+        }
+
+        100% {
+            opacity: 0;
+            transform: translate(-50%, -120%) scale(0.92);
+        }
+    }
+
+    @@keyframes criticalHitShake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        50% { transform: translateX(6px); }
+        75% { transform: translateX(-4px); }
+    }
+
     /* Nakładka cooldownu na SVG */
     #cooldown-overlay {
         position: absolute;
@@ -487,6 +974,78 @@
 
     .hit {
         filter: brightness(0.5) sepia(1) hue-rotate(-50deg) !important;
+    }
+
+    .upgrade-pill {
+        padding: 0.85rem 1rem;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        border-radius: 14px;
+        background: rgba(255, 193, 7, 0.08);
+    }
+
+    .potion-belt-item {
+        border: 1px solid rgba(13, 202, 240, 0.35);
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(12, 27, 45, 0.95), rgba(42, 10, 64, 0.95));
+        color: #fff;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .potion-belt-item:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(13, 202, 240, 0.18);
+        border-color: rgba(13, 202, 240, 0.7);
+    }
+
+    .potion-belt-item:disabled,
+    .potion-belt-item.disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    .potion-effect-visual {
+        padding: 0.85rem 1rem;
+        border-radius: 12px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        animation: potionPulse 1.1s ease-in-out infinite alternate;
+    }
+
+    .potion-effect-visual.speed {
+        background: rgba(0, 212, 255, 0.16);
+        color: #8fe7ff;
+        border-color: rgba(0, 212, 255, 0.45);
+    }
+
+    .potion-effect-visual.fury {
+        background: rgba(255, 87, 34, 0.18);
+        color: #ffbe91;
+        border-color: rgba(255, 87, 34, 0.45);
+    }
+
+    .potion-effect-visual.bleed {
+        background: rgba(220, 53, 69, 0.16);
+        color: #ffb3bb;
+        border-color: rgba(220, 53, 69, 0.5);
+    }
+
+    .potion-effect-visual.time-freeze {
+        background: rgba(111, 66, 193, 0.2);
+        color: #d5c1ff;
+        border-color: rgba(111, 66, 193, 0.5);
+    }
+
+    @@keyframes potionPulse {
+        from {
+            transform: scale(1);
+            box-shadow: 0 0 0 rgba(255,255,255,0);
+        }
+
+        to {
+            transform: scale(1.01);
+            box-shadow: 0 0 18px rgba(255,255,255,0.08);
+        }
     }
 
     svg {

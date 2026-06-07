@@ -4,7 +4,6 @@
 @{
     ViewData["Title"] = "Sklep";
     var favoriteWeapons = Model.FavoriteWeapons.ToList();
-    var ownedWeapons = Model.OwnedWeapons.ToList();
     var availableToBuyWeapons = Model.NonOwnedWeapons
         .Where(w => Model.UserLevel >= LevelService.GetRequiredLevelForWeapon(w.Id))
         .ToList();
@@ -145,10 +144,12 @@
                         <div class="card-body text-center">
                             <h5 class="card-title">@upgrade.Name</h5>
                             <p class="small text-muted mb-2">Dla: @upgrade.Weapon.Name</p>
+                            <p class="small upgrade-description">@upgrade.Description</p>
                             <p class="card-text">
                                 <span class="badge bg-danger">+@upgrade.DamageBonus DMG</span><br />
                                 <span class="badge bg-info mt-1">-@upgrade.CooldownReduction.ToString("F2")s CD</span><br />
-                                <span class="badge bg-warning text-dark mt-1">Cena: @upgrade.Price</span>
+                                <span class="badge bg-warning text-dark mt-1">Cena: @upgrade.Price</span><br />
+                                <span class="badge bg-success mt-1">Realny bonus w walce</span>
                             </p>
                             @if (alreadyBought)
                             {
@@ -190,10 +191,11 @@
                             <h5 class="card-title">@potion.Name</h5>
                             <p class="small text-muted">@potion.Description</p>
                             <p class="card-text">
-                                <span class="badge bg-primary">Moc @potion.EffectStrength</span><br />
-                                <span class="badge bg-info mt-1">@potion.DurationInSeconds s</span><br />
+                                <span class="badge bg-primary">@GetPotionPrimaryLabel(potion)</span><br />
+                                <span class="badge bg-info mt-1">@potion.DurationInSeconds s działania</span><br />
                                 <span class="badge bg-warning text-dark mt-1">Cena: @potion.Price</span><br />
-                                <span class="badge bg-secondary mt-1">Masz: @quantity</span>
+                                <span class="badge bg-secondary mt-1">Masz: @quantity</span><br />
+                                <span class="badge bg-success mt-1">Użyjesz przed startem lub w trakcie walki</span>
                             </p>
                             <form asp-action="BuyPotion" method="post">
                                 <input type="hidden" name="potionId" value="@potion.Id" />
@@ -210,32 +212,7 @@
         </div>
     </section>
 
-    <section>
-        <h3 class="mb-3">Kupione bronie</h3>
-        <div class="row">
-            @foreach (var weapon in ownedWeapons)
-            {
-                <div class="col-md-4 col-xl-3 mb-4">
-                    <div class="card weapon-card shadow-sm h-100">
-                        <button type="button" class="btn btn-link favorite-btn position-absolute top-0 end-0 m-2" onclick="toggleFavorite(@weapon.Id)">
-                            <i class="bi bi-heart text-secondary" style="font-size: 1.5rem;"></i>
-                        </button>
-                        <img src="@weapon.ImageUrl" class="card-img-top p-3" alt="@weapon.Name" style="height: 150px; object-fit: contain;" />
-                        <div class="card-body text-center">
-                            <h5 class="card-title">@weapon.Name</h5>
-                            <p class="card-text">
-                                <span class="badge bg-danger">DMG @weapon.Damage</span><br />
-                                <span class="badge bg-info mt-1">CD @weapon.Cooldown.ToString("F1")s</span>
-                            </p>
-                            <a asp-action="SelectWeapon" class="btn btn-primary btn-sm">Wybierz</a>
-                        </div>
-                    </div>
-                </div>
-            }
-        </div>
-    </section>
-
-    <section class="mt-5">
+    <section class="mt-2">
         <h3 class="mb-3">Zablokowane bronie</h3>
         <div class="row">
             @foreach (var weapon in lockedWeapons)
@@ -260,6 +237,20 @@
         </div>
     </section>
 </div>
+
+@functions {
+    private static string GetPotionPrimaryLabel(Symulator_Nozownika.Models.Potion potion)
+    {
+        return potion.Id switch
+        {
+            1 => $"-{potion.EffectStrength}% cooldownu",
+            2 => $"Crit x3 i +{potion.EffectStrength}% mocy",
+            3 => $"Bleed {potion.EffectStrength} dmg/tick",
+            4 => $"Stop czasu na {potion.DurationInSeconds}s",
+            _ => $"+{potion.EffectStrength}% mocy"
+        };
+    }
+}
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 
@@ -310,6 +301,10 @@
 
     .weapon-locked {
         opacity: 0.55;
+    }
+
+    .upgrade-description {
+        min-height: 2.5rem;
     }
 </style>
 

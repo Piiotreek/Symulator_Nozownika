@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Symulator_Nozownika.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -536,13 +536,13 @@ namespace Symulator_Nozownika.Migrations
                         name: "FK_UserReports_UserAccounts_ReportedUserId",
                         column: x => x.ReportedUserId,
                         principalTable: "UserAccounts",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_UserReports_UserAccounts_ReviewedByAdminId",
                         column: x => x.ReviewedByAdminId,
                         principalTable: "UserAccounts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -606,8 +606,7 @@ namespace Symulator_Nozownika.Migrations
                         name: "FK_UserPenalties_UserReports_RelatedReportId",
                         column: x => x.RelatedReportId,
                         principalTable: "UserReports",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.InsertData(

@@ -1,7 +1,7 @@
 ﻿@model Symulator_Nozownika.Models.LoginViewModel
 
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Logowanie";
     Layout = null;
 }
 
@@ -10,7 +10,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - Symulator Nożownika</title>
+    <title>Logowanie - Symulator Nożownika</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <style>
             body, html {
@@ -253,11 +253,11 @@
 
     <div class="login-screen">
         <a href="@Url.Action("StartView", "Home")" class="back-btn">
-            <i class="fas fa-arrow-left"></i> Back
+            <i class="fas fa-arrow-left"></i> Powrót
         </a>
 
         <div class="login-container">
-            <h1 class="login-title">LOGIN</h1>
+            <h1 class="login-title">LOGOWANIE</h1>
 
             <form asp-action="Login" method="post" autocomplete="on" id="loginForm">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>

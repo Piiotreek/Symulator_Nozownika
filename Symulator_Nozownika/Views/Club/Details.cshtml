@@ -1,7 +1,7 @@
 @model ClubDetailsViewModel
 
 @{
-    ViewData["Title"] = "Club Details";
+    ViewData["Title"] = "Szczegóły klubu";
 }
 
 <div class="container mt-5">
@@ -21,18 +21,18 @@
 
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <h5>Club Information</h5>
+                            <h5>Informacje o klubie</h5>
                             <ul class="list-unstyled">
-                                <li><strong>Owner:</strong> @Model.OwnerName</li>
-                                <li><strong>Created:</strong> @Model.CreatedAt.ToString("MMMM dd, yyyy")</li>
-                                <li><strong>Members:</strong> @Model.MemberCount / @Model.MaxMembers</li>
-                                <li><strong>Available Spots:</strong> 
+                                <li><strong>Właściciel:</strong> @Model.OwnerName</li>
+                                <li><strong>Utworzono:</strong> @Model.CreatedAt.ToString("dd.MM.yyyy")</li>
+                                <li><strong>Członkowie:</strong> @Model.MemberCount / @Model.MaxMembers</li>
+                                <li><strong>Wolne miejsca:</strong> 
                                     <span class="badge bg-info">@Model.AvailableSpots</span>
                                 </li>
                             </ul>
                         </div>
                         <div class="col-md-6">
-                            <h5>Club Status</h5>
+                            <h5>Status klubu</h5>
                             <div class="progress mb-3">
                                 <div class="progress-bar" role="progressbar" 
                                      style="width: @((Model.MemberCount * 100) / Model.MaxMembers)%"
@@ -45,13 +45,13 @@
                             @if (Model.IsFull)
                             {
                                 <div class="alert alert-warning mb-0">
-                                    <i class="fas fa-exclamation-triangle"></i> This club is full
+                                    <i class="fas fa-exclamation-triangle"></i> Ten klub jest pełny
                                 </div>
                             }
                             else
                             {
                                 <div class="alert alert-success mb-0">
-                                    <i class="fas fa-check-circle"></i> @Model.AvailableSpots spots available
+                                    <i class="fas fa-check-circle"></i> Dostępne miejsca: @Model.AvailableSpots
                                 </div>
                             }
                         </div>
@@ -59,18 +59,18 @@
 
                     <hr />
 
-                    <h5>Members (@Model.MemberCount)</h5>
+                    <h5>Członkowie (@Model.MemberCount)</h5>
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Name</th>
-                                    <th>Username</th>
-                                    <th>Country</th>
-                                    <th>Role</th>
+                                    <th>Imię i nazwisko</th>
+                                    <th>Nazwa użytkownika</th>
+                                    <th>Kraj</th>
+                                    <th>Rola</th>
                                     @if (Model.IsOwner)
                                     {
-                                        <th>Actions</th>
+                                        <th>Akcje</th>
                                     }
                                 </tr>
                             </thead>
@@ -89,11 +89,11 @@
                                         <td>
                                             @if (member.Id == Model.OwnerId)
                                             {
-                                                <span class="badge bg-primary">Owner</span>
+                                                <span class="badge bg-primary">Właściciel</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-secondary">Member</span>
+                                                <span class="badge bg-secondary">Członek</span>
                                             }
                                         </td>
                                         @if (Model.IsOwner && member.Id != Model.OwnerId)
@@ -104,8 +104,8 @@
                                                     <input type="hidden" name="clubId" value="@Model.Id" />
                                                     <input type="hidden" name="memberId" value="@member.Id" />
                                                     <button type="submit" class="btn btn-sm btn-danger" 
-                                                            onclick="return confirm('Remove this member?');">
-                                                        <i class="fas fa-trash"></i> Remove
+                                                            onclick="return confirm('Usunąć tego członka?');">
+                                                        <i class="fas fa-trash"></i> Usuń
                                                     </button>
                                                 </form>
                                             </td>
@@ -122,18 +122,18 @@
         <div class="col-md-4">
             <div class="card shadow-lg">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0">Actions</h5>
+                    <h5 class="mb-0">Akcje</h5>
                 </div>
                 <div class="card-body">
                     <a asp-controller="Report" asp-action="ClubPdf" asp-route-id="@Model.Id" class="btn btn-outline-info w-100 mb-2">📥 Eksportuj listę członków (PDF)</a>
                     @if (Model.IsMember)
                     {
                         <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i> You are a member of this club
+                            <i class="fas fa-check-circle"></i> Jesteś członkiem tego klubu
                         </div>
 
                         <a href="@Url.Action("Chat", "Club", new { clubId = Model.Id })" class="btn btn-info w-100 mb-2">
-                            <i class="fas fa-comments"></i> Club Chat
+                            <i class="fas fa-comments"></i> Czat klubu
                         </a>
 
                         @if (!Model.IsOwner)
@@ -141,8 +141,8 @@
                             <form method="post" action="@Url.Action("LeaveClub", "Club")">
                                 <input type="hidden" name="clubId" value="@Model.Id" />
                                 <button type="submit" class="btn btn-danger w-100" 
-                                        onclick="return confirm('Are you sure you want to leave this club?');">
-                                    <i class="fas fa-sign-out-alt"></i> Leave Club
+                                        onclick="return confirm('Na pewno chcesz opuścić ten klub?');">
+                                    <i class="fas fa-sign-out-alt"></i> Opuść klub
                                 </button>
                             </form>
                         }
@@ -151,8 +151,8 @@
                             <form method="post" action="@Url.Action("DeleteClub", "Club")" class="mt-3">
                                 <input type="hidden" name="clubId" value="@Model.Id" />
                                 <button type="submit" class="btn btn-danger w-100" 
-                                        onclick="return confirm('This will permanently delete the club. Are you sure?');">
-                                    <i class="fas fa-trash"></i> Delete Club
+                                        onclick="return confirm('To bezpowrotnie usunie klub. Czy na pewno?');">
+                                    <i class="fas fa-trash"></i> Usuń klub
                                 </button>
                             </form>
                         }
@@ -162,19 +162,19 @@
                         <form method="post" action="@Url.Action("JoinClub", "Club")">
                             <input type="hidden" name="clubId" value="@Model.Id" />
                             <button type="submit" class="btn btn-success w-100">
-                                <i class="fas fa-plus"></i> Join This Club
+                                <i class="fas fa-plus"></i> Dołącz do klubu
                             </button>
                         </form>
                     }
                     else
                     {
                         <div class="alert alert-warning">
-                            <i class="fas fa-exclamation-circle"></i> This club is full and cannot accept new members
+                            <i class="fas fa-exclamation-circle"></i> Ten klub jest pełny i nie przyjmuje nowych członków
                         </div>
                     }
 
                     <a href="@Url.Action("Index", "Club")" class="btn btn-outline-secondary w-100 mt-2">
-                        <i class="fas fa-arrow-left"></i> Back to Clubs
+                        <i class="fas fa-arrow-left"></i> Powrót do klubów
                     </a>
                 </div>
             </div>
@@ -195,7 +195,7 @@
 {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            alert('Error: @TempData["Error"]');
+            alert('Błąd: @TempData["Error"]');
         });
     </script>
 }

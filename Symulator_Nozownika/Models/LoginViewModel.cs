@@ -4,13 +4,13 @@ namespace Symulator_Nozownika.Models
 {
     public class LoginViewModel
     {
-        [Required(ErrorMessage = "Username or Email is Required")]
-        [MaxLength(30, ErrorMessage = "Max 30 characters are allowed")]
-        [Display(Name = "Username or Email")]
+        [Required(ErrorMessage = "Nazwa użytkownika lub adres e-mail są wymagane")]
+        [MaxLength(30, ErrorMessage = "Maksymalnie dozwolone jest 30 znaków")]
+        [Display(Name = "Nazwa użytkownika lub e-mail")]
         public string UserNameOrEmail { get; set; }
-        [Required(ErrorMessage = "Password is Required")]
+        [Required(ErrorMessage = "Hasło jest wymagane")]
         [DataType(DataType.Password)]
-        [StringLength(20, ErrorMessage = "The Password must be at least 6 characters long.", MinimumLength = 6)]
+        [StringLength(20, ErrorMessage = "Hasło musi mieć co najmniej 6 znaków.", MinimumLength = 6)]
         public string Password { get; set; }
 
         public bool RememberMe { get; set; }

@@ -12,8 +12,8 @@ using Symulator_Nozownika.Data;
 namespace Symulator_Nozownika.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260603235257_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260607215614_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1357,7 +1357,7 @@ namespace Symulator_Nozownika.Migrations
                     b.HasOne("Symulator_Nozownika.Models.UserAccount", "ReviewedByAdmin")
                         .WithMany()
                         .HasForeignKey("ReviewedByAdminId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("ReportedByUser");
 
@@ -1525,7 +1525,7 @@ namespace Symulator_Nozownika.Migrations
                     b.HasOne("Symulator_Nozownika.Models.UserAccount", "ReportedUser")
                         .WithMany()
                         .HasForeignKey("ReportedUserId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Symulator_Nozownika.Models.UserAccount", "ReviewedByAdmin")

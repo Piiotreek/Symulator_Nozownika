@@ -1,7 +1,7 @@
 @model CreateClubViewModel
 
 @{
-    ViewData["Title"] = "Create Club";
+    ViewData["Title"] = "Załóż klub";
 }
 
 <div class="container mt-5">
@@ -10,46 +10,46 @@
             <div class="card shadow-lg">
                 <div class="card-header bg-primary text-white">
                     <h3 class="mb-0">
-                        <i class="fas fa-plus-circle"></i> Create New Club
+                        <i class="fas fa-plus-circle"></i> Załóż nowy klub
                     </h3>
                 </div>
                 <div class="card-body">
                     <form method="post" action="@Url.Action("Create", "Club")">
                         <div class="mb-3">
-                            <label for="Name" class="form-label">Club Name *</label>
+                            <label for="Name" class="form-label">Nazwa klubu *</label>
                             <input type="text" 
                                    class="form-control" 
                                    id="Name" 
                                    name="Name" 
-                                   placeholder="Enter club name"
+                                   placeholder="Wpisz nazwę klubu"
                                    required>
                             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                             <span asp-validation-for="Name" class="text-danger"></span>
-                            <small class="form-text text-muted">3-100 characters</small>
+                            <small class="form-text text-muted">Od 3 do 100 znaków</small>
                         </div>
 
                         <div class="mb-3">
-                            <label for="Description" class="form-label">Club Description</label>
+                            <label for="Description" class="form-label">Opis klubu</label>
                             <textarea class="form-control" 
                                       id="Description" 
                                       name="Description" 
                                       rows="4" 
-                                      placeholder="Describe your club..."></textarea>
+                                      placeholder="Opisz swój klub..."></textarea>
                             <span asp-validation-for="Description" class="text-danger"></span>
-                            <small class="form-text text-muted">Max 500 characters</small>
+                            <small class="form-text text-muted">Maksymalnie 500 znaków</small>
                         </div>
 
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle"></i>
-                            <strong>Note:</strong> You will become the club owner. Maximum 20 members allowed.
+                            <strong>Uwaga:</strong> Zostaniesz właścicielem klubu. Maksymalnie 20 członków.
                         </div>
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-save"></i> Create Club
+                                <i class="fas fa-save"></i> Załóż klub
                             </button>
                             <a href="@Url.Action("Index", "Club")" class="btn btn-outline-secondary">
-                                <i class="fas fa-times"></i> Cancel
+                                <i class="fas fa-times"></i> Anuluj
                             </a>
                         </div>
                     </form>

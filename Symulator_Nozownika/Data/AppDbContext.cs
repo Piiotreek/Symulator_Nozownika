@@ -272,48 +272,58 @@ namespace Symulator_Nozownika.Data
                 });
 
             modelBuilder.Entity<Weapon>().HasData(
-                new Weapon { Id = 1, Name = "Kitchen Knife", Damage = 10, Cooldown = 0.4, ImageUrl = "/images/knife.png" },
-                new Weapon { Id = 2, Name = "Dagger", Damage = 25, Cooldown = 0.6, ImageUrl = "/images/dagger.png" },
-                new Weapon { Id = 3, Name = "Machete", Damage = 45, Cooldown = 0.9, ImageUrl = "/images/machete.png" },
-                new Weapon { Id = 4, Name = "Sword", Damage = 55, Cooldown = 1.1, ImageUrl = "/images/sword.png" },
-                new Weapon { Id = 5, Name = "Axe", Damage = 70, Cooldown = 1.5, ImageUrl = "/images/axe.png" },
-                new Weapon { Id = 6, Name = "Spear", Damage = 40, Cooldown = 0.7, ImageUrl = "/images/spear.png" },
-                new Weapon { Id = 7, Name = "Cleaver", Damage = 60, Cooldown = 1.3, ImageUrl = "/images/cleaver.png" },
-                new Weapon { Id = 8, Name = "Mace", Damage = 90, Cooldown = 2.0, ImageUrl = "/images/mace.png" },
+                new Weapon { Id = 1, Name = "Nóż kuchenny", Damage = 10, Cooldown = 0.4, ImageUrl = "/images/knife.png" },
+                new Weapon { Id = 2, Name = "Sztylet", Damage = 25, Cooldown = 0.6, ImageUrl = "/images/dagger.png" },
+                new Weapon { Id = 3, Name = "Maczeta", Damage = 45, Cooldown = 0.9, ImageUrl = "/images/machete.png" },
+                new Weapon { Id = 4, Name = "Miecz", Damage = 55, Cooldown = 1.1, ImageUrl = "/images/sword.png" },
+                new Weapon { Id = 5, Name = "Topór", Damage = 70, Cooldown = 1.5, ImageUrl = "/images/axe.png" },
+                new Weapon { Id = 6, Name = "Włócznia", Damage = 40, Cooldown = 0.7, ImageUrl = "/images/spear.png" },
+                new Weapon { Id = 7, Name = "Tasak", Damage = 60, Cooldown = 1.3, ImageUrl = "/images/cleaver.png" },
+                new Weapon { Id = 8, Name = "Buława", Damage = 90, Cooldown = 2.0, ImageUrl = "/images/mace.png" },
                 new Weapon { Id = 9, Name = "Katana", Damage = 50, Cooldown = 0.5, ImageUrl = "/images/katana.png" },
-                new Weapon { Id = 10, Name = "Scissors", Damage = 2, Cooldown = 0.1, ImageUrl = "/images/scissors.png" }
+                new Weapon { Id = 10, Name = "Nożyczki", Damage = 2, Cooldown = 0.1, ImageUrl = "/images/scissors.png" }
             );
 
             modelBuilder.Entity<Potion>().HasData(
                 new Potion
                 {
                     Id = 1,
-                    Name = "Mała potka energii",
-                    Description = "Krótki zastrzyk energii do szybszej rozgrywki.",
+                    Name = "Adrenalina",
+                    Description = "Przyspiesza tempo ataku na kilka sekund przed lub w trakcie rundy.",
                     Price = 120,
                     EffectStrength = 10,
-                    DurationInSeconds = 30,
+                    DurationInSeconds = 6,
                     ImageUrl = "/images/scissors.png"
                 },
                 new Potion
                 {
                     Id = 2,
-                    Name = "Potka furii",
-                    Description = "Mocniejsze uderzenia przez chwilę.",
+                    Name = "Furia",
+                    Description = "Podkręca obrażenia i zwiększa szansę na potężny critical hit x3.",
                     Price = 260,
-                    EffectStrength = 20,
-                    DurationInSeconds = 45,
+                    EffectStrength = 18,
+                    DurationInSeconds = 8,
                     ImageUrl = "/images/dagger.png"
                 },
                 new Potion
                 {
                     Id = 3,
-                    Name = "Eliksir skupienia",
-                    Description = "Pomaga utrzymać rytm i serię kliknięć.",
+                    Name = "Krwawiące Ostrze",
+                    Description = "Każde trafienie może wywołać niestackujący bleed, który dobija cel z czasem.",
                     Price = 400,
-                    EffectStrength = 30,
-                    DurationInSeconds = 60,
+                    EffectStrength = 12,
+                    DurationInSeconds = 10,
                     ImageUrl = "/images/katana.png"
+                },
+                new Potion
+                {
+                    Id = 4,
+                    Name = "Stop-Czas",
+                    Description = "Zatrzymuje licznik rundy na 3 sekundy i daje moment na darmowe trafienia.",
+                    Price = 520,
+                    EffectStrength = 3,
+                    DurationInSeconds = 3,
+                    ImageUrl = "/images/sword.png"
                 }
             );
 
@@ -321,7 +331,7 @@ namespace Symulator_Nozownika.Data
                 new WeaponUpgrade
                 {
                     Id = 1,
-                    Name = "Ostrzenie Kitchen Knife",
+                    Name = "Ostrzenie noża kuchennego",
                     Description = "Lepsza krawędź zwiększa obrażenia kuchennego noża.",
                     WeaponId = 1,
                     Price = 300,
@@ -332,7 +342,18 @@ namespace Symulator_Nozownika.Data
                 new WeaponUpgrade
                 {
                     Id = 2,
-                    Name = "Wyważenie Dagger",
+                    Name = "Lekki chwyt noża kuchennego",
+                    Description = "Pewniejszy chwyt przyspiesza kolejne cięcia kuchennym nożem.",
+                    WeaponId = 1,
+                    Price = 380,
+                    DamageBonus = 2,
+                    CooldownReduction = 0.05,
+                    ImageUrl = "/images/knife.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 3,
+                    Name = "Wyważenie sztyletu",
                     Description = "Lepszy balans skraca czas odnowienia sztyletu.",
                     WeaponId = 2,
                     Price = 650,
@@ -342,7 +363,150 @@ namespace Symulator_Nozownika.Data
                 },
                 new WeaponUpgrade
                 {
-                    Id = 3,
+                    Id = 4,
+                    Name = "Ząbkowane ostrze sztyletu",
+                    Description = "Dodatkowe nacięcia sprawiają, że sztylet rani znacznie mocniej.",
+                    WeaponId = 2,
+                    Price = 780,
+                    DamageBonus = 9,
+                    CooldownReduction = 0.02,
+                    ImageUrl = "/images/dagger.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 5,
+                    Name = "Cięższy grzbiet maczety",
+                    Description = "Dodatkowa masa zwiększa siłę każdego zamachu maczetą.",
+                    WeaponId = 3,
+                    Price = 980,
+                    DamageBonus = 10,
+                    CooldownReduction = 0.04,
+                    ImageUrl = "/images/machete.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 6,
+                    Name = "Rajdowa rękojeść maczety",
+                    Description = "Nowa rękojeść pozwala szybciej wrócić do pozycji po cięciu.",
+                    WeaponId = 3,
+                    Price = 1120,
+                    DamageBonus = 6,
+                    CooldownReduction = 0.08,
+                    ImageUrl = "/images/machete.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 7,
+                    Name = "Polerowana klinga miecza",
+                    Description = "Dłuższe ostrze tnie czyściej i głębiej.",
+                    WeaponId = 4,
+                    Price = 1350,
+                    DamageBonus = 11,
+                    CooldownReduction = 0.05,
+                    ImageUrl = "/images/sword.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 8,
+                    Name = "Stalowy jelec miecza",
+                    Description = "Lepsza kontrola miecza poprawia tempo ataku.",
+                    WeaponId = 4,
+                    Price = 1490,
+                    DamageBonus = 7,
+                    CooldownReduction = 0.09,
+                    ImageUrl = "/images/sword.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 9,
+                    Name = "Kolczaste ostrze topora",
+                    Description = "Dodatkowe kolce wzmacniają brutalność uderzeń toporem.",
+                    WeaponId = 5,
+                    Price = 1750,
+                    DamageBonus = 15,
+                    CooldownReduction = 0.04,
+                    ImageUrl = "/images/axe.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 10,
+                    Name = "Przeciwwaga topora",
+                    Description = "Lepsze wyważenie pomaga szybciej odzyskać kontrolę nad toporem.",
+                    WeaponId = 5,
+                    Price = 1880,
+                    DamageBonus = 9,
+                    CooldownReduction = 0.1,
+                    ImageUrl = "/images/axe.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 11,
+                    Name = "Wzmocniony grot włóczni",
+                    Description = "Hartowany grot włóczni lepiej przebija cel.",
+                    WeaponId = 6,
+                    Price = 920,
+                    DamageBonus = 8,
+                    CooldownReduction = 0.04,
+                    ImageUrl = "/images/spear.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 12,
+                    Name = "Elastyczny drzewiec włóczni",
+                    Description = "Lżejszy drzewiec zwiększa szybkość kolejnego pchnięcia.",
+                    WeaponId = 6,
+                    Price = 1080,
+                    DamageBonus = 5,
+                    CooldownReduction = 0.08,
+                    ImageUrl = "/images/spear.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 13,
+                    Name = "Rzeźnicka stal tasaka",
+                    Description = "Masakrycznie ostra stal zwiększa obrażenia tasaka.",
+                    WeaponId = 7,
+                    Price = 1420,
+                    DamageBonus = 12,
+                    CooldownReduction = 0.05,
+                    ImageUrl = "/images/cleaver.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 14,
+                    Name = "Gumowany chwyt tasaka",
+                    Description = "Pewniejszy uchwyt skraca czas między kolejnymi zamachami.",
+                    WeaponId = 7,
+                    Price = 1560,
+                    DamageBonus = 7,
+                    CooldownReduction = 0.1,
+                    ImageUrl = "/images/cleaver.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 15,
+                    Name = "Żelazny rdzeń buławy",
+                    Description = "Cięższy rdzeń buławy robi ogromną różnicę przy trafieniu.",
+                    WeaponId = 8,
+                    Price = 2200,
+                    DamageBonus = 18,
+                    CooldownReduction = 0.05,
+                    ImageUrl = "/images/mace.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 16,
+                    Name = "Skórzana owijka buławy",
+                    Description = "Nowa owijka poprawia rytm i skraca przerwy między ciosami.",
+                    WeaponId = 8,
+                    Price = 2380,
+                    DamageBonus = 10,
+                    CooldownReduction = 0.12,
+                    ImageUrl = "/images/mace.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 17,
                     Name = "Hartowana Katana",
                     Description = "Wzmocnione ostrze zapewnia dodatkową moc katanie.",
                     WeaponId = 9,
@@ -350,6 +514,39 @@ namespace Symulator_Nozownika.Data
                     DamageBonus = 12,
                     CooldownReduction = 0.08,
                     ImageUrl = "/images/katana.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 18,
+                    Name = "Błyskawiczna pochwa Katana",
+                    Description = "Precyzyjna pochwa pozwala wrócić do ataku niemal natychmiast.",
+                    WeaponId = 9,
+                    Price = 1940,
+                    DamageBonus = 8,
+                    CooldownReduction = 0.11,
+                    ImageUrl = "/images/katana.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 19,
+                    Name = "Tytanowy nit Scissors",
+                    Description = "Usztywnienie nożyc poprawia siłę cięcia mimo ich lekkości.",
+                    WeaponId = 10,
+                    Price = 240,
+                    DamageBonus = 2,
+                    CooldownReduction = 0.01,
+                    ImageUrl = "/images/scissors.png"
+                },
+                new WeaponUpgrade
+                {
+                    Id = 20,
+                    Name = "Sprężyna Scissors",
+                    Description = "Nowa sprężyna przyspiesza każde następne kliknięcie nożycami.",
+                    WeaponId = 10,
+                    Price = 320,
+                    DamageBonus = 1,
+                    CooldownReduction = 0.03,
+                    ImageUrl = "/images/scissors.png"
                 }
             );
 
@@ -532,7 +729,7 @@ namespace Symulator_Nozownika.Data
                 .HasOne(ur => ur.ReviewedByAdmin)
                 .WithMany()
                 .HasForeignKey(ur => ur.ReviewedByAdminId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
 
             // Configuration for UserPenalty
             modelBuilder.Entity<UserPenalty>()
@@ -551,7 +748,7 @@ namespace Symulator_Nozownika.Data
                 .HasOne(up => up.RelatedReport)
                 .WithMany()
                 .HasForeignKey(up => up.RelatedReportId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }
