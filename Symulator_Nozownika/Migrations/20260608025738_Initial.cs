@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Symulator_Nozownika.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -622,7 +622,8 @@ namespace Symulator_Nozownika.Migrations
                     { 6, "Zdobądź łącznie 300 kliknięć we wszystkich grach.", "/images/achiv/300-clicks.png", "Klikacz", 300, 1 },
                     { 7, "Zdobądź łącznie 500 kliknięć we wszystkich grach.", "/images/achiv/500-clicks.png", "Wprawiony Klikacz", 500, 1 },
                     { 8, "Zdobądź łącznie 1000 kliknięć we wszystkich grach.", "/images/achiv/1000-clicks.png", "Maniak", 1000, 1 },
-                    { 9, "Zdobądź łącznie 3000 kliknięć we wszystkich grach.", "/images/achiv/3000-clicks.png", "3000 GWIAZD!", 3000, 1 }
+                    { 9, "Zdobądź łącznie 3000 kliknięć we wszystkich grach.", "/images/achiv/3000-clicks.png", "3000 GWIAZD!", 3000, 1 },
+                    { 10, "Wyeliminuj cel po raz pierwszy.", "/images/achiv/first-kill.png", "Pierwszy zabójca", 1, 5 }
                 });
 
             migrationBuilder.InsertData(
@@ -630,9 +631,10 @@ namespace Symulator_Nozownika.Migrations
                 columns: new[] { "Id", "Description", "DurationInSeconds", "EffectStrength", "ImageUrl", "Name", "Price" },
                 values: new object[,]
                 {
-                    { 1, "Krótki zastrzyk energii do szybszej rozgrywki.", 30, 10, "/images/scissors.png", "Mała potka energii", 120 },
-                    { 2, "Mocniejsze uderzenia przez chwilę.", 45, 20, "/images/dagger.png", "Potka furii", 260 },
-                    { 3, "Pomaga utrzymać rytm i serię kliknięć.", 60, 30, "/images/katana.png", "Eliksir skupienia", 400 }
+                    { 1, "Przyspiesza tempo ataku na kilka sekund przed lub w trakcie rundy.", 6, 10, "/images/potions/adrenaline_potion.png", "Adrenalina", 120 },
+                    { 2, "Podkręca obrażenia i zwiększa szansę na potężny critical hit x3.", 8, 18, "/images/potions/rage_potion.png", "Furia", 260 },
+                    { 3, "Każde trafienie może wywołać niestackujący bleed, który dobija cel z czasem.", 10, 12, "/images/potions/bleeding_potion.png", "Krwawiące Ostrze", 400 },
+                    { 4, "Zatrzymuje licznik rundy na 3 sekundy i daje moment na darmowe trafienia.", 3, 3, "/images/potions/timestop_potion.png", "Stop-Czas", 520 }
                 });
 
             migrationBuilder.InsertData(
@@ -658,16 +660,16 @@ namespace Symulator_Nozownika.Migrations
                 columns: new[] { "Id", "Cooldown", "Damage", "ImageUrl", "Name" },
                 values: new object[,]
                 {
-                    { 1, 0.40000000000000002, 10, "/images/knife.png", "Kitchen Knife" },
-                    { 2, 0.59999999999999998, 25, "/images/dagger.png", "Dagger" },
-                    { 3, 0.90000000000000002, 45, "/images/machete.png", "Machete" },
-                    { 4, 1.1000000000000001, 55, "/images/sword.png", "Sword" },
-                    { 5, 1.5, 70, "/images/axe.png", "Axe" },
-                    { 6, 0.69999999999999996, 40, "/images/spear.png", "Spear" },
-                    { 7, 1.3, 60, "/images/cleaver.png", "Cleaver" },
-                    { 8, 2.0, 90, "/images/mace.png", "Mace" },
+                    { 1, 0.40000000000000002, 10, "/images/knife.png", "Nóż kuchenny" },
+                    { 2, 0.59999999999999998, 25, "/images/dagger.png", "Sztylet" },
+                    { 3, 0.90000000000000002, 45, "/images/machete.png", "Maczeta" },
+                    { 4, 1.1000000000000001, 55, "/images/sword.png", "Miecz" },
+                    { 5, 1.5, 70, "/images/axe.png", "Topór" },
+                    { 6, 0.69999999999999996, 40, "/images/spear.png", "Włócznia" },
+                    { 7, 1.3, 60, "/images/cleaver.png", "Tasak" },
+                    { 8, 2.0, 90, "/images/mace.png", "Buława" },
                     { 9, 0.5, 50, "/images/katana.png", "Katana" },
-                    { 10, 0.10000000000000001, 2, "/images/scissors.png", "Scissors" }
+                    { 10, 0.10000000000000001, 2, "/images/scissors.png", "Nożyczki" }
                 });
 
             migrationBuilder.InsertData(
@@ -690,9 +692,26 @@ namespace Symulator_Nozownika.Migrations
                 columns: new[] { "Id", "CooldownReduction", "DamageBonus", "Description", "ImageUrl", "Name", "Price", "WeaponId" },
                 values: new object[,]
                 {
-                    { 1, 0.02, 4, "Lepsza krawędź zwiększa obrażenia kuchennego noża.", "/images/knife.png", "Ostrzenie Kitchen Knife", 300, 1 },
-                    { 2, 0.050000000000000003, 6, "Lepszy balans skraca czas odnowienia sztyletu.", "/images/dagger.png", "Wyważenie Dagger", 650, 2 },
-                    { 3, 0.080000000000000002, 12, "Wzmocnione ostrze zapewnia dodatkową moc katanie.", "/images/katana.png", "Hartowana Katana", 1800, 9 }
+                    { 1, 0.02, 4, "Lepsza krawędź zwiększa obrażenia kuchennego noża.", "/images/knife.png", "Ostrzenie noża kuchennego", 300, 1 },
+                    { 2, 0.050000000000000003, 2, "Pewniejszy chwyt przyspiesza kolejne cięcia kuchennym nożem.", "/images/knife.png", "Lekki chwyt noża kuchennego", 380, 1 },
+                    { 3, 0.050000000000000003, 6, "Lepszy balans skraca czas odnowienia sztyletu.", "/images/dagger.png", "Wyważenie sztyletu", 650, 2 },
+                    { 4, 0.02, 9, "Dodatkowe nacięcia sprawiają, że sztylet rani znacznie mocniej.", "/images/dagger.png", "Ząbkowane ostrze sztyletu", 780, 2 },
+                    { 5, 0.040000000000000001, 10, "Dodatkowa masa zwiększa siłę każdego zamachu maczetą.", "/images/machete.png", "Cięższy grzbiet maczety", 980, 3 },
+                    { 6, 0.080000000000000002, 6, "Nowa rękojeść pozwala szybciej wrócić do pozycji po cięciu.", "/images/machete.png", "Rajdowa rękojeść maczety", 1120, 3 },
+                    { 7, 0.050000000000000003, 11, "Dłuższe ostrze tnie czyściej i głębiej.", "/images/sword.png", "Polerowana klinga miecza", 1350, 4 },
+                    { 8, 0.089999999999999997, 7, "Lepsza kontrola miecza poprawia tempo ataku.", "/images/sword.png", "Stalowy jelec miecza", 1490, 4 },
+                    { 9, 0.040000000000000001, 15, "Dodatkowe kolce wzmacniają brutalność uderzeń toporem.", "/images/axe.png", "Kolczaste ostrze topora", 1750, 5 },
+                    { 10, 0.10000000000000001, 9, "Lepsze wyważenie pomaga szybciej odzyskać kontrolę nad toporem.", "/images/axe.png", "Przeciwwaga topora", 1880, 5 },
+                    { 11, 0.040000000000000001, 8, "Hartowany grot włóczni lepiej przebija cel.", "/images/spear.png", "Wzmocniony grot włóczni", 920, 6 },
+                    { 12, 0.080000000000000002, 5, "Lżejszy drzewiec zwiększa szybkość kolejnego pchnięcia.", "/images/spear.png", "Elastyczny drzewiec włóczni", 1080, 6 },
+                    { 13, 0.050000000000000003, 12, "Masakrycznie ostra stal zwiększa obrażenia tasaka.", "/images/cleaver.png", "Rzeźnicka stal tasaka", 1420, 7 },
+                    { 14, 0.10000000000000001, 7, "Pewniejszy uchwyt skraca czas między kolejnymi zamachami.", "/images/cleaver.png", "Gumowany chwyt tasaka", 1560, 7 },
+                    { 15, 0.050000000000000003, 18, "Cięższy rdzeń buławy robi ogromną różnicę przy trafieniu.", "/images/mace.png", "Żelazny rdzeń buławy", 2200, 8 },
+                    { 16, 0.12, 10, "Nowa owijka poprawia rytm i skraca przerwy między ciosami.", "/images/mace.png", "Skórzana owijka buławy", 2380, 8 },
+                    { 17, 0.080000000000000002, 12, "Wzmocnione ostrze zapewnia dodatkową moc katanie.", "/images/katana.png", "Hartowana Katana", 1800, 9 },
+                    { 18, 0.11, 8, "Precyzyjna pochwa pozwala wrócić do ataku niemal natychmiast.", "/images/katana.png", "Błyskawiczna pochwa Katana", 1940, 9 },
+                    { 19, 0.01, 2, "Usztywnienie nożyc poprawia siłę cięcia mimo ich lekkości.", "/images/scissors.png", "Tytanowy nit Scissors", 240, 10 },
+                    { 20, 0.029999999999999999, 1, "Nowa sprężyna przyspiesza każde następne kliknięcie nożycami.", "/images/scissors.png", "Sprężyna Scissors", 320, 10 }
                 });
 
             migrationBuilder.CreateIndex(

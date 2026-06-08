@@ -144,15 +144,15 @@ namespace Symulator_Nozownika.Services
         </div>
 
         <div class='info-section'>
-            <p><span class='info-label'>Owner:</span> ");
+            <p><span class='info-label'>W³aœciciel:</span> ");
             html.Append(club.Owner?.FirstName ?? "N/A");
             html.Append(" ");
             html.Append(club.Owner?.LastName ?? "");
             html.Append(@"</p>
-            <p><span class='info-label'>Created:</span> ");
+            <p><span class='info-label'>Utworzono:</span> ");
             html.Append(club.CreatedAt.ToString("dd.MM.yyyy HH:mm"));
             html.Append(@"</p>
-            <p><span class='info-label'>Total Members:</span> ");
+            <p><span class='info-label'> Liczba u¿ytkowników:</span> ");
             html.Append(club.Members.Count);
             html.Append(@"</p>
         </div>
@@ -160,12 +160,12 @@ namespace Symulator_Nozownika.Services
         <table>
             <thead>
                 <tr>
-                    <th>MemberId</th>
-                    <th>Username</th>
-                    <th>Full Name</th>
-                    <th>Country</th>
-                    <th>Role</th>
-                    <th>Joined</th>
+                    <th>ID cz³onka</th>
+                    <th>Nazwa u¿ytkownika</th>
+                    <th>Pe³ne imiê</th>
+                    <th>Kraj</th>
+                    <th>Rola</th>
+                    <th>Data do³¹czenia</th>
                 </tr>
             </thead>
             <tbody>");
@@ -202,7 +202,7 @@ namespace Symulator_Nozownika.Services
         </table>
 
         <div class='footer'>
-            Generated on ");
+            Wygenerowano dnia ");
             html.Append(DateTime.UtcNow.ToString("dd.MM.yyyy HH:mm:ss"));
             html.Append(@"
         </div>

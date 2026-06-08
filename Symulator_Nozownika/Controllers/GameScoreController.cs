@@ -17,7 +17,7 @@ namespace Symulator_Nozownika.Controllers
         public bool Won { get; set; }
         public int Clicks { get; set; }
     }
-
+    [ApiController]
     public class GameScoreController : Controller
     {
         private sealed class CountryCatalogItem
@@ -256,6 +256,8 @@ namespace Symulator_Nozownika.Controllers
 
         //new save score method that first updates user statistics and then checks for achievements before saving the high score
         [HttpPost]
+        [Route("api/gamescore/savescore")]
+        [Produces("application/json")]
         public async Task<IActionResult> SaveScore([FromBody] GameScoreRequest request)
         {
             var score = request?.Score ?? 0;
@@ -308,6 +310,10 @@ namespace Symulator_Nozownika.Controllers
                             // 4. Sprawdzanie łącznej sumy kliknięć
                             var totalClicksAch = await _achievementService.CheckTotalClicksAchievementsAsync(parsedUserId, userStats.TotalClicks);
                             if (totalClicksAch != null && totalClicksAch.Any()) unlockedAchievements.AddRange(totalClicksAch);
+
+                            //5. Sprawdzanie osiągnięcia za pierwsze zwycięstwo - tylko jeśli ta gra została wygrana
+                            var firstKillAch = await _achievementService.CheckFirstKillAchievementAsync(parsedUserId, request.Won);
+                            if (firstKillAch?.Any() == true) unlockedAchievements.AddRange(firstKillAch);
                         }
                     }
 
@@ -394,6 +400,9 @@ namespace Symulator_Nozownika.Controllers
 
 
         [HttpPost]
+        [Route("api/gamescore/saveanonymousscore")]
+        [Produces("application/json")]
+
         public async Task<IActionResult> SaveAnonymousScore([FromBody] GameScoreRequest request)
         {
             var score = request?.Score ?? 0;
@@ -416,6 +425,8 @@ namespace Symulator_Nozownika.Controllers
         }
 
         [HttpGet]
+        [Route("api/gamescore/topscores")]
+        [Produces("application/json")]
         public async Task<IActionResult> GetTopScores(int limit = 10)
         {
             var topScores = await _context.HighScores
@@ -437,6 +448,8 @@ namespace Symulator_Nozownika.Controllers
         }
 
         [HttpGet]
+        [Route("api/gamescore/userhighscore")]
+        [Produces("application/json")]
         public async Task<IActionResult> GetUserHighScore()
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -454,6 +467,7 @@ namespace Symulator_Nozownika.Controllers
         }
 
         [HttpGet]
+        [Route("GameScore/Highscores")]
         public async Task<IActionResult> Highscores()
         {
             // Block demo users from accessing rankings
@@ -535,6 +549,8 @@ namespace Symulator_Nozownika.Controllers
         }
 
         [HttpPost]
+        [Route("api/gamescore/pinscore")]
+        [Produces("application/json")]
         public async Task<IActionResult> PinScore([FromBody] PinScoreRequest request)
         {
             // Block demo users from saving scores
@@ -562,6 +578,8 @@ namespace Symulator_Nozownika.Controllers
         }
 
         [HttpPost]
+        [Route("api/gamescore/unpinscore")]
+        [Produces("application/json")]
         public async Task<IActionResult> UnpinScore([FromBody] UnpinScoreRequest request)
         {
             // Block demo users from saving scores

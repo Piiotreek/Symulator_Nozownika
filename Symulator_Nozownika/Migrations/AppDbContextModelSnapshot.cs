@@ -136,6 +136,15 @@ namespace Symulator_Nozownika.Migrations
                             Name = "3000 GWIAZD!",
                             TargetValue = 3000,
                             Type = 1
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Description = "Wyeliminuj cel po raz pierwszy.",
+                            ImagePath = "/images/achiv/first-kill.png",
+                            Name = "Pierwszy zabójca",
+                            TargetValue = 1,
+                            Type = 5
                         });
                 });
 
@@ -488,7 +497,7 @@ namespace Symulator_Nozownika.Migrations
                             Description = "Przyspiesza tempo ataku na kilka sekund przed lub w trakcie rundy.",
                             DurationInSeconds = 6,
                             EffectStrength = 10,
-                            ImageUrl = "/images/scissors.png",
+                            ImageUrl = "/images/potions/adrenaline_potion.png",
                             Name = "Adrenalina",
                             Price = 120
                         },
@@ -498,7 +507,7 @@ namespace Symulator_Nozownika.Migrations
                             Description = "Podkręca obrażenia i zwiększa szansę na potężny critical hit x3.",
                             DurationInSeconds = 8,
                             EffectStrength = 18,
-                            ImageUrl = "/images/dagger.png",
+                            ImageUrl = "/images/potions/rage_potion.png",
                             Name = "Furia",
                             Price = 260
                         },
@@ -508,7 +517,7 @@ namespace Symulator_Nozownika.Migrations
                             Description = "Każde trafienie może wywołać niestackujący bleed, który dobija cel z czasem.",
                             DurationInSeconds = 10,
                             EffectStrength = 12,
-                            ImageUrl = "/images/katana.png",
+                            ImageUrl = "/images/potions/bleeding_potion.png",
                             Name = "Krwawiące Ostrze",
                             Price = 400
                         },
@@ -518,7 +527,7 @@ namespace Symulator_Nozownika.Migrations
                             Description = "Zatrzymuje licznik rundy na 3 sekundy i daje moment na darmowe trafienia.",
                             DurationInSeconds = 3,
                             EffectStrength = 3,
-                            ImageUrl = "/images/sword.png",
+                            ImageUrl = "/images/potions/timestop_potion.png",
                             Name = "Stop-Czas",
                             Price = 520
                         });

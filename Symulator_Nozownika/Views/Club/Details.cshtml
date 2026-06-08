@@ -87,7 +87,7 @@
                                         </td>
                                         <td>@member.Country</td>
                                         <td>
-                                            @if (member.Id == Model.OwnerId)
+                                            @if (member.UserId == Model.OwnerId)
                                             {
                                                 <span class="badge bg-primary">Właściciel</span>
                                             }
@@ -96,7 +96,7 @@
                                                 <span class="badge bg-secondary">Członek</span>
                                             }
                                         </td>
-                                        @if (Model.IsOwner && member.Id != Model.OwnerId)
+                                        @if (Model.IsOwner && member.UserId != Model.OwnerId)
                                         {
                                             <td>
                                                 <form method="post" action="@Url.Action("RemoveMember", "Club")" 
@@ -186,7 +186,7 @@
 {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            alert('@TempData["Success"]');
+            alert('@Html.Raw(TempData["Success"])');
         });
     </script>
 }
@@ -195,7 +195,7 @@
 {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            alert('Błąd: @TempData["Error"]');
+            alert('Błąd: @Html.Raw(TempData["Error"])');
         });
     </script>
 }

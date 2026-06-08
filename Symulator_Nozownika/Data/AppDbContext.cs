@@ -293,7 +293,7 @@ namespace Symulator_Nozownika.Data
                     Price = 120,
                     EffectStrength = 10,
                     DurationInSeconds = 6,
-                    ImageUrl = "/images/scissors.png"
+                    ImageUrl = "/images/potions/adrenaline_potion.png"
                 },
                 new Potion
                 {
@@ -303,7 +303,7 @@ namespace Symulator_Nozownika.Data
                     Price = 260,
                     EffectStrength = 18,
                     DurationInSeconds = 8,
-                    ImageUrl = "/images/dagger.png"
+                    ImageUrl = "/images/potions/rage_potion.png"
                 },
                 new Potion
                 {
@@ -313,7 +313,7 @@ namespace Symulator_Nozownika.Data
                     Price = 400,
                     EffectStrength = 12,
                     DurationInSeconds = 10,
-                    ImageUrl = "/images/katana.png"
+                    ImageUrl = "/images/potions/bleeding_potion.png"
                 },
                 new Potion
                 {
@@ -323,7 +323,7 @@ namespace Symulator_Nozownika.Data
                     Price = 520,
                     EffectStrength = 3,
                     DurationInSeconds = 3,
-                    ImageUrl = "/images/sword.png"
+                    ImageUrl = "/images/potions/timestop_potion.png"
                 }
             );
 
@@ -637,6 +637,15 @@ namespace Symulator_Nozownika.Data
                     ImagePath = "/images/achiv/3000-clicks.png",
                     Type = AchievementType.TotalClicks,
                     TargetValue = 3000
+                },
+                new Achievement
+                {
+                    Id = 10,
+                    Name = "Pierwszy zabójca",
+                    Description = "Wyeliminuj cel po raz pierwszy.",
+                    ImagePath = "/images/achiv/first-kill.png",
+                    Type = AchievementType.FirstKill,
+                    TargetValue = 1
                 });
 
             // Seed a debug user account with wallet and level

@@ -10,6 +10,12 @@
     var lockedWeapons = Model.NonOwnedWeapons
         .Where(w => Model.UserLevel < LevelService.GetRequiredLevelForWeapon(w.Id))
         .ToList();
+
+    if (User.FindFirst("IsDemo")?.Value == "true")
+    {
+        Context.Response.Redirect(Url.Action("SecurePage", "Account")!);
+        return;
+    }
 }
 
 <div class="container mt-4">

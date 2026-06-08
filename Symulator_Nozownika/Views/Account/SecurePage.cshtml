@@ -138,13 +138,22 @@
     <div class="row justify-content-center">
         <div class="col-lg-8 shadow-lg p-4 bg-light rounded relative-container">
             <div id="cooldown-overlay"></div>
+
             <div id="round-countdown-overlay" class="round-countdown-overlay d-none">
                 <div class="round-countdown-inner">
                     <div class="round-countdown-label">Przygotuj się</div>
                     <div id="round-countdown-value" class="round-countdown-value">3</div>
-                    <div class="round-countdown-hint">Użyj potki i ustaw celownik</div>
+                    <div class="round-countdown-hint">@(isDemoUser ? "Ustaw celownik" : "Użyj potki i ustaw celownik")</div>
                 </div>
             </div>
+
+            <div id="win-overlay" class="round-countdown-overlay d-none" style="z-index: 10;">
+                <div class="round-countdown-inner">
+                    <div class="round-countdown-value" style="font-size: 5rem;">🏆</div>
+                    <div class="round-countdown-label" style="font-size: 3rem; letter-spacing: 0.05rem;">WYGRAŁEŚ!</div>
+                </div>
+            </div>
+
             <div id="hit-feedback-layer" class="hit-feedback-layer"></div>
 
             <div id="graphic-container" class="text-center">
@@ -228,6 +237,7 @@
     const roundCountdownOverlay = document.getElementById('round-countdown-overlay');
     const roundCountdownValue = document.getElementById('round-countdown-value');
     const potionEffectVisual = document.getElementById('potion-effect-visual');
+    const winOverlay = document.getElementById('win-overlay');
 
     // Initialize demo games display if demo user
     if (isDemoUser) {
@@ -370,8 +380,12 @@
             hpDisplay.innerText = hp;
             remainingTicks--;
 
-            if (hp <= 0) {
+           if (hp <= 0) {
                 clearInterval(bleedInterval);
+                if (winOverlay) {
+                    winOverlay.classList.remove('d-none');
+                    setTimeout(() => winOverlay.classList.add('d-none'), 6000);
+                }
                 endGame('CEL WYKRWAWIŁ SIĘ!');
             }
         }, 1000);
@@ -559,7 +573,7 @@
             }
         } else {
             // Normal user score submission
-            const response = await fetch('/GameScore/SaveScore', {
+           const response = await fetch('/api/gamescore/savescore', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -778,10 +792,15 @@
                     triggerBleed();
                 }
 
-                // Logika Cooldownu
+               // Logika Cooldownu
                 activateCooldown();
-
-                if (hp <= 0) endGame("CEL WYELIMINOWANY!");
+                if (hp <= 0 && winOverlay) {
+                        winOverlay.classList.remove('d-none');
+                        endGame("WYGRAŁEŚ!"); // <--- DODANA LINIJKA: Zatrzymuje grę i wysyła wynik!
+                        setTimeout(() => {
+                            winOverlay.classList.add('d-none');
+                        }, 6000);
+                }
             });
         });
     }

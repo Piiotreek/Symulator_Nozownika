@@ -128,6 +128,30 @@ namespace Symulator_Nozownika.Services
             await _context.SaveChangesAsync();
             return newlyUnlocked;
         }
+        public async Task<List<Achievement>> CheckFirstKillAchievementAsync(int userId, bool won)
+        {
+            var newlyUnlocked = new List<Achievement>();
+            if (!won) return newlyUnlocked;
+
+            var unlockedAchievementIds = await _context.UserAchievements
+                .Where(ua => ua.UserAccountId == userId && ua.Achievement.Type == AchievementType.FirstKill)
+                .Select(ua => ua.AchievementId).ToListAsync();
+
+            var achievementsToUnlock = await _context.Achievements
+                .Where(a => a.Type == AchievementType.FirstKill && !unlockedAchievementIds.Contains(a.Id))
+                .ToListAsync();
+
+            if (!achievementsToUnlock.Any()) return newlyUnlocked;
+
+            foreach (var achievement in achievementsToUnlock)
+            {
+                _context.UserAchievements.Add(new UserAchievement { UserAccountId = userId, AchievementId = achievement.Id, UnlockedAt = DateTime.UtcNow });
+                newlyUnlocked.Add(achievement);
+            }
+
+            await _context.SaveChangesAsync();
+            return newlyUnlocked;
+        }
     }
 }
     

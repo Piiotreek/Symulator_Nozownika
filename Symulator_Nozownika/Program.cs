@@ -17,8 +17,56 @@ namespace Symulator_Nozownika
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
-            // Register Razor Pages so pages using @page and asp-page work (Admin pages)
             builder.Services.AddRazorPages();
+
+            // Swagger / OpenAPI
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = "Symulator Nożownika API",
+                    Version = "v1",
+                    Description = "REST API dla Symulatora Nożownika – wyniki, statystyki, zgłoszenia."
+                });
+
+                options.DocInclusionPredicate((docName, apiDesc) =>
+                {
+                    var actionDescriptor = apiDesc.ActionDescriptor as
+                        Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor;
+                    if (actionDescriptor == null) return false;
+                    return actionDescriptor.ControllerTypeInfo
+                        .GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.ApiControllerAttribute), true)
+                        .Any();
+                });
+
+                options.AddSecurityDefinition("cookieAuth", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Cookie,
+                    Name = ".AspNetCore.Cookies",
+                    Description = "Autoryzacja przez cookie sesji ASP.NET Core."
+                });
+                options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                {
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "cookieAuth"
+                            }
+                        },
+                        Array.Empty<string>()
+                    }
+                });
+
+            var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+             var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
+             if (System.IO.File.Exists(xmlPath))
+             options.IncludeXmlComments(xmlPath);
+            });
             //building authentication services using cookie authentication scheme
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -44,14 +92,10 @@ namespace Symulator_Nozownika
 
             // Add Authorization with custom policies
             builder.Services.AddHttpContextAccessor();
-            builder.Services.AddScoped<IAuthorizationHandler, CsvExportAuthorizationHandler>();
+           
             builder.Services.AddAuthorization(options =>
             {
-                options.AddPolicy("CanExportCsv", policy =>
-                    policy.AddRequirements(new CsvExportRequirement()));
-
-                options.AddPolicy("CanExportClubCsv", policy =>
-                    policy.AddRequirements(new CsvExportRequirement()));
+               
 
                 options.AddPolicy("AdminOnly", policy =>
                     policy.RequireRole("Admin"));
@@ -212,14 +256,14 @@ namespace Symulator_Nozownika
                         adminWallet = new CoinWallet
                         {
                             UserId = adminUser.Id,
-                            Balance = 9999,
+                            Balance = 999999,
                             UpdatedAt = DateTime.UtcNow
                         };
                         dbContext.CoinWallets.Add(adminWallet);
                     }
                     else
                     {
-                        adminWallet.Balance = 9999;
+                        adminWallet.Balance = 999999;
                         adminWallet.UpdatedAt = DateTime.UtcNow;
                         dbContext.CoinWallets.Update(adminWallet);
                     }
@@ -232,7 +276,7 @@ namespace Symulator_Nozownika
                         {
                             UserId = adminUser.Id,
                             TotalGamesPlayed = 0,
-                            TotalScore = 5500,
+                            TotalScore = 9999999,
                             TotalClicks = 0,
                             HighestScore = 0,
                             TotalPlayTime = TimeSpan.Zero,
@@ -377,6 +421,13 @@ namespace Symulator_Nozownika
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Symulator Nożownika API v1");
+                c.RoutePrefix = "swagger";
+                c.DocumentTitle = "Symulator Nożownika – API Docs";
+            });
 
 
             app.UseHttpsRedirection();

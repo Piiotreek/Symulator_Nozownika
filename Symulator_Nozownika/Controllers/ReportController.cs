@@ -12,27 +12,26 @@ namespace Symulator_Nozownika.Controllers
     {
         private readonly IReportService _reportService;
         private readonly AppDbContext _context;
-        private readonly IAuthorizationService _authorizationService;
+       
 
-        public ReportController(IReportService reportService, AppDbContext context, IAuthorizationService authorizationService)
+        public ReportController(IReportService reportService, AppDbContext context)
         {
             _reportService = reportService;
             _context = context;
-            _authorizationService = authorizationService;
+           
         }
 
         [HttpGet]
-        [Authorize(Policy = "CanExportClubCsv")]
+        [Authorize]
         public async Task<IActionResult> ClubPdf(int id)
         {
-            // Additional check: verify if user is club owner for this specific club
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (!int.TryParse(userIdClaim, out var userId)) return Unauthorized();
 
-            var requirement = new CsvExportRequirement(id);
-            var authResult = await _authorizationService.AuthorizeAsync(User, requirement, "CanExportClubCsv");
+            var isAdmin = User.IsInRole("Admin");
+            var isOwner = await _context.Clubs.AnyAsync(c => c.Id == id && c.OwnerId == userId);
 
-            if (!authResult.Succeeded)
+            if (!isAdmin && !isOwner)
                 return Forbid();
 
             var pdf = await _reportService.GenerateClubPdfAsync(id);
@@ -41,7 +40,7 @@ namespace Symulator_Nozownika.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "CanExportCsv")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> MyStatisticsPdf()
         {
             var pdf = await _reportService.GenerateUserStatisticsPdfAsync(
@@ -52,7 +51,7 @@ namespace Symulator_Nozownika.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "CanExportCsv")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> AllStatisticsPdf()
         {
             var pdf = await _reportService.GenerateAllStatisticsPdfAsync();
@@ -61,7 +60,7 @@ namespace Symulator_Nozownika.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "CanExportCsv")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> HighscoresPdf()
         {
             var pdf = await _reportService.GenerateHighscoresPdfAsync();

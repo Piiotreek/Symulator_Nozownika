@@ -159,7 +159,7 @@ namespace Symulator_Nozownika.Controllers
             // Sprawdzenie czy użytkownik już ma klub
             if (user.ClubId.HasValue)
             {
-                ModelState.AddModelError("", "You are already a member of a club. Leave your current club first.");
+                ModelState.AddModelError("", "Jesteś już członkiem klubu. Najpierw opuść swój obecny klub.");
                 return View(model);
             }
 
@@ -168,7 +168,7 @@ namespace Symulator_Nozownika.Controllers
             var userGold = user.CoinWallet?.Balance ?? 0;
             if (userLevel < 7 && userGold < 500)
             {
-                ModelState.AddModelError("", "You need at least level 7 or 500 coins to create a club.");
+                ModelState.AddModelError("", "Potrzebujesz przynajmniej poziomu 7 i 500 monet, aby utworzyć klub.");
                 return View(model);
             }
 
@@ -181,7 +181,7 @@ namespace Symulator_Nozownika.Controllers
             if (nameTaken)
             {
                 ModelState.AddModelError(nameof(model.Name),
-                    "A club with this name already exists.");
+                    "Klub o tej nazwie już istnieje.");
                 return View(model);
             }
 
@@ -219,7 +219,7 @@ namespace Symulator_Nozownika.Controllers
             // Block demo users from joining clubs
             if (User.FindFirst("IsDemo")?.Value == "true")
             {
-                TempData["DemoError"] = "Club features are not available in Demo mode";
+                TempData["DemoError"] = "Funkcjonalność klubu nie jest dostępna w trybie demo";
                 return RedirectToAction("SecurePage", "Account");
             }
 
@@ -247,14 +247,14 @@ namespace Symulator_Nozownika.Controllers
             // Sprawdzenie czy już jest członkiem
             if (user.ClubId.HasValue)
             {
-                TempData["Error"] = "You are already a member of a club.";
+                TempData["Error"] = "Jesteś już członkiem klubu.";
                 return RedirectToAction("Details", new { id = clubId });
             }
 
             // Sprawdzenie czy klub jest pełny
             if (club.IsFull())
             {
-                TempData["Error"] = "This club is full.";
+                TempData["Error"] = "Klub jest pełny.";
                 return RedirectToAction("Details", new { id = clubId });
             }
 
@@ -271,7 +271,7 @@ namespace Symulator_Nozownika.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"You have successfully joined {club.Name}!";
+            TempData["Success"] = $"Dołączyłeś do klubu {club.Name}!";
             return RedirectToAction("Details", new { id = clubId });
         }
 
@@ -281,7 +281,7 @@ namespace Symulator_Nozownika.Controllers
             // Block demo users from club operations
             if (User.FindFirst("IsDemo")?.Value == "true")
             {
-                TempData["DemoError"] = "Club features are not available in Demo mode";
+                TempData["DemoError"] = "Funkcjonalność klubu nie jest dostępna w trybie demo";
                 return RedirectToAction("SecurePage", "Account");
             }
 
@@ -329,7 +329,7 @@ namespace Symulator_Nozownika.Controllers
                     _context.Clubs.Remove(club);
                     user.ClubId = null;
                     await _context.SaveChangesAsync();
-                    TempData["Success"] = "Club has been deleted because you were the only member.";
+                    TempData["Success"] = "Klub został usunięty, ponieważ byłeś jedynym członkiem.";
                     return RedirectToAction("Index");
                 }
             }
@@ -343,7 +343,7 @@ namespace Symulator_Nozownika.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "You have left the club.";
+            TempData["Success"] = "Opuściłeś klub.";
             return RedirectToAction("Index");
         }
 
@@ -353,7 +353,7 @@ namespace Symulator_Nozownika.Controllers
             // Block demo users from club operations
             if (User.FindFirst("IsDemo")?.Value == "true")
             {
-                TempData["DemoError"] = "Club features are not available in Demo mode";
+                TempData["DemoError"] = "W trybie demo nie można usuwać klubów.";
                 return RedirectToAction("SecurePage", "Account");
             }
 
@@ -374,7 +374,7 @@ namespace Symulator_Nozownika.Controllers
 
             if (!club.IsOwner(userId.Value))
             {
-                TempData["Error"] = "Only the club owner can delete the club.";
+                TempData["Error"] = "Tylko właściciel klubu może usunąć klub.";
                 return RedirectToAction("Details", new { id = clubId });
             }
 
@@ -390,7 +390,7 @@ namespace Symulator_Nozownika.Controllers
             _context.Clubs.Remove(club);
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = "Club has been deleted.";
+            TempData["Success"] = "Klub został usunięty.";
             return RedirectToAction("Index");
         }
 
@@ -417,14 +417,14 @@ namespace Symulator_Nozownika.Controllers
             var currentUserMember = club.Members.FirstOrDefault(m => m.UserId == userId.Value);
             if (currentUserMember?.Role != ClubRole.Owner && currentUserMember?.Role != ClubRole.Moderator)
             {
-                TempData["Error"] = "Only the club owner or moderator can remove members.";
+                TempData["Error"] = "Tylko członek klubu może usunąć innego członka.";
                 return RedirectToAction("Details", new { id = clubId });
             }
 
             // Nie można usunąć ownera (chyba że sam się usuwa)
             if (memberId == club.OwnerId && userId.Value != club.OwnerId)
             {
-                TempData["Error"] = "You cannot remove the club owner.";
+                TempData["Error"] = "Nie możesz usunąć właściciela klubu.";
                 return RedirectToAction("Details", new { id = clubId });
             }
 
@@ -443,7 +443,7 @@ namespace Symulator_Nozownika.Controllers
 
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"{member.FirstName} {member.LastName} has been removed from the club.";
+            TempData["Success"] = $"{member.FirstName} {member.LastName} został usunięty z klubu.";
             return RedirectToAction("Details", new { id = clubId });
         }
 
@@ -504,7 +504,7 @@ namespace Symulator_Nozownika.Controllers
             // Block demo users from club chat
             if (User.FindFirst("IsDemo")?.Value == "true")
             {
-                TempData["DemoError"] = "Club features are not available in Demo mode";
+                TempData["DemoError"] = "Funkcjonalności czatu klubu nie są dostępne w trybie demo.";
                 return RedirectToAction("SecurePage", "Account");
             }
 

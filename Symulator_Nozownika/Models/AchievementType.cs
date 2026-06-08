@@ -6,6 +6,7 @@
         TotalClicks,
         TotalScore,
         FriendsCount,
-        SingleGameClicks
+        SingleGameClicks,
+        FirstKill
     }
 }

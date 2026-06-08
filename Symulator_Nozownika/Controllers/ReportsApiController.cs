@@ -13,6 +13,8 @@ namespace Symulator_Nozownika.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
+    [Produces("application/json")]   
+
     public class ReportsApiController : ControllerBase
     {
         private readonly IReportManagementService _reportService;

@@ -258,13 +258,37 @@
             <div class="text-center mt-4 d-flex flex-wrap justify-content-center align-items-center gap-3">
                 <a asp-controller="Account" asp-action="SecurePage" class="play-cta-button play-cta-button-lg">⚔️ Wskocz do gry</a>
                 <a asp-controller="Account" asp-action="SelectWeapon" class="btn btn-outline-warning btn-lg">Zmień broń</a>
-                <a asp-controller="Report" asp-action="HighscoresPdf" class="btn btn-outline-light btn-lg">📥 Eksportuj PDF</a>
+                <!-- PO: -->
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Report" asp-action="MyStatisticsPdf" class="btn btn-outline-primary btn-lg ms-2">📥 Eksportuj moje PDF</a>
+                }
+                else
+                {
+                    <button class="btn btn-outline-secondary btn-lg ms-2" onclick="showNoPermissionToast()">📥 Eksportuj moje PDF</button>
+                }
             </div>
         </div>
     </div>
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+        <div id="noPermissionToast" class="toast align-items-center text-bg-danger border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    🔒 Nie masz uprawnień do eksportu PDF. Ta funkcja jest dostępna tylko dla administratorów.
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    
 </div>
 
 <script>
+    function showNoPermissionToast() {
+            const toast = new bootstrap.Toast(document.getElementById('noPermissionToast'), { delay: 4000 });
+            toast.show();
+        }
     document.addEventListener('DOMContentLoaded', function() {
         const tables = ['#desktopTable', '#mobileTable'];
         let sortState = {

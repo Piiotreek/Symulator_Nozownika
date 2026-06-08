@@ -8,5 +8,6 @@ namespace Symulator_Nozownika.Services
         Task<List<Achievement>> CheckTotalClicksAchievementsAsync(int userId, int currentTotalClicks);
         Task<List<Achievement>> CheckSingleGameClicksAchievementAsync(int userId, int singleGameClicks);
         Task<List<Achievement>> CheckFirstGameAchievementAsync(int userId, int totalGamesPlayed);
+        Task<List<Achievement>> CheckFirstKillAchievementAsync(int userId, bool won);
     }
 }
