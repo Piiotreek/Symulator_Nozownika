@@ -288,7 +288,7 @@ namespace Symulator_Nozownika
                     }
                     else
                     {
-                        adminStats.TotalScore = 5500;
+                        
                         dbContext.UserStatistics.Update(adminStats);
                     }
 
