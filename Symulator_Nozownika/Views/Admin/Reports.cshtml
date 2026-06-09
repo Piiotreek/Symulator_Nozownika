@@ -465,11 +465,16 @@
                     });
 
                     if (response.ok) {
+                        const data = await response.json().catch(() => ({}));
                         bootstrap.Modal.getInstance(document.getElementById('applyPenaltyModal')).hide();
                         document.getElementById('penaltyType').value = '';
                         document.getElementById('penaltyReason').value = '';
                         document.getElementById('penaltyNotes').value = '';
                         showPenaltyFeedback('');
+
+                        if (data.message) {
+                            alert(data.message);
+                        }
 
                         if (currentReportType === 'message') {
                             bootstrap.Modal.getInstance(document.getElementById('messageReportModal')).hide();
@@ -481,29 +486,6 @@
 
                         loadPenalties();
                         return;
-                        const data = await response.json().catch(() => ({}));
-                        let msg = data.message || 'Kara została zastosowana';
-                        if (data.penalty) {
-                            msg += `\nID kary: ${data.penalty.id}`;
-                            if (data.penalty.expiresAt) msg += `\nWygasa: ${new Date(data.penalty.expiresAt).toLocaleString('pl-PL')}`;
-                        }
-                        alert(msg);
-                        bootstrap.Modal.getInstance(document.getElementById('applyPenaltyModal')).hide();
-                        
-                        // Wyczyść pola formularza
-                        document.getElementById('penaltyType').value = '';
-                        document.getElementById('penaltyReason').value = '';
-                        document.getElementById('penaltyNotes').value = '';
-                        
-                        if (currentReportType === 'message') {
-                            bootstrap.Modal.getInstance(document.getElementById('messageReportModal')).hide();
-                            loadMessageReports();
-                        } else {
-                            bootstrap.Modal.getInstance(document.getElementById('userReportModal')).hide();
-                            loadUserReports();
-                        }
-                        
-                        loadPenalties();
                     } else {
                         const err = await response.json().catch(() => ({}));
                         console.error('Apply penalty failed', response.status, err);

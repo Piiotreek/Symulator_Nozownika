@@ -1,15 +1,23 @@
 ﻿@model Symulator_Nozownika.Models.UserPenalty
 
 @{
-    ViewData["Title"] = "Konto zawieszone";
+    var isBan = Model?.Type == Symulator_Nozownika.Models.PenaltyType.Ban;
+    ViewData["Title"] = isBan ? "Konto zbanowane" : "Konto zawieszone";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <div class="container text-center mt-5">
-    <h1 class="display-4 text-danger">Konto zawieszone</h1>
-    <p class="lead">Twoje konto zostało zawieszone z powodu naruszenia regulaminu.</p>
+    <h1 class="display-4 text-danger">@(isBan ? "Konto zbanowane" : "Konto zawieszone")</h1>
+    <p class="lead">@(isBan ? "Twoje konto zostało zbanowane z powodu naruszenia regulaminu." : "Twoje konto zostało zawieszone z powodu naruszenia regulaminu.")</p>
     
-    @if (Model != null && Model.ExpiresAt.HasValue)
+    @if (Model != null && isBan)
+    {
+        <div class="alert alert-danger" role="alert">
+            <p><strong>Powód:</strong> @Model.Reason</p>
+            <p>Ban jest aktywny bezterminowo. Jeśli uważasz, że to pomyłka, skontaktuj się z administracją.</p>
+        </div>
+    }
+    else if (Model != null && Model.ExpiresAt.HasValue)
     {
         <div class="alert alert-warning" role="alert">
             <p><strong>Powód:</strong> @Model.Reason</p>

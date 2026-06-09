@@ -453,6 +453,66 @@ namespace Symulator_Nozownika.Services
                     }
                 }
 
+                if (penaltyType == PenaltyType.BanWithDeletion)
+                {
+                    var normalizedBannedUserName = user.UserName.Trim();
+                    var normalizedBannedEmail = user.Email.Trim();
+
+                    var existingBannedCredential = await _context.BannedCredentials
+                        .FirstOrDefaultAsync(b => b.UserName == normalizedBannedUserName || b.Email == normalizedBannedEmail);
+
+                    if (existingBannedCredential == null)
+                    {
+                        _context.BannedCredentials.Add(new BannedCredential
+                        {
+                            UserName = normalizedBannedUserName,
+                            Email = normalizedBannedEmail,
+                            BannedAt = DateTime.UtcNow,
+                            Reason = normalizedReason
+                        });
+                    }
+
+                    var clubsOwned = await _context.Clubs
+                        .Include(c => c.Members)
+                            .ThenInclude(cm => cm.User)
+                        .Where(c => c.OwnerId == userId)
+                        .ToListAsync();
+
+                    foreach (var club in clubsOwned)
+                    {
+                        foreach (var member in club.Members)
+                        {
+                            if (member.User != null)
+                            {
+                                member.User.ClubId = null;
+                            }
+                        }
+
+                        _context.Clubs.Remove(club);
+                    }
+
+                    var memberships = await _context.ClubMembers
+                        .Where(cm => cm.UserId == userId)
+                        .ToListAsync();
+
+                    if (memberships.Count > 0)
+                    {
+                        _context.ClubMembers.RemoveRange(memberships);
+                    }
+
+                    var clubMessages = await _context.ClubMessages
+                        .Where(m => m.UserId == userId)
+                        .ToListAsync();
+
+                    if (clubMessages.Count > 0)
+                    {
+                        _context.ClubMessages.RemoveRange(clubMessages);
+                    }
+
+                    user.ClubId = null;
+                    _context.UserAccounts.Remove(user);
+                }
+
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("ApplyPenaltyAsync: penalty id={PenaltyId} user={UserId} admin={AdminId}", penalty.Id, userId, adminId);
                 return true;

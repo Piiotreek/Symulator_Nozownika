@@ -38,6 +38,7 @@ namespace Symulator_Nozownika.Data
         public DbSet<MessageReport> MessageReports { get; set; }
         public DbSet<UserReport> UserReports { get; set; }
         public DbSet<UserPenalty> UserPenalties { get; set; }
+        public DbSet<BannedCredential> BannedCredentials { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -55,6 +56,14 @@ namespace Symulator_Nozownika.Data
 
             modelBuilder.Entity<UserAccount>()
                 .HasIndex(u => u.Email)
+                .IsUnique();
+
+            modelBuilder.Entity<BannedCredential>()
+                .HasIndex(b => b.UserName)
+                .IsUnique();
+
+            modelBuilder.Entity<BannedCredential>()
+                .HasIndex(b => b.Email)
                 .IsUnique();
 
             modelBuilder.Entity<Club>()

@@ -32,7 +32,10 @@ namespace Symulator_Nozownika.Controllers
             var isOwner = await _context.Clubs.AnyAsync(c => c.Id == id && c.OwnerId == userId);
 
             if (!isAdmin && !isOwner)
-                return Forbid();
+            {
+                TempData["Info"] = "Tylko właściciel klubu lub administrator może eksportować listę członków do PDF.";
+                return RedirectToAction("Details", "Club", new { id });
+            }
 
             var pdf = await _reportService.GenerateClubPdfAsync(id);
             if (pdf.Length == 0) return NotFound();

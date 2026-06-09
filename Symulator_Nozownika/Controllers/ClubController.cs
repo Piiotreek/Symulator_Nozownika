@@ -28,6 +28,13 @@ namespace Symulator_Nozownika.Controllers
             return null;
         }
 
+        private async Task<bool> UserHasAnyClubRelationAsync(int userId)
+        {
+            return await _context.UserAccounts.AnyAsync(u => u.Id == userId && u.ClubId.HasValue)
+                || await _context.Clubs.AnyAsync(c => c.OwnerId == userId)
+                || await _context.ClubMembers.AnyAsync(cm => cm.UserId == userId);
+        }
+
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -109,7 +116,7 @@ namespace Symulator_Nozownika.Controllers
         }
 
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             // Block demo users from creating clubs
             if (User.FindFirst("IsDemo")?.Value == "true")
@@ -121,6 +128,12 @@ namespace Symulator_Nozownika.Controllers
             if (!GetCurrentUserId().HasValue)
             {
                 return Redirect("/Account/Login");
+            }
+
+            if (await UserHasAnyClubRelationAsync(GetCurrentUserId().Value))
+            {
+                TempData["Error"] = "Jeden użytkownik może być tylko w jednym klubie. Najpierw opuść lub usuń swój obecny klub.";
+                return RedirectToAction("Index");
             }
 
             return View(new CreateClubViewModel());
@@ -157,9 +170,9 @@ namespace Symulator_Nozownika.Controllers
             }
 
             // Sprawdzenie czy użytkownik już ma klub
-            if (user.ClubId.HasValue)
+            if (await UserHasAnyClubRelationAsync(userId.Value))
             {
-                ModelState.AddModelError("", "Jesteś już członkiem klubu. Najpierw opuść swój obecny klub.");
+                ModelState.AddModelError("", "Jeden użytkownik może należeć tylko do jednego klubu. Najpierw opuść lub usuń obecny klub.");
                 return View(model);
             }
 
@@ -205,9 +218,11 @@ namespace Symulator_Nozownika.Controllers
             };
 
             club.Members.Add(clubMember);
-            user.ClubId = null;
 
             _context.Clubs.Add(club);
+            await _context.SaveChangesAsync();
+
+            user.ClubId = club.Id;
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Details", new { id = club.Id });
@@ -245,9 +260,9 @@ namespace Symulator_Nozownika.Controllers
             }
 
             // Sprawdzenie czy już jest członkiem
-            if (user.ClubId.HasValue)
+            if (await UserHasAnyClubRelationAsync(userId.Value))
             {
-                TempData["Error"] = "Jesteś już członkiem klubu.";
+                TempData["Error"] = "Jeden użytkownik może należeć tylko do jednego klubu.";
                 return RedirectToAction("Details", new { id = clubId });
             }
 

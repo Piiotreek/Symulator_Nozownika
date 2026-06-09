@@ -191,6 +191,15 @@
     </script>
 }
 
+@if (TempData["Info"] != null)
+{
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            alert('@Html.Raw(TempData["Info"])');
+        });
+    </script>
+}
+
 @if (TempData["Error"] != null)
 {
     <script>

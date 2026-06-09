@@ -187,14 +187,27 @@ namespace Symulator_Nozownika.Controllers
         {
             ViewBag.Countries = await LoadCountriesAsync();
 
+            var normalizedEmail = model.Email?.Trim() ?? string.Empty;
+            var normalizedUserName = model.UserName?.Trim() ?? string.Empty;
+
+            if (await _context.BannedCredentials.AnyAsync(b => b.Email == normalizedEmail))
+            {
+                ModelState.AddModelError(nameof(model.Email), "Ten adres e-mail został trwale zablokowany i nie może zostać użyty ponownie.");
+            }
+
+            if (await _context.BannedCredentials.AnyAsync(b => b.UserName == normalizedUserName))
+            {
+                ModelState.AddModelError(nameof(model.UserName), "Ta nazwa użytkownika została trwale zablokowana i nie może zostać użyta ponownie.");
+            }
+
             if (ModelState.IsValid)
             {
                 UserAccount account = new UserAccount();
-                account.Email = model.Email;
+                account.Email = normalizedEmail;
                 account.FirstName = model.FirstName;
                 account.LastName = model.LastName;
                 account.Country = model.Country;
-                account.UserName = model.UserName;
+                account.UserName = normalizedUserName;
                 account.Password = model.Password;
                 try
                 {
@@ -413,9 +426,9 @@ namespace Symulator_Nozownika.Controllers
                 var suspension = await _context.UserPenalties
                     .Where(p => p.UserId == currentUserId
                         && p.IsActive
-                        && (p.Type == PenaltyType.Suspension1Day || p.Type == PenaltyType.Suspension7Days)
-                        && p.ExpiresAt.HasValue
-                        && p.ExpiresAt > DateTime.UtcNow)
+                        && ((p.Type == PenaltyType.Suspension1Day || p.Type == PenaltyType.Suspension7Days)
+                            ? p.ExpiresAt.HasValue && p.ExpiresAt > DateTime.UtcNow
+                            : p.Type == PenaltyType.Ban))
                     .OrderByDescending(p => p.AppliedAt)
                     .FirstOrDefaultAsync();
 
@@ -473,9 +486,9 @@ namespace Symulator_Nozownika.Controllers
             var suspension = await _context.UserPenalties
                 .Where(p => p.UserId == userId
                     && p.IsActive
-                    && (p.Type == PenaltyType.Suspension1Day || p.Type == PenaltyType.Suspension7Days)
-                    && p.ExpiresAt.HasValue
-                    && p.ExpiresAt > DateTime.UtcNow)
+                    && ((p.Type == PenaltyType.Suspension1Day || p.Type == PenaltyType.Suspension7Days)
+                        ? p.ExpiresAt.HasValue && p.ExpiresAt > DateTime.UtcNow
+                        : p.Type == PenaltyType.Ban))
                 .OrderByDescending(p => p.AppliedAt)
                 .FirstOrDefaultAsync();
 
