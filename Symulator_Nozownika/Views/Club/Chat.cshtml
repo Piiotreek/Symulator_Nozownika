@@ -1,0 +1,232 @@
+@model List<Symulator_Nozownika.Models.ClubMessage>
+
+@{
+    ViewData["Title"] = "Czat - " + ViewBag.ClubName;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <h2>💬 Czat klubu: @ViewBag.ClubName</h2>
+            <hr />
+
+            <div class="chat-container" style="height: 500px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; background-color: #f9f9f9; border-radius: 8px;">
+                @if (Model.Count == 0)
+                {
+                    <div class="text-center text-muted">
+                        <p>Brak wiadomości. Bądź pierwszy aby napisać!</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var message in Model)
+                    {
+                        var adminDeletedMessageContent = ViewBag.AdminDeletedMessageContent as string ?? "*wiadomość usunięta przez administratora*";
+                        var bannedWithDeletedAccountUserIds = ViewBag.BannedWithDeletedAccountUserIds as HashSet<int> ?? new HashSet<int>();
+                        var isAdminDeletedMessage = message.Content == adminDeletedMessageContent;
+                        var displayUserName = bannedWithDeletedAccountUserIds.Contains(message.UserId) ? "ZBANOWANY" : message.User.UserName;
+                        <div class="message mb-3" style="padding: 10px; background: white; border-radius: 6px; border-left: 4px solid #007bff;">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong style="color: #007bff;">@displayUserName</strong>
+                                    <span style="color: #999; font-size: 0.85em;">
+                                        @message.CreatedAt.ToString("g")
+                                        @if (message.EditedAt.HasValue)
+                                        {
+                                         <em>(edytowano)</em>
+                                        }
+                                    </span>
+                                </div>
+                                @{
+                                    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                                    var isOwnMessage = message.UserId.ToString() == currentUserId;
+                                    var canDelete = message.UserId.ToString() == currentUserId || 
+                                                   (User.IsInRole("Admin") || 
+                                                    int.TryParse(currentUserId, out int uid) && 
+                                                    ViewContext.RouteData.Values.ContainsKey("clubId"));
+                                }
+                                <div class="btn-group" role="group">
+                                    @if (canDelete && message.UserId.ToString() == currentUserId)
+                                    {
+                                        <form method="post" action="@Url.Action("DeleteMessage")" style="display: inline;">
+                                            <input type="hidden" name="messageId" value="@message.Id" />
+                                            <input type="hidden" name="clubId" value="@ViewBag.ClubId" />
+                                            <button type="submit" class="btn btn-sm btn-danger">×</button>
+                                        </form>
+                                    }
+                                    @if (!isAdminDeletedMessage && !isOwnMessage)
+                                    {
+                                    <button type="button" class="btn btn-sm btn-warning" 
+                                            onclick="reportMessage(@message.Id, '@message.User.UserName')"
+                                            title="Zgłoś tę wiadomość">
+                                        🚩
+                                    </button>
+                                    }
+                                    @if (!isAdminDeletedMessage && !isOwnMessage)
+                                    {
+                                    <button type="button" class="btn btn-sm btn-info" 
+                                            onclick="reportUser(@message.UserId, '@message.User.UserName')"
+                                            title="Zgłoś tego użytkownika">
+                                        👤
+                                    </button>
+                                    }
+                                </div>
+                            </div>
+                            @if (isAdminDeletedMessage)
+                            {
+                                <p class="mt-2 mb-0 fst-italic" style="word-wrap: break-word; color: #8B0000; font-weight: bold; text-decoration: line-through;">@adminDeletedMessageContent</p>
+                            }
+                            else
+                            {
+                                <p class="mt-2 mb-0" style="word-wrap: break-word; color: #000;">@message.Content</p>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            <form method="post" action="@Url.Action("SendMessage")">
+                <input type="hidden" name="clubId" value="@ViewBag.ClubId" />
+                <div class="form-group">
+                    <label for="content" class="form-label">Twoja wiadomość:</label>
+                    <textarea name="content" id="content" class="form-control" placeholder="Wpisz wiadomość..." required rows="4" maxlength="500"></textarea>
+                    <small class="form-text text-muted">Maksymalnie 500 znaków</small>
+                </div>
+                <button type="submit" class="btn btn-primary">📤 Wyślij</button>
+                <a href="@Url.Action("Details", "Club", new { id = ViewBag.ClubId })" class="btn btn-secondary">Powrót do klubu</a>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">ℹ️ Informacje</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Czat klubu jest dostępny tylko dla członków.</strong></p>
+                    <p>Tutaj możecie rozmawiać i dzielić się informacjami dotyczącymi klubu.</p>
+                    <hr />
+                    <p class="text-muted small">Wiadomości są sortowane chronologicznie. Możesz usunąć tylko swoje wiadomości.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .chat-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .chat-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .chat-container::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+
+    .chat-container::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    .message {
+        animation: slideIn 0.3s ease-in;
+    }
+</style>
+
+<style>
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<script>
+    // Auto-scroll do dołu gdy załaduje się strona
+    document.addEventListener('DOMContentLoaded', function () {
+        const chatContainer = document.querySelector('.chat-container');
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    });
+
+    function reportMessage(messageId, userName) {
+        const reason = prompt('Podaj powód zgłoszenia wiadomości od ' + userName + ':');
+        if (!reason) return;
+
+        fetch('/api/reportsapi/message', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messageId: messageId, reason: reason })
+        })
+        .then(async response => {
+            const data = await response.json().catch(() => ({}));
+            if (response.ok) {
+                alert(data.message || 'Zgłoszono wiadomość.');
+            } else {
+                console.error('ReportMessage failed', response.status, data);
+                alert('Błąd: ' + (data.error || JSON.stringify(data) || response.statusText));
+            }
+        })
+        .catch(error => {
+            console.error('Błąd:', error);
+            alert('Wystąpił błąd podczas zgłaszania wiadomości. Sprawdź konsolę.');
+        });
+    }
+
+    function reportUser(userId, userName) {
+        const reason = prompt(
+            'Wybierz powód zgłoszenia ' + userName + ':\n' +
+            '1 - Obraźliwy nick\n' +
+            '2 - Nieodpowiedni awatar\n' +
+            '3 - Zawartość pornograficzna\n' +
+            '4 - Podszywanie\n' +
+            '5 - Nękanie\n' +
+            '6 - Spam\n' +
+            '7 - Inne'
+        );
+        
+        if (!reason) return;
+        
+        const reasonCode = parseInt(reason) - 1;
+        if (isNaN(reasonCode) || reasonCode < 0 || reasonCode > 6) {
+            alert('Nieprawidłowy wybór');
+            return;
+        }
+
+        const description = prompt('Opisz szczegóły:');
+        if (!description) return;
+
+        fetch('/api/reportsapi/user', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                reportedUserId: userId, 
+                reason: reasonCode,
+                description: description
+            })
+        })
+        .then(async response => {
+            const data = await response.json().catch(() => ({}));
+            if (response.ok) {
+                alert(data.message || 'Zgłoszono użytkownika.');
+            } else {
+                console.error('ReportUser failed', response.status, data);
+                alert('Błąd: ' + (data.error || JSON.stringify(data) || response.statusText));
+            }
+        })
+        .catch(error => {
+            console.error('Błąd:', error);
+            alert('Wystąpił błąd podczas zgłaszania użytkownika. Sprawdź konsolę.');
+        });
+    }
+</script>

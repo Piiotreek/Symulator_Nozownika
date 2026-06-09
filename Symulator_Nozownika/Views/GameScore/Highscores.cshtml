@@ -1,0 +1,367 @@
+@model IEnumerable<dynamic>
+@using System.Text
+
+@{
+    ViewData["Title"] = "Ranking";
+
+    string NormalizeFlag(string? flag)
+    {
+        if (string.IsNullOrWhiteSpace(flag))
+        {
+            return "🏳️";
+        }
+
+        if (!flag.Contains("ð"))
+        {
+            return flag;
+        }
+
+        var bytes = Encoding.GetEncoding("ISO-8859-1").GetBytes(flag);
+        var normalized = Encoding.UTF8.GetString(bytes);
+        return string.IsNullOrWhiteSpace(normalized) ? "🏳️" : normalized;
+    }
+}
+
+<style>
+    .sortable-header {
+        cursor: pointer;
+        user-select: none;
+        padding-right: 20px;
+        position: relative;
+    }
+
+    .sortable-header:hover {
+        opacity: 0.7;
+    }
+
+    .sort-indicator {
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.8em;
+        color: #999;
+    }
+
+    .sort-indicator.active {
+        color: #fff;
+    }
+
+    .sort-indicator.asc::after {
+        content: " ▲";
+    }
+
+    .sort-indicator.desc::after {
+        content: " ▼";
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <h1 class="text-center mb-4">🏆 Ranking</h1>
+
+            @if (Model != null && Model.Any())
+            {
+                <!-- Wersja desktop -->
+                <div class="table-responsive d-none d-md-block">
+                    <table class="table table-dark table-striped table-hover" id="desktopTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;" class="sortable-header" data-column="place">
+                                    Miejsce
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th style="width: 35%;" class="sortable-header" data-column="playerName">
+                                    Gracz
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th style="width: 20%;" class="sortable-header" data-column="country">
+                                    Kraj
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th style="width: 15%;" class="sortable-header" data-column="score">
+                                    Wynik
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th style="width: 20%;" class="sortable-header" data-column="date">
+                                    Data
+                                    <span class="sort-indicator"></span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int position = 1;
+                                foreach (var score in Model)
+                                {
+                                    var country = (string?)score.Country;
+                                    var countryFlag = NormalizeFlag((string?)score.CountryFlag);
+
+                                    <tr>
+                                        <td data-value="@position">
+                                            @if (position == 1)
+                                            {
+                                                <span class="badge bg-warning text-dark">🥇 @position</span>
+                                            }
+                                            else if (position == 2)
+                                            {
+                                                <span class="badge bg-secondary">🥈 @position</span>
+                                            }
+                                            else if (position == 3)
+                                            {
+                                                <span class="badge bg-danger">🥉 @position</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@position</span>
+                                            }
+                                        </td>
+                                        <td data-value="@score.PlayerName">
+                                            @{
+                                                var hsAvatar = (string?)score.AvatarPath;
+                                                var hsAvatarSrc = string.IsNullOrEmpty(hsAvatar) ? "/images/default-avatar.svg" : hsAvatar;
+                                            }
+                                            <img src="@hsAvatarSrc" alt="avatar" class="rounded-circle me-2" style="width:32px;height:32px;object-fit:cover;border:1px solid #ffc107;" />
+                                            @if (score.UserId != null)
+                                            {
+                                                <a href="@Url.Action("ViewProfile", "Account", new { id = score.UserId })"
+                                                   class="text-warning text-decoration-none">
+                                                    <strong>@score.PlayerName</strong>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <strong>@score.PlayerName</strong>
+                                            }
+                                        </td>
+                                        <td data-value="@country">
+                                            @if (!string.IsNullOrWhiteSpace(country))
+                                            {
+                                                <span style="margin-right:6px;font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;">@countryFlag</span>
+                                                <span>@country</span>
+                                            }
+                                            else
+                                            {
+                                                <span>-</span>
+                                            }
+                                        </td>
+                                        <td data-value="@score.Score">
+                                            <span class="badge bg-info">@score.Score pkt</span>
+                                        </td>
+                                        <td data-value="@(((DateTime)score.CreatedAt).Ticks)">
+                                            @(((DateTime)score.CreatedAt).ToString("dd.MM.yyyy HH:mm:ss"))
+                                        </td>
+                                    </tr>
+                                    position++;
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Wersja mobile - kompaktowa tabela -->
+                <div class="table-responsive d-md-none">
+                    <table class="table table-dark table-striped table-hover table-sm mobile-ranking" id="mobileTable">
+                        <thead>
+                            <tr>
+                                <th class="sortable-header" data-column="rank">
+                                    Miejsce
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th class="sortable-header" data-column="playerName">
+                                    Gracz
+                                    <span class="sort-indicator"></span>
+                                </th>
+                                <th class="sortable-header" data-column="score">
+                                    Wynik
+                                    <span class="sort-indicator"></span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{
+                                int mobilePosition = 1;
+                                foreach (var score in Model)
+                                {
+                                    var country = (string?)score.Country;
+                                    var countryFlag = NormalizeFlag((string?)score.CountryFlag);
+
+                                    <tr>
+                                        <td data-value="@mobilePosition">
+                                            @if (mobilePosition == 1)
+                                            {
+                                                <span class="badge bg-warning text-dark">🥇</span>
+                                            }
+                                            else if (mobilePosition == 2)
+                                            {
+                                                <span class="badge bg-secondary">🥈</span>
+                                            }
+                                            else if (mobilePosition == 3)
+                                            {
+                                                <span class="badge bg-danger">🥉</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="small">@mobilePosition</span>
+                                            }
+                                        </td>
+                                        <td class="mobile-player" data-value="@score.PlayerName">
+                                            @{
+                                                var mAvatar = (string?)score.AvatarPath;
+                                                var mAvatarSrc = string.IsNullOrEmpty(mAvatar) ? "/images/default-avatar.svg" : mAvatar;
+                                            }
+                                            <div class="d-flex align-items-center gap-2">
+                                                <img src="@mAvatarSrc" alt="avatar" class="rounded-circle" style="width:28px;height:28px;object-fit:cover;border:1px solid #ffc107;" />
+                                                <div>
+                                                    @if (score.UserId != null)
+                                                    {
+                                                        <a href="@Url.Action("ViewProfile", "Account", new { id = score.UserId })"
+                                                           class="text-warning text-decoration-none">
+                                                            <strong>@score.PlayerName</strong>
+                                                        </a>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div><strong>@score.PlayerName</strong></div>
+                                                    }
+                                                    <div class="small text-muted">
+                                                        @if (!string.IsNullOrWhiteSpace(country))
+                                                        {
+                                                            <span style="font-family:'Segoe UI Emoji','Apple Color Emoji','Noto Color Emoji',sans-serif;">@countryFlag</span>
+                                                            <span>@country</span>
+                                                        }
+                                                        <br />
+                                                        <span>@(((DateTime)score.CreatedAt).ToString("dd.MM.yyyy HH:mm"))</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td data-value="@score.Score">
+                                            <span class="badge bg-info">@score.Score</span>
+                                        </td>
+                                    </tr>
+                                    mobilePosition++;
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info text-center">
+                    <p>Brak wyników do wyświetlenia.</p>
+                </div>
+            }
+
+            <div class="text-center mt-4 d-flex flex-wrap justify-content-center align-items-center gap-3">
+                <a asp-controller="Account" asp-action="SecurePage" class="play-cta-button play-cta-button-lg">⚔️ Wskocz do gry</a>
+                <a asp-controller="Account" asp-action="SelectWeapon" class="btn btn-outline-warning btn-lg">Zmień broń</a>
+                <!-- PO: -->
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Report" asp-action="MyStatisticsPdf" class="btn btn-outline-primary btn-lg ms-2">📥 Eksportuj moje PDF</a>
+                }
+                else
+                {
+                    <button class="btn btn-outline-secondary btn-lg ms-2" onclick="showNoPermissionToast()">📥 Eksportuj moje PDF</button>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+        <div id="noPermissionToast" class="toast align-items-center text-bg-danger border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    🔒 Nie masz uprawnień do eksportu PDF. Ta funkcja jest dostępna tylko dla administratorów.
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    
+</div>
+
+<script>
+    function showNoPermissionToast() {
+            const toast = new bootstrap.Toast(document.getElementById('noPermissionToast'), { delay: 4000 });
+            toast.show();
+        }
+    document.addEventListener('DOMContentLoaded', function() {
+        const tables = ['#desktopTable', '#mobileTable'];
+        let sortState = {
+            column: null,
+            direction: 'asc'
+        };
+
+        tables.forEach(tableSelector => {
+            const table = document.querySelector(tableSelector);
+            if (!table) return;
+
+            const headers = table.querySelectorAll('.sortable-header');
+
+            headers.forEach(header => {
+                header.addEventListener('click', function() {
+                    const column = this.dataset.column;
+
+                    // Toggle sort direction if clicking same column
+                    if (sortState.column === column) {
+                        sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        sortState.column = column;
+                        sortState.direction = 'asc';
+                    }
+
+                    // Update indicators
+                    headers.forEach(h => {
+                        const indicator = h.querySelector('.sort-indicator');
+                        indicator.classList.remove('active', 'asc', 'desc');
+                    });
+
+                    const activeIndicator = this.querySelector('.sort-indicator');
+                    activeIndicator.classList.add('active', sortState.direction);
+
+                    // Sort table
+                    sortTable(table, column, sortState.direction);
+                });
+            });
+        });
+
+        function sortTable(table, column, direction) {
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                let aValue = a.querySelector(`td[data-value]`)?.dataset.value || '';
+                let bValue = b.querySelector(`td[data-value]`)?.dataset.value || '';
+
+                // Get the correct cell for the column being sorted
+                const cells = a.querySelectorAll('td[data-value]');
+                const columnIndex = Array.from(table.querySelectorAll('.sortable-header'))
+                    .findIndex(h => h.dataset.column === column);
+
+                if (columnIndex >= 0 && columnIndex < cells.length) {
+                    aValue = cells[columnIndex].dataset.value || '';
+                    bValue = b.querySelectorAll('td[data-value]')[columnIndex].dataset.value || '';
+                }
+
+                // Try to parse as numbers
+                const aNum = parseFloat(aValue);
+                const bNum = parseFloat(bValue);
+
+                let comparison = 0;
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    comparison = aNum - bNum;
+                } else {
+                    comparison = aValue.toString().localeCompare(bValue.toString(), undefined, { numeric: true, sensitivity: 'base' });
+                }
+
+                return direction === 'asc' ? comparison : -comparison;
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    });
+</script>

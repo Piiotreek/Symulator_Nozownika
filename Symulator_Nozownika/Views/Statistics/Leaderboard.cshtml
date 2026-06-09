@@ -1,0 +1,64 @@
+@model IEnumerable<Symulator_Nozownika.Models.UserStatistics>
+
+@{
+    ViewData["Title"] = "Ranking Graczy";
+    var rank = 0;
+}
+
+<div class="container">
+    <h1 class="mb-4">🏆 Ranking Graczy</h1>
+    <p class="lead">Top 50 najlepszych graczy</p>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Gracz</th>
+                    <th>Najwyższy wynik</th>
+                    <th>Łączny wynik</th>
+                    <th>Gry</th>
+                    <th>Najdłuższa seria</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var stat in Model)
+                {
+                    rank++;
+                    var medal = rank switch
+                    {
+                        1 => "🥇",
+                        2 => "🥈",
+                        3 => "🥉",
+                        _ => ""
+                    };
+
+                    <tr class="@(rank <= 3 ? "table-warning" : "")">
+                        <td><strong>@medal @rank</strong></td>
+                        <td>
+                            @{
+                                var lbAvatar = stat.User?.AvatarPath;
+                                var lbAvatarSrc = string.IsNullOrEmpty(lbAvatar) ? "/images/default-avatar.svg" : lbAvatar;
+                            }
+                            <img src="@lbAvatarSrc" alt="avatar" class="rounded-circle me-2" style="width:32px;height:32px;object-fit:cover;border:1px solid #ffc107;" />
+                            @stat.User.UserName
+                        </td>
+                        <td><strong class="text-warning">@stat.HighestScore</strong></td>
+                        <td>@stat.TotalScore.ToString("N0")</td>
+                        <td>@stat.TotalGamesPlayed</td>
+                        <td>@stat.LongestStreak</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center mt-4 d-flex flex-wrap justify-content-center gap-3">
+        <a asp-controller="Account" asp-action="SecurePage" class="play-cta-button">
+            ⚔️ Zagraj teraz
+        </a>
+        <a asp-controller="Statistics" asp-action="Index" class="btn btn-primary">
+            📊 Moje Statystyki
+        </a>
+    </div>
+</div>

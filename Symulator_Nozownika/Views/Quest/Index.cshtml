@@ -1,0 +1,175 @@
+@model List<Symulator_Nozownika.Models.UserQuestProgress>
+
+@{
+    ViewData["Title"] = "Dzienne Questy";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-9 mx-auto">
+            <h1 class="mb-1">📋 Dzienne Questy</h1>
+            <p class="text-muted mb-4">Questy resetują się o północy (UTC). Graj, zdobywaj postęp i odbieraj nagrody!</p>
+
+            <div class="row g-4">
+                @foreach (var p in Model)
+                {
+                    var quest = p.Quest;
+                    var percent = quest.TargetValue > 0
+                        ? (int)Math.Min(100, Math.Round((double)p.CurrentValue / quest.TargetValue * 100))
+                        : 0;
+
+                    var cardClass = p.IsRewardClaimed ? "border-secondary opacity-75"
+                        : p.IsCompleted ? "border-success"
+                        : "border-primary";
+
+                    var typeIcon = quest.QuestType == Symulator_Nozownika.Models.QuestType.Clicks ? "🖱️" : "⭐";
+                    var typeName = quest.QuestType == Symulator_Nozownika.Models.QuestType.Clicks ? "Kliknięcia" : "Punkty";
+
+                    <div class="col-md-6">
+                        <div class="card h-100 @cardClass" style="border-width:2px;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="card-title mb-0">@typeIcon @quest.Name</h5>
+                                    @if (p.IsRewardClaimed)
+                                    {
+                                        <span class="badge bg-secondary">✓ Odebrano</span>
+                                    }
+                                    else if (p.IsCompleted)
+                                    {
+                                        <span class="badge bg-success">✅ Ukończono</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-primary">W toku</span>
+                                    }
+                                </div>
+
+                                <p class="card-text text-muted small mb-3">@quest.Description</p>
+
+                                <div class="mb-2">
+                                    <div class="d-flex justify-content-between small mb-1">
+                                        <span>@typeName: @p.CurrentValue / @quest.TargetValue</span>
+                                        <span>@percent%</span>
+                                    </div>
+                                    <div class="progress" style="height:10px;">
+                                        <div class="progress-bar @(p.IsCompleted ? "bg-success" : "bg-primary")"
+                                             role="progressbar"
+                                             style="width:@percent%"
+                                             aria-valuenow="@percent"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex gap-3 small text-warning mt-2 mb-3">
+                                    <span>🪙 @quest.RewardCoins monet</span>
+                                    <span>✨ @quest.RewardXp XP</span>
+                                </div>
+
+                                @if (p.IsCompleted && !p.IsRewardClaimed)
+                                {
+                                    <button class="btn btn-success btn-sm w-100 claim-btn"
+                                            data-progress-id="@p.Id"
+                                            data-quest-name="@quest.Name"
+                                            data-reward-coins="@quest.RewardCoins"
+                                            data-reward-xp="@quest.RewardXp">
+                                        🎁 Odbierz nagrodę
+                                    </button>
+                                }
+                                else if (p.IsRewardClaimed)
+                                {
+                                    <div class="text-center text-secondary small">Nagroda odebrana — wróć jutro!</div>
+                                }
+                                else
+                                {
+                                    <div class="text-center text-muted small">Graj, aby zebrać postęp 🎮</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="text-center mt-5">
+                <a asp-controller="Account" asp-action="SelectWeapon" class="btn btn-primary">🎮 Graj teraz</a>
+                <a asp-controller="Statistics" asp-action="Index" class="btn btn-secondary ms-2">📊 Twoje statystyki</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.querySelectorAll('.claim-btn').forEach(btn => {
+        btn.addEventListener('click', async function () {
+            const progressId = this.dataset.progressId;
+            const questName = this.dataset.questName;
+            const coins = this.dataset.rewardCoins;
+            const xp = this.dataset.rewardXp;
+
+            this.disabled = true;
+            this.textContent = '⏳ Odbieranie...';
+
+            try {
+                const response = await fetch('/Quest/ClaimReward', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ questProgressId: parseInt(progressId) })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showQuestRewardToast(questName, coins, xp);
+                    // Odśwież kartę
+                    const card = this.closest('.card');
+                    this.remove();
+                    const badge = card.querySelector('.badge');
+                    if (badge) {
+                        badge.className = 'badge bg-secondary';
+                        badge.textContent = '✓ Odebrano';
+                    }
+                    card.classList.remove('border-success');
+                    card.classList.add('border-secondary', 'opacity-75');
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'text-center text-secondary small';
+                    placeholder.textContent = 'Nagroda odebrana — wróć jutro!';
+                    card.querySelector('.card-body').appendChild(placeholder);
+                } else {
+                    alert(result.message);
+                    this.disabled = false;
+                    this.textContent = '🎁 Odbierz nagrodę';
+                }
+            } catch (e) {
+                console.error(e);
+                this.disabled = false;
+                this.textContent = '🎁 Odbierz nagrodę';
+            }
+        });
+    });
+
+    function showQuestRewardToast(questName, coins, xp) {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        const id = 'toast-quest-' + Date.now();
+        const html = `
+            <div id="${id}" class="toast align-items-center text-bg-dark border-success shadow-lg" role="alert" data-bs-delay="8000">
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center p-3 gap-3">
+                        <span style="font-size:2rem;">🎁</span>
+                        <div>
+                            <strong class="text-success d-block">Quest ukończony!</strong>
+                            <span class="text-white">${questName}</span><br>
+                            <small class="text-warning">+${coins} 🪙 &nbsp; +${xp} ✨ XP</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-3 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+        const el = document.getElementById(id);
+        new bootstrap.Toast(el).show();
+        el.addEventListener('hidden.bs.toast', () => el.remove());
+    }
+</script>
+}

@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+/Symulator_Nozownika/Migrations/20260407115509_Remove-Mig_pot.cs
+/Symulator_Nozownika/Migrations/20260407115509_Remove-Mig_pot.Designer.cs

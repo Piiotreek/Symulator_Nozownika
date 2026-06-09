@@ -1,0 +1,56 @@
+﻿@model Symulator_Nozownika.Models.UserPenalty
+
+@{
+    ViewData["Title"] = "Konto zawieszone";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container text-center mt-5">
+    <h1 class="display-4 text-danger">Konto zawieszone</h1>
+    <p class="lead">Twoje konto zostało zawieszone z powodu naruszenia regulaminu.</p>
+    
+    @if (Model != null && Model.ExpiresAt.HasValue)
+    {
+        <div class="alert alert-warning" role="alert">
+            <p><strong>Powód:</strong> @Model.Reason</p>
+            <p>Twoje zawieszenie zostanie zniesione <strong>@Model.ExpiresAt.Value.ToLocalTime().ToString("g")</strong>.</p>
+            <div id="countdown" class="h4 mt-3"></div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-danger" role="alert">
+            <p>Wystąpił błąd podczas pobierania szczegółów zawieszenia. Skontaktuj się z pomocą techniczną.</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    @if (Model != null && Model.ExpiresAt.HasValue)
+    {
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var countDownDate = new Date("@Model.ExpiresAt.Value.ToString("o")").getTime();
+
+                var x = setInterval(function() {
+                    var now = new Date().getTime();
+                    var distance = countDownDate - now;
+
+                    var days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    document.getElementById("countdown").innerHTML = "Pozostały czas: " + days + "d " + hours + "h "
+                    + minutes + "m " + seconds + "s ";
+
+                    if (distance < 0) {
+                        clearInterval(x);
+                        document.getElementById("countdown").innerHTML = "Twoje zawieszenie zostało zniesione. Odśwież stronę.";
+                        window.location.reload();
+                    }
+                }, 1000);
+            });
+        </script>
+    }
+}

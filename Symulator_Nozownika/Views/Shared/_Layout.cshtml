@@ -1,36 +1,226 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+@using Microsoft.EntityFrameworkCore
+@inject Symulator_Nozownika.Data.AppDbContext DbContext
+@inject Symulator_Nozownika.Services.IReportManagementService ReportManagementService
+
+@{
+    var isAuthenticated = Context.User.Identity?.IsAuthenticated == true;
+    var isDemoUser = Context.User.FindFirst("IsDemo")?.Value == "true";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+    var showTopBar = !(string.Equals(currentController, "Home", StringComparison.OrdinalIgnoreCase)
+        && string.Equals(currentAction, "Index", StringComparison.OrdinalIgnoreCase));
+    var currentUserName = Context.User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value;
+    var currentUserEmail = Context.User.Identity?.Name;
+    var avatarPath = Url.Content("~/images/default-avatar.svg");
+    var isAdmin = Context.User.IsInRole("Admin");
+    var shouldRedirectToSuspended = false;
+
+    var adminReportingGuideHref = string.Empty;
+    var adminReportsHref = string.Empty;
+    if (Context.Request != null)
+    {
+        var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host.Value}";
+        adminReportingGuideHref = baseUrl + Url.Content("~/Admin/ReportingGuide");
+        adminReportsHref = baseUrl + Url.Content("~/Admin/Reports");
+    }
+
+    if (isAuthenticated)
+    {
+        var userIdClaim = Context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (int.TryParse(userIdClaim, out var currentUserId))
+        {
+            var layoutUser = await DbContext.UserAccounts
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == currentUserId);
+
+            if (layoutUser != null)
+            {
+                currentUserName = layoutUser.UserName;
+                currentUserEmail = layoutUser.Email;
+                isAdmin = layoutUser.Role == UserRole.Admin;
+
+                if (!string.IsNullOrWhiteSpace(layoutUser.AvatarPath))
+                {
+                    avatarPath = layoutUser.AvatarPath;
+                }
+
+                var activePenalty = (await ReportManagementService.GetActivePenaltiesForUserAsync(currentUserId)).FirstOrDefault();
+                if (activePenalty != null && activePenalty.Type != Symulator_Nozownika.Models.PenaltyType.BanWithDeletion)
+                {
+                    if (currentController != "Account" || currentAction != "Suspended")
+                    {
+                        shouldRedirectToSuspended = true;
+                    }
+                }
+            }
+        }
+    }
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Symulator_Nozownika</title>
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico?v=2" />
     <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/darkly/bootstrap.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Symulator_Nozownika.styles.css" asp-append-version="true" />
+    @if (shouldRedirectToSuspended)
+    {
+        <script>
+            window.location.href = '@Url.Action("Suspended", "Account")';
+        </script>
+    }
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Symulator_Nozownika</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+    @if (showTopBar)
+    {
+        <header>
+            <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark app-navbar border-bottom box-shadow mb-3">
+                <div class="container-fluid position-relative">
+                    <div class="position-absolute top-50 start-50 translate-middle d-none d-sm-block navbar-hello-center">
+                        <span class="navbar-text navbar-greeting fw-bold fs-4">
+                            @if (isAuthenticated)
+                            {
+                                <text>Witaj, @currentUserName</text>
+                            }
+                            else
+                            {
+                                <text>Nie jesteś zalogowany</text>
+                            }
+                        </span>
+                    </div>
+
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="navbar-collapse collapse app-navbar-collapse">
+                        <ul class="navbar-nav me-auto align-items-sm-center gap-sm-2">
+                            <li class="nav-item nav-item-play">
+                                @if (isAuthenticated)
+                                {
+                                    <a class="nav-link navbar-main-link play-cta-button play-cta-button-nav" asp-area="" asp-controller="Account" asp-action="SecurePage">⚔️ Zagraj teraz</a>
+                                }
+                                else
+                                {
+                                    <a class="nav-link navbar-main-link play-cta-button play-cta-button-nav" asp-area="" asp-controller="Account" asp-action="Login">⚔️ Zacznij grać</a>
+                                }
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link navbar-main-link" asp-area="" asp-controller="GameScore" asp-action="Highscores">Ranking</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link navbar-main-link" asp-area="" asp-controller="Account" asp-action="Shop">Sklep</a>
+                            </li>
+                            @if (!isDemoUser)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link navbar-main-link" asp-area="" asp-controller="Quest" asp-action="Index">Questy</a>
+                                </li>
+                            }
+                            <li class="nav-item">
+                                <a class="nav-link navbar-main-link" asp-area="" asp-controller="Club" asp-action="Index">Kluby</a>
+                            </li>
+                        </ul>
+
+                        <div class="d-flex align-items-center ms-auto gap-3 navbar-account-wrapper">
+                            <div class="dropdown">
+                                <button class="btn navbar-account-trigger" type="button" id="accountMenuToggle" data-bs-toggle="dropdown" aria-expanded="false" title="Menu konta">
+                                    <img src="@avatarPath" alt="Awatar konta" class="navbar-account-avatar" />
+                                </button>
+
+                                <ul class="dropdown-menu dropdown-menu-end navbar-account-dropdown shadow" aria-labelledby="accountMenuToggle">
+                                    <li class="dropdown-account-header px-3 py-3">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <img src="@avatarPath" alt="Awatar konta" class="navbar-account-avatar navbar-account-avatar-lg" />
+                                            <div>
+                                                <div class="fw-bold dropdown-account-name">@(isAuthenticated ? currentUserName : "Gość")</div>
+                                                <div class="small dropdown-account-email">@(isAuthenticated ? currentUserEmail : "Wybierz sposób logowania")</div>
+                                                @if (isDemoUser)
+                                                {
+                                                    <span class="badge navbar-account-badge mt-2">Konto demo</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </li>
+
+                                    <li><hr class="dropdown-divider" /></li>
+
+                                    @if (isAuthenticated)
+                                    {
+                                        <li>
+                                            <a class="dropdown-item navbar-dropdown-link" asp-controller="Home" asp-action="Index">Konto</a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item navbar-dropdown-link" asp-controller="Statistics" asp-action="Index">Statystyki</a>
+                                        </li>
+
+                                        @if (isAdmin)
+                                        {
+                                            <li><hr class="dropdown-divider" /></li>
+                                            <li>
+                                                <a class="dropdown-item navbar-dropdown-link" href="@adminReportingGuideHref" title="Instrukcja systemu zgłaszania">📋 Instrukcja</a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item navbar-dropdown-link" href="@adminReportsHref" title="Panel administracyjny">⚙️ Panel administracyjny</a>
+                                            </li>
+                                        }
+
+                                        @if (!isDemoUser)
+                                        {
+                                            <li>
+                                                <a class="dropdown-item navbar-dropdown-link" asp-controller="Account" asp-action="ChangePassword">Zmień hasło</a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item navbar-dropdown-link navbar-dropdown-link-danger" asp-controller="Account" asp-action="RemoveAccount">Usuń konto</a>
+                                            </li>
+                                        }
+                                        else
+                                        {
+                                            <li>
+                                                <a class="dropdown-item navbar-dropdown-link" asp-controller="Account" asp-action="Login">Zaloguj się na konto</a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item navbar-dropdown-link" asp-controller="Account" asp-action="Registration">Załóż konto</a>
+                                            </li>
+                                        }
+
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li class="px-3 pb-3 pt-3">
+                                            <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" class="d-grid">
+                                                <button type="submit" class="btn navbar-dropdown-action-btn">Wyloguj</button>
+                                            </form>
+                                        </li>
+                                    }
+                                    else
+                                    {
+                                        <li>
+                                            <a class="dropdown-item navbar-dropdown-link" asp-area="" asp-controller="Account" asp-action="Login">Logowanie</a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item navbar-dropdown-link" asp-area="" asp-controller="Account" asp-action="Registration">Rejestracja</a>
+                                        </li>
+                                        <li><hr class="dropdown-divider" /></li>
+                                        <li class="px-3 pb-3 pt-3">
+                                            <button type="button" class="btn navbar-dropdown-action-btn" data-start-demo>
+                                                Zagraj w demo
+                                            </button>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </nav>
-    </header>
+            </nav>
+        </header>
+    }
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -39,12 +229,16 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - Symulator_Nozownika - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - Symulator_Nozownika
         </div>
     </footer>
+    <div id="toast-container" class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-2" style="z-index: 1055;"></div>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    <script src="~/js/highscore.js"></script>
+    @RenderSection("Scripts", required: false)
+    @* div for toasts *@
+    
 </body>
 </html>

@@ -1,4 +1,9 @@
-﻿/* Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
+﻿html,
+body {
+  overflow-x: hidden;
+}
+
+/* Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
 for details on configuring this project to bundle and minify static web assets. */
 
 a.navbar-brand {
@@ -40,9 +45,248 @@ button.accept-policy {
 }
 
 .footer {
-  position: absolute;
-  bottom: 0;
   width: 100%;
   white-space: nowrap;
   line-height: 60px;
+  margin-top: auto;
+}
+
+.app-navbar {
+  background: linear-gradient(180deg, rgba(30, 0, 0, 0.98) 0%, rgba(10, 0, 0, 0.98) 100%) !important;
+  border-bottom-color: rgba(139, 0, 0, 0.65) !important;
+  box-shadow: 0 0 22px rgba(139, 0, 0, 0.2), inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.app-navbar-collapse {
+  background: transparent;
+}
+
+.navbar-greeting {
+  color: #ececec !important;
+  text-shadow: 0 0 10px rgba(200, 0, 0, 0.35);
+}
+
+.navbar-main-link {
+  color: #ececec !important;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 0.6rem 1rem !important;
+  transition: color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.navbar-main-link:hover,
+.navbar-main-link:focus {
+  color: #fff !important;
+  background: linear-gradient(90deg, rgba(139, 0, 0, 0.32) 0%, rgba(179, 0, 0, 0.18) 100%);
+  box-shadow: 0 0 16px rgba(180, 0, 0, 0.16);
+  transform: translateY(-1px);
+}
+
+.navbar-account-wrapper {
+  min-width: fit-content;
+  position: relative;
+  z-index: 3;
+}
+
+.navbar-hello-center {
+  z-index: 1;
+}
+
+.navbar-account-trigger {
+  width: 54px;
+  height: 54px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex: 0 0 54px;
+  padding: 0;
+  border: 2px solid #2b2b2b;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08), rgba(20, 0, 0, 0.96));
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(139, 0, 0, 0.35), inset 0 0 10px rgba(180, 0, 0, 0.18);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.navbar-account-trigger:focus {
+  box-shadow: 0 0 0 0.2rem rgba(204, 0, 0, 0.18), 0 0 18px rgba(220, 0, 0, 0.35);
+}
+
+.navbar-account-trigger:hover,
+.navbar-account-trigger[aria-expanded="true"] {
+  transform: scale(1.05);
+  border-color: #8b0000;
+  box-shadow: 0 0 18px rgba(220, 0, 0, 0.55), inset 0 0 14px rgba(180, 0, 0, 0.22);
+}
+
+.navbar-account-avatar {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  max-width: 42px;
+  max-height: 42px;
+  display: block;
+  flex: 0 0 42px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #3a3a3a;
+  background: #171717;
+}
+
+.navbar-account-avatar-lg {
+  width: 60px;
+  height: 60px;
+  min-width: 60px;
+  min-height: 60px;
+  max-width: 60px;
+  max-height: 60px;
+  flex-basis: 60px;
+}
+
+.navbar-account-dropdown {
+  min-width: 320px;
+  border-radius: 18px;
+  padding: 0;
+  border: 1px solid rgba(139, 0, 0, 0.65);
+  background: linear-gradient(180deg, rgba(27, 0, 0, 0.98) 0%, rgba(8, 0, 0, 0.98) 100%);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45), 0 0 25px rgba(180, 0, 0, 0.18);
+  margin-top: 14px;
+  display: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px) scale(0.97);
+  transform-origin: top right;
+  pointer-events: none;
+  transition: opacity 0.28s ease, transform 0.28s ease, visibility 0.28s ease;
+}
+
+.navbar-account-dropdown.show,
+.navbar-account-dropdown.closing {
+  display: block;
+}
+
+.navbar-account-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.navbar-account-dropdown.closing {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px) scale(0.97);
+  pointer-events: none;
+}
+
+.dropdown-account-header {
+  background: linear-gradient(135deg, rgba(40, 0, 0, 0.98) 0%, rgba(15, 0, 0, 0.98) 100%);
+  border-bottom: 1px solid rgba(204, 0, 0, 0.18);
+}
+
+.dropdown-account-name {
+  color: #f4f4f4;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.dropdown-account-email {
+  color: rgba(236, 236, 236, 0.68);
+}
+
+.navbar-account-badge {
+  background: linear-gradient(135deg, #ffb347 0%, #ff8c00 100%);
+  color: #fff;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(255, 140, 0, 0.3);
+}
+
+.navbar-account-dropdown .dropdown-divider {
+  margin: 0;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.navbar-dropdown-link {
+  color: #ececec;
+  padding: 0.9rem 1.1rem;
+  font-size: 1.08rem;
+  transition: background-color 0.25s ease, color 0.25s ease, padding-left 0.25s ease, box-shadow 0.25s ease;
+}
+
+.navbar-dropdown-link:hover,
+.navbar-dropdown-link:focus {
+  color: #fff;
+  background: linear-gradient(90deg, rgba(139, 0, 0, 0.34) 0%, rgba(179, 0, 0, 0.18) 100%);
+  padding-left: 1.35rem;
+  box-shadow: inset 3px 0 0 #cc0000;
+}
+
+.navbar-dropdown-link-danger {
+  color: #ff8b8b;
+}
+
+.navbar-dropdown-link-danger:hover,
+.navbar-dropdown-link-danger:focus {
+  color: #fff;
+  background: linear-gradient(90deg, rgba(150, 0, 0, 0.42) 0%, rgba(70, 0, 0, 0.2) 100%);
+}
+
+.navbar-dropdown-action-btn {
+  width: 100%;
+  background-color: #8b0000;
+  color: #fff;
+  border: 2px solid #cc0000;
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  box-shadow: 0 0 15px rgba(220, 0, 0, 0.35), inset 0 0 10px rgba(180, 0, 0, 0.25);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+.navbar-dropdown-action-btn:hover,
+.navbar-dropdown-action-btn:focus {
+  color: #fff;
+  background-color: #b30000;
+  transform: scale(1.02);
+  box-shadow: 0 0 22px rgba(255, 0, 0, 0.5), inset 0 0 14px rgba(255, 0, 0, 0.25);
+}
+
+.navbar-toggler {
+  border-color: rgba(204, 0, 0, 0.35);
+  background: rgba(40, 0, 0, 0.45);
+}
+
+.navbar-toggler:focus {
+  box-shadow: 0 0 0 0.2rem rgba(204, 0, 0, 0.2);
+}
+
+@media (max-width: 575.98px) {
+  .navbar-hello-center {
+    position: static !important;
+    transform: none !important;
+    display: block !important;
+    width: 100%;
+    text-align: center;
+    margin-top: 0.75rem;
+  }
+
+  .navbar-account-wrapper {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 0.75rem;
+  }
+
+  .navbar-account-dropdown {
+    min-width: 290px;
+  }
+
+  .app-navbar-collapse {
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
 }

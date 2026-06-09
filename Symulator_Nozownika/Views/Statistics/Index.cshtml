@@ -1,0 +1,117 @@
+@model Symulator_Nozownika.Models.UserStatistics
+
+@{
+    ViewData["Title"] = "Twoje Statystyki";
+    var avgScore = Model.TotalGamesPlayed > 0 ? (double)Model.TotalScore / Model.TotalGamesPlayed : 0;
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <h1 class="mb-4">📊 Twoje Statystyki</h1>
+            <p class="lead d-flex align-items-center gap-2">
+                @{
+                    var statAvatarSrc = string.IsNullOrEmpty(Model.User.AvatarPath) ? "/images/default-avatar.svg" : Model.User.AvatarPath;
+                }
+                <img src="@statAvatarSrc" alt="Awatar" class="rounded-circle" style="width:48px;height:48px;object-fit:cover;border:2px solid #ffc107;" />
+                Witaj, <strong>@Model.User.UserName</strong>!
+            </p>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">🎮 Rozegranych Gier</h5>
+                            <h2 class="display-4">@Model.TotalGamesPlayed</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">📊 Łączny Wynik</h5>
+                            <h2 class="display-4">@Model.TotalScore</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">🏆 Najwyższy Wynik</h5>
+                            <h2 class="display-4">@Model.HighestScore</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-8 mx-auto">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">🔥 Serie </h5>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Ostatnia Rozgrywka:</span>
+                                    <strong>@Model.LastPlayedAt.ToString("dd.MM.yyyy HH:mm")</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Obecna seria:</span>
+                                    <strong class="text-warning">@Model.CurrentStreak</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Najdłuższa seria:</span>
+                                    <strong class="text-warning">@Model.LongestStreak</strong>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Średni wynik:</span>
+                                    <strong class="text-danger">@avgScore.ToString("F0")</strong>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a asp-controller="Statistics" asp-action="Leaderboard" class="btn btn-primary btn-lg">
+                    🏆 Zobacz ranking
+                </a>
+                <a asp-controller="Statistics" asp-action="SavedScores" class="btn btn-warning btn-lg">
+                    📌 Ulubione wyniki
+                </a>
+                <a asp-controller="Home" asp-action="Index" class="btn btn-secondary btn-lg">
+                    👤 Moje konto
+                </a><!-- PO: -->
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Report" asp-action="HighscoresPdf" class="btn btn-outline-light btn-lg">📥 Eksportuj PDF</a>
+                }
+                else
+                {
+                    <button class="btn btn-outline-secondary btn-lg" onclick="showNoPermissionToast()">📥 Eksportuj PDF</button>
+                }
+            </div>
+
+        </div>
+    </div>
+</div>
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+    <div id="noPermissionToast" class="toast align-items-center text-bg-danger border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">
+                🔒 Nie masz uprawnień do eksportu PDF. Ta funkcja jest dostępna tylko dla administratorów.
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showNoPermissionToast() {
+        const toast = new bootstrap.Toast(document.getElementById('noPermissionToast'), { delay: 4000 });
+        toast.show();
+    }
+</script>
+</div>

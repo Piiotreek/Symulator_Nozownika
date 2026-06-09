@@ -1,17 +1,65 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Symulator_Nozownika.Data;
 using Symulator_Nozownika.Models;
+using Symulator_Nozownika.Services;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace Symulator_Nozownika.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private readonly AppDbContext _context;
+        private readonly ILevelService _levelService;
+
+        public HomeController(AppDbContext context, ILevelService levelService)
         {
-            return View();
+            _context = context;
+            _levelService = levelService;
         }
 
-        public IActionResult Privacy()
+        
+
+        [Authorize]
+        public async Task<IActionResult> Index()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var user = await _context.UserAccounts
+                .Include(u => u.Statistics)
+                .Include(u => u.CoinWallet)
+                .FirstOrDefaultAsync(u => u.Id == userId);
+
+            if (user == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            //achievements logic for homepage display
+            var allAchievements = await _context.Achievements.ToListAsync();
+
+            var unlockedAchievementIds = await _context.UserAchievements
+                .Where(ua => ua.UserAccountId == userId)
+                .Select(ua => ua.AchievementId)
+                .ToListAsync();
+
+            ViewBag.AllAchievements = allAchievements;
+            ViewBag.UnlockedIds = unlockedAchievementIds;
+
+            var totalScore = user.Statistics?.TotalScore ?? 0;
+            var level = _levelService.GetLevelFromTotalScore(totalScore);
+            ViewBag.UserLevel = level;
+            ViewBag.UserTotalScore = totalScore;
+            ViewBag.CurrentLevelThreshold = _levelService.GetTotalScoreThresholdForLevel(level);
+            ViewBag.NextLevelThreshold = _levelService.GetNextLevelTotalScoreThreshold(level);
+            ViewBag.CoinBalance = user.CoinWallet?.Balance ?? 0;
+           
+
+            return View(user);
+        }
+        public IActionResult StartView()
         {
             return View();
         }

@@ -1,0 +1,8 @@
+﻿@if(Context.User.Identity.Name != null)
+{
+    <a class="nav-link text-dark fw-bold">Hello @Context.User.Claims.FirstOrDefault(c => c.Type == "Name")?.Value</a>
+}
+else
+{
+    <a class="text-dark fw-bold">Please log into the Account</a>
+}

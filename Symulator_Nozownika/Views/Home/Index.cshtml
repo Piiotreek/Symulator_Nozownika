@@ -1,8 +1,203 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model Symulator_Nozownika.Models.UserAccount
+@{
+    ViewData["Title"] = "Profil użytkownika";
+    var avatarSrc = string.IsNullOrEmpty(Model.AvatarPath) ? "/images/default-avatar.svg" : Model.AvatarPath;
+
+    var userLevel = (int?)ViewBag.UserLevel ?? 1;
+    var userTotalScore = (int?)ViewBag.UserTotalScore ?? 0;
+    var currentLevelThreshold = (int?)ViewBag.CurrentLevelThreshold ?? 0;
+    var nextLevelThreshold = ViewBag.NextLevelThreshold as int?;
+    var coinBalance = (int?)ViewBag.CoinBalance ?? 0;
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<link href="~/css/profile.css" rel="stylesheet" />
+
+<div class="container mt-5 px-3">
+    <div class="row g-5">
+        <div class="col-md-3">
+            <div class="position-relative mb-3">
+                <img src="@avatarSrc" alt="Awatar" class="img-fluid rounded-circle border border-secondary shadow-sm w-100"
+                     style="aspect-ratio: 1/1; object-fit: cover; background: #21262d;">
+
+                <button class="btn btn-sm btn-dark border-secondary position-absolute bottom-0 end-0 rounded-circle"
+                        data-bs-toggle="collapse" data-bs-target="#avatarUploadForm" title="Zmień awatar">
+                    <i class="bi bi-camera-fill"></i>
+                </button>
+            </div>
+
+            <h1 class="h4 mb-0 fw-bold text-white">@Model.UserName</h1>
+            <p class="text-muted fs-5 mb-3">@Model.Email</p>
+
+            <div class="collapse mb-3" id="avatarUploadForm">
+                <div class="card card-body bg-dark border-secondary p-2">
+                    <form asp-controller="Account" asp-action="UploadAvatar" asp-route-returnUrl="account"
+                          method="post" enctype="multipart/form-data">
+                        @Html.AntiForgeryToken()
+                        <input type="file" name="avatarFile" accept=".jpg,.jpeg,.png,.gif" class="form-control form-control-sm bg-dark text-white border-secondary mb-2" required />
+                        <button type="submit" class="btn btn-success btn-sm w-100">Zapisz zdjęcie</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2">
+                <a asp-action="ChangePassword" asp-controller="Account" class="btn btn-warning">Zmień hasło</a>
+            </div>
+
+            <hr class="border-secondary my-4">
+
+            <div class="small text-muted">
+                <div class="mb-2"><i class="bi bi-calendar3 me-2"></i>Konto od: @Model.CreatedAt.ToString("dd.MM.yyyy")</div>
+                <div><i class="bi bi-shield-lock me-2"></i>Status: Aktywny</div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <ul class="nav nav-tabs border-secondary mb-4">
+                <li class="nav-item">
+                    <a class="nav-link active bg-transparent border-0 border-bottom border-3 border-orange text-white" href="#">
+                        <i class="bi bi-layout-text-sidebar-reverse me-2"></i>Przegląd
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted border-0" asp-controller="Statistics" asp-action="Index">
+                        <i class="bi bi-graph-up me-2"></i>Pełne Statystyki
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-muted border-0" asp-controller="Statistics" asp-action="Leaderboard">
+                        <i class="bi bi-trophy me-2"></i>Ranking
+                    </a>
+                </li>
+            </ul>
+
+            @if (TempData["AvatarError"] != null)
+            {
+                <div class="alert alert-danger py-2 small">@TempData["AvatarError"]</div>
+            }
+            @if (TempData["AvatarSuccess"] != null)
+            {
+                <div class="alert alert-success py-2 small">@TempData["AvatarSuccess"]</div>
+            }
+
+            <h6 class="text-white mb-3 fw-bold">Statystyki gracza</h6>
+            <div class="row g-3 mb-5">
+                @if (Model.Statistics != null)
+                {
+                    <div class="col-sm-4">
+                        <div class="card bg-dark border-secondary h-100 shadow-sm">
+                            <div class="card-body">
+                                <span class="text-muted small fw-bold text-uppercase">Rozegrane gry</span>
+                                <div class="h3 mb-0 mt-1 text-white fw-bold">@Model.Statistics.TotalGamesPlayed</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="card bg-dark border-secondary h-100 shadow-sm border-start border-4 border-success">
+                            <div class="card-body">
+                                <span class="text-muted small fw-bold text-uppercase">Najlepszy wynik</span>
+                                <div class="h3 mb-0 mt-1 text-success fw-bold">@Model.Statistics.HighestScore</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="card bg-dark border-secondary h-100 shadow-sm">
+                            <div class="card-body">
+                                <span class="text-muted small fw-bold text-uppercase">Suma punktów</span>
+                                <div class="h3 mb-0 mt-1 text-white fw-bold">@Model.Statistics.TotalScore</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            @* view for user profile with avatar, stats, achievements, and quick access to the game simulator *@
+            <h6 class="text-white mb-3 fw-bold">Szybki dostęp</h6>
+            <div class="list-group">
+                <a asp-controller="Account" asp-action="SelectWeapon" class="list-group-item list-group-item-action bg-dark text-white border-secondary p-3">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1 text-primary">Uruchom Symulator</h5>
+                        <small class="text-white"><i class="bi bi-play-circle"></i></small>
+                    </div>
+                    <p class="mb-1 small text-white">Wróć do gry i popraw swój najwyższy wynik!</p>
+                </a>
+            </div>
+
+            <div class="card bg-dark border-secondary shadow-sm mt-3">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <div class="text-white">
+                            <strong>Level:</strong> @userLevel
+                            <span class="text-muted">|</span>
+                            <strong>Punkty łącznie:</strong> @userTotalScore
+                            <span class="text-muted">|</span>
+                            <strong>Monety:</strong> @coinBalance
+                        </div>
+
+                        @if (nextLevelThreshold.HasValue)
+                        {
+                            var span = Math.Max(1, nextLevelThreshold.Value - currentLevelThreshold);
+                            var progress = (int)Math.Clamp(((userTotalScore - currentLevelThreshold) * 100.0) / span, 0, 100);
+                            <div class="d-flex align-items-center gap-2" style="min-width: 280px;">
+                                <small class="text-muted">Do lvl @(userLevel + 1): @(Math.Max(0, nextLevelThreshold.Value - userTotalScore))</small>
+                                <div class="progress flex-grow-1" style="height: 10px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: @progress%"></div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success">MAKSYMALNY POZIOM</span>
+                        }
+                    </div>
+                </div>
+            </div>
+                <h6 class="text-white mt-5 mb-3 fw-bold"><span style="color: #ffc107;">🏆</span> Twoje Osiągnięcia</h6>
+                <div class="row g-3 mb-4">
+                    @if (ViewBag.AllAchievements != null)
+                    {
+                        foreach (var ach in ViewBag.AllAchievements)
+                        {
+                            bool isUnlocked = ViewBag.UnlockedIds != null && ViewBag.UnlockedIds.Contains(ach.Id);
+
+                            var opacityClass = isUnlocked ? "opacity-100" : "opacity-50";
+                            var filterStyle = isUnlocked ? "" : "filter: grayscale(100%);";
+
+                            <div class="col-6 col-sm-4 col-md-3">
+                                <div class="card bg-dark border-secondary h-100 text-center p-3 shadow-sm" title="@ach.Description">
+                                    <img src="@ach.ImagePath" alt="@ach.Name" class="img-fluid mx-auto mb-2 @opacityClass" style="height: 65px; width: auto; object-fit: contain; @filterStyle" />
+                                    <h6 class="text-white mt-2 mb-1 fw-bold" style="font-size: 0.85rem;">@ach.Name</h6>
+
+                                    <div class="mt-auto pt-2">
+                                        @if (isUnlocked)
+                                        {
+                                            <span class="badge bg-success w-100" style="font-size: 0.7rem;">Odblokowane</span>
+                                        }
+                                        else
+                                        {
+                                            @if (ach.Type == Symulator_Nozownika.Models.AchievementType.TotalScore)
+                                            {
+                                                <span class="badge bg-secondary w-100" style="font-size: 0.7rem;">@ach.TargetValue pkt</span>
+                                            }
+                                            else if (ach.Type == Symulator_Nozownika.Models.AchievementType.TotalClicks || ach.Type == Symulator_Nozownika.Models.AchievementType.SingleGameClicks)
+                                            {
+                                                <span class="badge bg-secondary w-100" style="font-size: 0.7rem;">@ach.TargetValue kliknięć</span>
+                                            }
+                                            else if (ach.Type == Symulator_Nozownika.Models.AchievementType.FirstGame)
+                                            {
+                                                <span class="badge bg-secondary w-100" style="font-size: 0.7rem;">Wymaga gry</span>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="col-12">
+                            <p class="text-muted small">Brak danych o osiągnięciach do wyświetlenia.</p>
+                        </div>
+                    }
+            </div>
+    </div>
 </div>
